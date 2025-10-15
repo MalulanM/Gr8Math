@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorLight">
+
+    <!-- Top bar: back + bold centered title -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@android:color/transparent"
+        app:navigationIcon="@drawable/ic_arrow_back_24"
+        app:title="@string/register_title"
+        app:titleCentered="true"
+        app:titleTextColor="@color/colorText"
+        app:titleTextAppearance="@style/TextAppearance.Gr8.ToolbarTitle"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Scroll just the content area; card floats with margins like the mockup -->
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Floating white card (same width as login: screen_side_login) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_side_login"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="@dimen/screen_side_login"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="6dp"
+                app:cardUseCompatPadding="true">
+
+                <!-- Card content -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <!-- Subtitle with inter-word spacing like your design -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:justificationMode="inter_word"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="12dp"
+                        android:text="@string/register_subtitle"
+                        android:textColor="@color/colorText"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        tools:ignore="UnusedAttribute" />
+
+                    <!-- Email -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Gr8TextInputStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/hint_email"
+                        app:boxBackgroundColor="@color/colorLight"
+                        app:boxBackgroundMode="outline"
+                        app:boxStrokeColor="@color/til_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:fontFamily="@font/lexend"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textColor="@color/colorText" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Password -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Gr8TextInputStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/field_spacing"
+                        android:hint="@string/hint_password"
+                        app:boxBackgroundColor="@color/colorLight"
+                        app:boxBackgroundMode="outline"
+                        app:boxStrokeColor="@color/til_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp"
+                        app:passwordToggleEnabled="true">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:fontFamily="@font/lexend"
+                            android:inputType="textPassword"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textColor="@color/colorText" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Re-enter Password -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Gr8TextInputStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/field_spacing"
+                        android:hint="@string/hint_reenter_password"
+                        app:boxBackgroundColor="@color/colorLight"
+                        app:boxBackgroundMode="outline"
+                        app:boxStrokeColor="@color/til_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp"
+                        app:passwordToggleEnabled="true">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:fontFamily="@font/lexend"
+                            android:inputType="textPassword"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textColor="@color/colorText" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- First Name -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Gr8TextInputStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/field_spacing"
+                        android:hint="@string/hint_first_name"
+                        app:boxBackgroundColor="@color/colorLight"
+                        app:boxBackgroundMode="outline"
+                        app:boxStrokeColor="@color/til_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:fontFamily="@font/lexend"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textColor="@color/colorText" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Last Name -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Gr8TextInputStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/field_spacing"
+                        android:hint="@string/hint_last_name"
+                        app:boxBackgroundColor="@color/colorLight"
+                        app:boxBackgroundMode="outline"
+                        app:boxStrokeColor="@color/til_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:fontFamily="@font/lexend"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textColor="@color/colorText" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- LRN -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Gr8TextInputStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/field_spacing"
+                        android:hint="@string/hint_lrn"
+                        app:boxBackgroundColor="@color/colorLight"
+                        app:boxBackgroundMode="outline"
+                        app:boxStrokeColor="@color/til_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxStrokeWidthFocused="2dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:fontFamily="@font/lexend"
+                            android:inputType="number"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textColor="@color/colorText" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Gender + DOB row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/field_spacing"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Gr8TextInputStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            app:boxBackgroundColor="@color/colorLight"
+                            app:boxBackgroundMode="outline"
+                            app:boxStrokeColor="@color/til_stroke"
+                            app:boxStrokeWidth="1dp"
+                            app:boxStrokeWidthFocused="2dp"
+                            app:endIconMode="dropdown_menu">
+
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:id="@+id/etGender"
+                                android:layout_width="match_parent"
+                                android:layout_height="52dp"
+                                android:entries="@array/gender_options"
+                                android:fontFamily="@font/lexend"
+                                android:hint="@string/hint_gender"
+                                android:importantForAccessibility="yes"
+                                android:inputType="none"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp"
+                                android:textColor="@color/colorText" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <Space
+                            android:layout_width="12dp"
+                            android:layout_height="0dp" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Gr8TextInputStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            app:boxBackgroundColor="@color/colorLight"
+                            app:boxBackgroundMode="outline"
+                            app:boxStrokeColor="@color/til_stroke"
+                            app:boxStrokeWidth="1dp"
+                            app:boxStrokeWidthFocused="2dp"
+                            app:endIconDrawable="@drawable/ic_calendar_24"
+                            app:endIconMode="custom">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etDob"
+                                android:layout_width="match_parent"
+                                android:layout_height="52dp"
+                                android:clickable="false"
+                                android:focusable="false"
+                                android:fontFamily="@font/lexend"
+                                android:hint="@string/hint_dob"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp"
+                                android:textColor="@color/colorText" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+
+                    <!-- Submit -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSubmit"
+                        style="@style/Gr8ButtonStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="18dp"
+                        android:text="@string/action_submit" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Small cream gap under the card (like your screenshot) -->
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="16dp" />
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

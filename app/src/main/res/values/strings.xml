@@ -1,0 +1,34 @@
+<resources>
+    <!-- Login screen -->
+    <string name="app_name">Gr8Math</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="no_account">Don’t have an account?</string>
+
+    <!-- Register screen -->
+    <string name="register_title">Register</string>
+    <string name="register_subtitle">Please enter the appropriate information.</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_reenter_password">Re-enter Password</string>
+    <string name="hint_first_name">First Name</string>
+    <string name="hint_last_name">Last Name</string>
+    <string name="hint_lrn">Learner’s Reference Number</string>
+    <string name="hint_gender">Gender</string>
+    <string name="hint_dob">01/01/1995</string> <!-- placeholder -->
+    <string name="action_submit">Submit</string>
+
+    <!-- Forgot / Change Password -->
+    <string name="fp_title">Change Password</string>
+    <string name="fp_info">A verification code will be sent to your email.</string>
+    <string name="fp_code">Code</string>
+    <string name="fp_get_code">Get Code</string>
+    <string name="fp_verify">Verify</string>
+    <string name="fp_new_password">New Password</string>
+    <string name="fp_reenter_password">Re-enter Password</string>
+    <string name="fp_save">Save Password</string>
+
+</resources>

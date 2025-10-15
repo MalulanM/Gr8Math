@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Focused outline -->
+    <item android:state_enabled="true" android:state_focused="true" android:color="@color/saffron"/>
+    <!-- Hover (optional) -->
+    <item android:state_enabled="true" android:state_hovered="true" android:color="@color/colorMatisse"/>
+    <!-- Idle outline -->
+    <item android:color="@color/colorMatisse"/>
+</selector>

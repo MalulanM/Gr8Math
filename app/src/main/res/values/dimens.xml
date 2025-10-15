@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="field_spacing">16dp</dimen>
+    <dimen name="card_top_overlap">-28dp</dimen>
+    <dimen name="screen_side_login">24dp</dimen>
+    <dimen name="screen_side_register">16dp</dimen>
+</resources>
