@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorAccent">#2A68FF</color>
+    <color name="colorAccent">#ECF1F4</color>
     <color name="colorLight">#F4EFED</color>
-    <color name="colorMatisse">#1E4F91</color>
-    <color name="colorRed">#ED1C24</color>
+    <color name="colorMatisse">#1E4B95</color>
+    <color name="colorRed">#E91D26</color>
     <color name="colorText">#1B1B1B</color>
     <color name="colorSubtleText">#6F6F6F</color>
     <color name="white">#FFFFFF</color>
     <color name="saffron">#EFBD31</color>
-    <color name="colorDarkCyan">#0F8A83</color>
+    <color name="colorDarkCyan">#0F8B8D</color>
     <color name="ecf1f4">#ECF1F4</color>
 </resources>

@@ -6,17 +6,10 @@ import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.google.android.material.appbar.MaterialToolbar
-import com.example.gr8math.R
-import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import retrofit2.Call
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
 
 class ForgotPasswordActivity : AppCompatActivity() {
     lateinit var codeInput: EditText;
@@ -34,7 +27,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.forgot_password_activity)
 
-        findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
+        /*findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
         init()
 
         txtSendCode.setOnClickListener {
@@ -47,7 +40,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
 
         savePassBtn.setOnClickListener {
             updatePassword()
-        }
+        }*/
     }
 
     fun init(){

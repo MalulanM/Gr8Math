@@ -11,28 +11,34 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Gr8Math">
 
-        <!-- Launcher (login) -->
+        <!-- Splash Activity (Launcher) -->
         <activity
-            android:name=".AppLoginActivity"
+            android:name=".SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- Login Activity -->
+        <activity
+            android:name=".AppLoginActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <!-- Register Activity -->
         <activity
             android:name=".RegisterActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
+        <!-- Forgot Password Activity -->
         <activity
             android:name=".ForgotPasswordActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
     </application>
-
 </manifest>

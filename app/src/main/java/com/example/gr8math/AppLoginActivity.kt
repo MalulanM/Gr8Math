@@ -48,11 +48,13 @@ class AppLoginActivity : AppCompatActivity() {
 
     }
     fun login(){
+
         val apiService = ConnectURL.api
         val user = LoginUser(
             email = etEmail.text.toString(),
             password = etPassword.text.toString()
         )
+
         val call = apiService.loginUser(user)
         call.enqueue(object : retrofit2.Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
