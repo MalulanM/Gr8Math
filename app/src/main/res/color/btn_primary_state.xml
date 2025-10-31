@@ -3,5 +3,5 @@
     <!-- Disabled = dark cyan (locked) -->
     <item android:state_enabled="false" android:color="@color/colorDarkCyan"/>
     <!-- Pressed/Focused fall back to primary red -->
-    <item android:color="@color/colorRed"/>
+    <item android:color="@color/colorMatisse"/>
 </selector>

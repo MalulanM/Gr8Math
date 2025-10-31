@@ -3,7 +3,7 @@
     <!-- Focused outline -->
     <item android:state_enabled="true" android:state_focused="true" android:color="@color/saffron"/>
     <!-- Hover (optional) -->
-    <item android:state_enabled="true" android:state_hovered="true" android:color="@color/colorDarkCyan"/>
+    <item android:state_enabled="true" android:state_hovered="true" android:color="@color/sonicsilver"/>
     <!-- Idle outline -->
-    <item android:color="@color/colorDarkCyan"/>
+    <item android:color="@color/sonicsilver"/>
 </selector>
