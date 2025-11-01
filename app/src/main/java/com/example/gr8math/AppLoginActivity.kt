@@ -8,6 +8,8 @@ import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
+import com.google.android.material.textfield.TextInputLayout
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -21,6 +23,9 @@ class AppLoginActivity : AppCompatActivity() {
     lateinit var btnLogin: Button
     lateinit var etEmail : TextView
     lateinit var etPassword : TextView
+    lateinit var tilPassword: TextInputLayout
+    lateinit var tilEmail: TextInputLayout
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.app_login_activity)   // <-- must match your XML file name
@@ -45,9 +50,55 @@ class AppLoginActivity : AppCompatActivity() {
         btnLogin = findViewById(R.id.btnLogin)
         etEmail = findViewById(R.id.etEmail)
         etPassword = findViewById(R.id.etPassword)
+        tilPassword = findViewById(R.id.tilPassword)
+        tilEmail = findViewById(R.id.tilEmail)
 
     }
     fun login(){
+        if(etEmail.text.toString().isEmpty() || etPassword.text.toString().isEmpty()){
+            if (etEmail.text.toString().isEmpty()) {
+                tilEmail.isErrorEnabled = true
+                tilEmail.error = "Please input valid credentials"
+                tilEmail.setErrorIconDrawable(R.drawable.ic_warning)
+                tilEmail.setErrorTextColor(ContextCompat.getColorStateList(this, R.color.colorRed))
+                tilEmail.setErrorIconTintList(ContextCompat.getColorStateList(this, R.color.colorRed))
+                tilEmail.setBoxStrokeColorStateList(ContextCompat.getColorStateList(this, R.color.colorRed))
+            } else {
+                tilEmail.isErrorEnabled = false
+                tilEmail.error = null
+                tilEmail.setBoxStrokeColorStateList(
+                    ContextCompat.getColorStateList(this, R.color.til_stroke)
+                )
+            }
+
+            if (etPassword.text.toString().isEmpty()) {
+                tilPassword.isErrorEnabled = true
+                tilPassword.error = "Please input valid credentials"
+                tilPassword.setErrorIconDrawable(null)
+                tilPassword.setErrorTextColor(ContextCompat.getColorStateList(this, R.color.colorRed))
+                tilPassword.setErrorIconTintList(ContextCompat.getColorStateList(this, R.color.colorRed))
+                tilPassword.setBoxStrokeColorStateList(ContextCompat.getColorStateList(this, R.color.colorRed))
+            } else {
+                tilPassword.isErrorEnabled = false
+                tilPassword.error = null
+                tilPassword.setBoxStrokeColorStateList(
+                    ContextCompat.getColorStateList(this, R.color.til_stroke)
+                )
+            }
+
+            return
+        }
+
+        tilEmail.isErrorEnabled = false
+        tilEmail.error = null
+        tilEmail.setBoxStrokeColorStateList(
+            ContextCompat.getColorStateList(this, R.color.til_stroke)
+        )
+        tilPassword.isErrorEnabled = false
+        tilPassword.error = null
+        tilPassword.setBoxStrokeColorStateList(
+            ContextCompat.getColorStateList(this, R.color.til_stroke)
+        )
 
         val apiService = ConnectURL.api
         val user = LoginUser(
