@@ -37,7 +37,7 @@
     <string name="fp_reenter_password">Re-enter Password</string>
     <string name="fp_save">Save Password</string>
     <string name="fp_password_requirements">Please create a new password. The password needs to follow the following requirements:\n\n- Minimum of 8 and maximum of 16 characters\n- At least one uppercase letter\n- At least one number and one special character</string>
-
+    <string name="cp_title">Create Password</string>
 
 
 </resources>
