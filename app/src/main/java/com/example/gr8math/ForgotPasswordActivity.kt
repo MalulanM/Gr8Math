@@ -105,7 +105,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
     }
 
     fun sendCode() {
-        txtSendCode.setBackgroundColor(ContextCompat.getColor(this, R.color.white))
+        txtSendCode.setBackgroundColor(ContextCompat.getColor(this, R.color.colorLight))
 
         val apiService = ConnectURL.api
         val call = apiService.sendCode(emailInput.text.toString())
