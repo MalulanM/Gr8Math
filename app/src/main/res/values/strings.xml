@@ -12,7 +12,7 @@
 
     <!-- Register screen -->
     <string name="register_title">Register</string>
-    <string name="register_subtitle">Please enter the appropriate information.</string>
+    <string name="register_subtitle">Please enter the needed details.</string>
     <string name="hint_email">Email</string>
     <string name="hint_password">Password</string>
     <string name="hint_reenter_password">Re-enter Password</string>
@@ -22,6 +22,9 @@
     <string name="hint_gender">Gender</string>
     <string name="hint_dob">01/01/1995</string> <!-- placeholder -->
     <string name="action_submit">Submit</string>
+    <string name="action_next">Next</string>
+    <string name="hint_birthdate">Birthdate</string>
+    <string name="hint_birthdate_placeholder">MM/DD/YYYY</string>
 
     <!-- Forgot / Change Password -->
     <string name="fp_title">Change Password</string>

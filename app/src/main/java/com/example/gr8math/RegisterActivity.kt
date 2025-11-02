@@ -61,7 +61,7 @@ class RegisterActivity : AppCompatActivity() {
                     selectedDate.set(selectedYear, selectedMonth, selectedDay)
 
 
-                    val formatter = SimpleDateFormat("MM/dd/yy", Locale.getDefault())
+                    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
                     val formattedDate = formatter.format(selectedDate.time)
 
 
@@ -75,23 +75,24 @@ class RegisterActivity : AppCompatActivity() {
             datePicker.show()
         }
 
-        registerButton.setOnClickListener {
-            UserRegister()
-        }
+        //registerButton.setOnClickListener {
+        //    UserRegister()
+        //}
 
     }
 
     fun Init() {
          email = findViewById<EditText>(R.id.email)
-         password = findViewById<EditText>(R.id.password)
-         confirmPassword = findViewById<EditText>(R.id.confirmPass)
-        registerButton = findViewById<Button>(R.id.btnSubmit)
+        // "it was changed so I put a comment line at those 3"
+         //password = findViewById<EditText>(R.id.password)
+         //confirmPassword = findViewById<EditText>(R.id.confirmPass)
+        //registerButton = findViewById<Button>(R.id.btnSubmit)
          firstName = findViewById<EditText>(R.id.firstName)
          lastName = findViewById<EditText>(R.id.lastName)
          LRN = findViewById<EditText>(R.id.LRN)
         date = findViewById<EditText>(R.id.etDob)
         genderField = findViewById<MaterialAutoCompleteTextView>(R.id.etGender)
-        val items = listOf("Male", "Female", "Prefer not to say")
+        val items = listOf("Male", "Female")
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, items)
         genderField.setAdapter(adapter)
         MessageBox = findViewById<TextView>(R.id.message)
