@@ -39,5 +39,18 @@
     <string name="fp_password_requirements">Please create a new password. The password needs to follow the following requirements:\n\n- Minimum of 8 and maximum of 16 characters\n- At least one uppercase letter\n- At least one number and one special character</string>
     <string name="cp_title">Create Password</string>
 
-
+    <!-- Account Management -->
+    <string name="account_management_title">Account Management</string>
+    <string name="active_accounts">Active Accounts</string>
+    <string name="add_account">Add Account</string>
+    <string name="account_requests">Account Requests</string>
+    <string name="see_more">See More</string>
+    <string name="no_new_requests">No new requests</string>
+    <string name="lorem_ipsum">Lorem Ipsum</string>
+    <string name="student">Student</string>
+    <string name="teacher">Teacher</string>
+    <string name="accept_request">Accept Request</string>
+    <string name="reject_request">Reject Request</string>
+    <string name="add_account_title">Add Account</string>
+    <string name="add">Add Account</string>
 </resources>

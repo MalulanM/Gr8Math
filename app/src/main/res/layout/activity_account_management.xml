@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorLight">
+
+    <!-- Top bar: Centered Icon + Title -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@android:color/transparent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- This LinearLayout holds the icon and title together -->
+        <!-- and is centered inside the Toolbar -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="8dp"
+                android:contentDescription="@string/account_management_title"
+                android:src="@drawable/ic_icon_acc_manage"
+                app:tint="@color/colorMatisse" />
+            <!-- Note: You can remove app:tint if your icon is already blue -->
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/account_management_title"
+                android:textAppearance="@style/TextAppearance.Gr8.ToolbarTitle"
+                android:textColor="@color/colorText" />
+
+        </LinearLayout>
+
+    </com.google.android.material.appbar.MaterialToolbar>
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="16dp">
+
+            <!-- Active Accounts Card -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Gr8Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Card Header -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingEnd="16dp">
+
+                        <TextView
+                            style="@style/Gr8Title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="8dp"
+                            android:layout_toStartOf="@id/btnAddAccount"
+                            android:text="@string/active_accounts" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAddAccount"
+                            style="@style/Gr8ButtonStyle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="48dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
+                            android:text="@string/add_account"
+                            android:textSize="12sp" />
+                    </RelativeLayout>
+
+                    <!-- List of Active Accounts -->
+                    <LinearLayout
+                        android:id="@+id/active_accounts_list"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="8dp">
+
+                        <!-- Hardcoded items to match the layout (for front-end only) -->
+                        <include layout="@layout/item_active_account" />
+                        <include layout="@layout/item_active_account" />
+                        <include layout="@layout/item_active_account" />
+
+                    </LinearLayout>
+
+                    <!-- See More -->
+                    <TextView
+                        android:id="@+id/tvSeeMoreActive"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:fontFamily="@font/lexend"
+                        android:padding="16dp"
+                        android:text="@string/see_more"
+                        android:textColor="@color/colorSubtleText"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Account Requests Card -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Gr8Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Card Header -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingEnd="16dp">
+
+                        <TextView
+                            style="@style/Gr8Title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerVertical="true"
+                            android:text="@string/account_requests" />
+                    </RelativeLayout>
+
+                    <!-- "No new requests" View -->
+                    <TextView
+                        android:id="@+id/tvNoRequests"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/lexend"
+                        android:gravity="center"
+                        android:padding="32dp"
+                        android:text="@string/no_new_requests"
+                        android:textColor="@color/colorSubtleText"
+                        android:textSize="14sp"
+                        android:visibility="gone" /> <!-- FIX: Set to "gone" to be hidden by default -->
+
+                    <!-- List of Account Requests -->
+                    <LinearLayout
+                        android:id="@+id/account_requests_list"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="8dp"
+                        android:visibility="visible"> <!-- This list is now visible by default -->
+
+                        <!-- Hardcoded items to match the layout (for front-end only) -->
+                        <include layout="@layout/item_account_request" />
+                        <include layout="@layout/item_account_request" />
+                        <include layout="@layout/item_account_request" />
+
+                    </LinearLayout>
+
+                    <!-- See More -->
+                    <TextView
+                        android:id="@+id/tvSeeMoreRequests"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:fontFamily="@font/lexend"
+                        android:padding="16dp"
+                        android:text="@string/see_more"
+                        android:textColor="@color/colorSubtleText"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
+
