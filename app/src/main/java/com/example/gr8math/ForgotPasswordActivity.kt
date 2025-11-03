@@ -4,6 +4,8 @@ import android.content.Intent
 import android.content.IntentSender
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.widget.Button
@@ -11,9 +13,18 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.example.gr8math.utils.UIUtils
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
 import retrofit2.Call
+import kotlinx.coroutines.*
+
 
 class ForgotPasswordActivity : AppCompatActivity() {
     lateinit var codeInput: EditText
@@ -37,17 +48,12 @@ class ForgotPasswordActivity : AppCompatActivity() {
 
     lateinit var loadingProgress : View
 
+    lateinit var loadingText : TextView
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        /*findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
-        init()
-
-        savePassBtn.setOnClickListener {
-            updatePassword()
-        }*/
 
         showForgotPasswordActivity()
     }
@@ -55,6 +61,8 @@ class ForgotPasswordActivity : AppCompatActivity() {
     private fun showForgotPasswordActivity(){
         setContentView(R.layout.forgot_password_activity)
         init()
+
+        findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
 
         txtSendCode.setOnClickListener {
             sendCode()
@@ -69,15 +77,25 @@ class ForgotPasswordActivity : AppCompatActivity() {
     private fun showForgotPasswordActivityOne(){
         setContentView(R.layout.forgot_password_activity_one)
         init2()
-        val enableBtn = {
-            savePassBtn.isEnabled = newPasswordInput.text.isNotEmpty()&& confirmPasswordInput.text.isNotEmpty()
-        }
-        val keyListener = { _: Any, _: Any, _: Any ->
-            enableBtn()
-            false
-        }
-        newPasswordInput.setOnKeyListener(keyListener)
-        confirmPasswordInput.setOnKeyListener(keyListener)
+        findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
+
+        savePassBtn.isEnabled = true
+
+        newPasswordInput.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                UIUtils.errorDisplay(this@ForgotPasswordActivity, tillNewPassLayout, newPasswordInput, false,"Please enter a password")
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+        confirmPasswordInput.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                UIUtils.errorDisplay(this@ForgotPasswordActivity, tillConfirmPassLayout, confirmPasswordInput, false,"Please enter a password")
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
 
         savePassBtn.setOnClickListener {
             updatePassword()
@@ -102,6 +120,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
         tillConfirmPassLayout = findViewById(R.id.tilReEnterPassword)
         loadingLayout = findViewById(R.id.loadingLayout)
         loadingProgress = findViewById(R.id.loadingProgressBg)
+        loadingText = findViewById(R.id.loadingText)
     }
 
     fun sendCode() {
@@ -219,46 +238,10 @@ class ForgotPasswordActivity : AppCompatActivity() {
     fun updatePassword(){
 
         if(newPasswordInput.text.toString().isEmpty() || confirmPasswordInput.text.toString().isEmpty()){
-            if(newPasswordInput.text.toString().isEmpty()){
-                tillNewPassLayout.isErrorEnabled = true
-                tillNewPassLayout.error = "Please enter a password"
-                tillNewPassLayout.setBoxStrokeColorStateList(ContextCompat.getColorStateList(this, R.color.colorRed))
-                tillNewPassLayout.setErrorTextColor(ContextCompat.getColorStateList(this, R.color.colorRed))
-            } else {
-                tillNewPassLayout.isErrorEnabled = false
-                tillNewPassLayout.error = null
-                tillNewPassLayout.setBoxStrokeColorStateList(ContextCompat.getColorStateList(
-                    this, R.color.til_stroke
-                 )
-                )
-            }
-            if(confirmPasswordInput.text.toString().isEmpty()){
-                tillConfirmPassLayout.isErrorEnabled = true
-                tillConfirmPassLayout.error = "Please enter a password"
-                tillConfirmPassLayout.setBoxStrokeColorStateList(ContextCompat.getColorStateList(this, R.color.colorRed))
-                tillConfirmPassLayout.setErrorTextColor(ContextCompat.getColorStateList(this, R.color.colorRed))
-            } else {
-                tillConfirmPassLayout.isErrorEnabled = false
-                tillConfirmPassLayout.error = null
-                tillConfirmPassLayout.setBoxStrokeColorStateList(ContextCompat.getColorStateList(
-                    this, R.color.til_stroke
-                )
-                )
-            }
+            UIUtils.errorDisplay(this@ForgotPasswordActivity, tillNewPassLayout, newPasswordInput, false,"Please enter a password")
+            UIUtils.errorDisplay(this@ForgotPasswordActivity, tillConfirmPassLayout, confirmPasswordInput, false,"Please enter a password")
             return
         }
-        tillNewPassLayout.isErrorEnabled = false
-        tillNewPassLayout.error = null
-        tillNewPassLayout.setBoxStrokeColorStateList(ContextCompat.getColorStateList(
-            this, R.color.til_stroke
-        )
-        )
-        tillConfirmPassLayout.isErrorEnabled = false
-        tillConfirmPassLayout.error = null
-        tillConfirmPassLayout.setBoxStrokeColorStateList(ContextCompat.getColorStateList(
-            this, R.color.til_stroke
-        )
-        )
 
 
         if(newPasswordInput.text.toString() != confirmPasswordInput.text.toString()){
@@ -274,13 +257,13 @@ class ForgotPasswordActivity : AppCompatActivity() {
         newPasswordInput.isEnabled = false
         confirmPasswordInput.isEnabled = false
         savePassBtn.isEnabled = false
-        showLoading(true)
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
 
         val apiService = ConnectURL.api
         val call = apiService.savePass(emailInput.text.toString(), codeInput.text.toString(),newPasswordInput.text.toString(), confirmPasswordInput.text.toString())
         call.enqueue(object : retrofit2.Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
-                showLoading(false)
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                 val responseBody = response.body()?.string()
                 val errorBody = response.errorBody()?.string()
                 val responseString = responseBody ?: errorBody
@@ -297,24 +280,24 @@ class ForgotPasswordActivity : AppCompatActivity() {
                         startActivity(intent)
                         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
 
-                        // Fade out the loading after the transition
-                        showLoading(false)
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+
                         finish()
                     }, 800)
 
                 } else {
                     ShowToast.showMessage(this@ForgotPasswordActivity, msg)
-                    showLoading(false)
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     newPasswordInput.isEnabled = true
                     confirmPasswordInput.isEnabled = true
                     savePassBtn.isEnabled = true
                 }
             }
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                showLoading(false)
                 newPasswordInput.isEnabled = true
                 confirmPasswordInput.isEnabled = true
                 savePassBtn.isEnabled = true
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
 
                 Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
                 ShowToast.showMessage(this@ForgotPasswordActivity, "Failed to connect to the server. Please check your internet connection.")
@@ -322,31 +305,8 @@ class ForgotPasswordActivity : AppCompatActivity() {
         })
     }
 
-    fun showLoading(isShowing : Boolean){
-        val fade = 200L
 
-        if(isShowing){
-            loadingLayout.apply {
-                alpha = 0f
-                visibility = View.VISIBLE
-                animate().alpha(1f).setDuration(fade).start()
-            }
 
-            loadingProgress.apply {
-                alpha = 0f
-                visibility = View.VISIBLE
-                animate().alpha(1f).setDuration(fade).start()
-            }
-        }
-        else{
-            loadingLayout.animate().alpha(0f).setDuration(fade).withEndAction {
-                loadingLayout.visibility = View.GONE
-            }.start()
 
-            loadingProgress.animate().alpha(0f).setDuration(fade).withEndAction {
-                loadingProgress.visibility = View.GONE
-            }.start()
-        }
-    }
 
 }

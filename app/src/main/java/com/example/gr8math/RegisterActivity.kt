@@ -19,6 +19,18 @@ import java.text.SimpleDateFormat
 import java.util.*
 import android.widget.Toast
 import android.util.Log
+import android.view.View
+import androidx.core.content.ContextCompat
+import com.example.gr8math.utils.UIUtils
+import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+
 
 
 class RegisterActivity : AppCompatActivity() {
@@ -36,9 +48,32 @@ class RegisterActivity : AppCompatActivity() {
 
     lateinit var MessageBox : TextView
 
+    lateinit var nextButton :Button;
+
+    lateinit var loadingLayout : View
+
+    lateinit var loadingProgress : View
+
+    lateinit var loadingText : TextView
+
+    lateinit var tilEmail : TextInputLayout
+    lateinit var tilFirstName : TextInputLayout
+    lateinit var tilLastName : TextInputLayout
+    lateinit var tilLRN : TextInputLayout
+    lateinit var tilGender : TextInputLayout
+    lateinit var tilBirthDate : TextInputLayout
+
+
+
     var selectedGender: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        showRegisterInfo()
+    }
+
+    fun showRegisterInfo(){
         setContentView(R.layout.register_activity)
         Init()
         findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
@@ -75,18 +110,54 @@ class RegisterActivity : AppCompatActivity() {
             datePicker.show()
         }
 
-        //registerButton.setOnClickListener {
-        //    UserRegister()
-        //}
+        nextButton.setOnClickListener {
+
+            val fields = listOf(email, firstName, lastName, LRN, date, genderField)
+            val tils = listOf(tilEmail, tilFirstName, tilLastName, tilLRN, tilBirthDate, tilGender)
+
+            var hasError = false
+            for (i in fields.indices) {
+                val field = fields[i]
+                val til = tils[i]
+                UIUtils.errorDisplay(this@RegisterActivity,til, field, true, "Please enter the needed details")
+                if (field.text.toString().trim().isEmpty()) {
+                    hasError = true
+                }
+            }
+
+            if (!hasError) {
+                showPasswordRegistration()
+            }
+
+        }
+
+    }
+
+    fun showPasswordRegistration(){
+        setContentView(R.layout.change_password_activity)
+        Init2()
+        findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
+
+        val enableBtn = {
+            registerButton.isEnabled = password.text.toString().isNotEmpty() && confirmPassword.text.toString().isNotEmpty()
+        }
+
+        val keyListener = { _: Any, _:Any, _:Any ->
+            enableBtn()
+            false
+        }
+
+        password.setOnKeyListener(keyListener)
+        confirmPassword.setOnKeyListener(keyListener)
+
+        registerButton.setOnClickListener {
+            UserRegister()
+        }
 
     }
 
     fun Init() {
          email = findViewById<EditText>(R.id.email)
-        // "it was changed so I put a comment line at those 3"
-         //password = findViewById<EditText>(R.id.password)
-         //confirmPassword = findViewById<EditText>(R.id.confirmPass)
-        //registerButton = findViewById<Button>(R.id.btnSubmit)
          firstName = findViewById<EditText>(R.id.firstName)
          lastName = findViewById<EditText>(R.id.lastName)
          LRN = findViewById<EditText>(R.id.LRN)
@@ -96,6 +167,22 @@ class RegisterActivity : AppCompatActivity() {
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, items)
         genderField.setAdapter(adapter)
         MessageBox = findViewById<TextView>(R.id.message)
+        nextButton = findViewById(R.id.btnNext)
+        tilEmail = findViewById(R.id.tilEmail)
+        tilFirstName = findViewById(R.id.tilFirstName)
+        tilLastName = findViewById(R.id.tilLastName)
+        tilLRN = findViewById(R.id.tilLRN)
+        tilGender = findViewById(R.id.tilGender)
+        tilBirthDate = findViewById(R.id.tilBirthdate)
+    }
+
+    fun Init2(){
+        password = findViewById<EditText>(R.id.etNewPass)
+        confirmPassword = findViewById<EditText>(R.id.etRePass)
+        registerButton = findViewById<Button>(R.id.btnSave)
+        loadingLayout =  findViewById<View>(R.id.loadingLayout)
+        loadingProgress = findViewById<View>(R.id.loadingProgressBg)
+        loadingText = findViewById<TextView>(R.id.loadingText)
     }
 
     fun isValidPassword(password: String): Boolean {
@@ -114,19 +201,13 @@ class RegisterActivity : AppCompatActivity() {
         val genderText = selectedGender.trim()
 
 
-        if(emailText.isEmpty() || passwordText.isEmpty() || firstNameText.isEmpty() ||
-            lastNameText.isEmpty() || LRNText.isEmpty() || birthDateText.isEmpty() || genderText.isEmpty() || LRNText.length != 12 || !LRNText.all{it.isDigit()}) {
-            ShowToast.showMessage(this@RegisterActivity, "Please input valid credentials")
-         return
-        }
-
         if(passwordText != confirmPassText){
             ShowToast.showMessage(this@RegisterActivity, "Passwords do not match")
           return
         }
 
         if(!isValidPassword(passwordText)){
-             ShowToast.showMessage(this@RegisterActivity, "Password Requirement:\n- 8-16 characters\n- At least one uppercase letter\n- At least one number\n- At least one special character")
+             ShowToast.showMessage(this@RegisterActivity, "Password Invalid")
           return
         }
 
@@ -144,6 +225,9 @@ class RegisterActivity : AppCompatActivity() {
             LRN = LRNText
         )
 
+        password.isEnabled = false
+        confirmPassword.isEnabled = false
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
         val call = apiService.registerUser(user)
         call.enqueue(object : retrofit2.Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
@@ -155,18 +239,24 @@ class RegisterActivity : AppCompatActivity() {
                         } | ErrorBody: ${response.errorBody()?.string()}"
                     )
                     if (response.isSuccessful) {
-                        ShowToast.showMessage(this@RegisterActivity, "You have successfully created an account, please wait for it to be approved.")
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                             val intent = Intent(this@RegisterActivity, AppLoginActivity::class.java)
-                            startActivity(intent)
+                                intent.putExtra("toast_msg", "You have successfully created an account, please wait for it to be approved.")
+                                startActivity(intent)
+                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+
+                            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                             finish()
-                        }, 3000)
+                        }, 800)
                     } else {
                         ShowToast.showMessage(this@RegisterActivity, "An error occurred while handling the response.")
+
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     }
                 } catch (e: Exception) {
                     Log.e("registerAcc", "Exception: ${e.message}", e)
                     ShowToast.showMessage(this@RegisterActivity, "An error occurred while handling the response.")
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                 }
             }
 
@@ -174,10 +264,10 @@ class RegisterActivity : AppCompatActivity() {
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
                 ShowToast.showMessage(this@RegisterActivity, "Failed to connect to server. Check your internet connection.")
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
             }
         })
     }
-
 
 
 }

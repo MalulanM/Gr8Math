@@ -72,6 +72,7 @@
 
                     <!-- Email -->
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilEmail"
                         style="@style/Gr8TextInputStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -88,14 +89,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="52dp"
                             android:fontFamily="@font/lexend"
+                            android:maxLines="1"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
-                            android:textColor="@android:color/black"
-                            android:maxLines="1" />
+                            android:textColor="@android:color/black" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <!-- First Name -->
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilFirstName"
                         style="@style/Gr8TextInputStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -113,14 +115,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="52dp"
                             android:fontFamily="@font/lexend"
+                            android:maxLines="1"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
-                            android:textColor="@android:color/black"
-                            android:maxLines="1" />
+                            android:textColor="@android:color/black" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <!-- Last Name -->
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilLastName"
                         style="@style/Gr8TextInputStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -138,14 +141,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="52dp"
                             android:fontFamily="@font/lexend"
+                            android:maxLines="1"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
-                            android:textColor="@android:color/black"
-                            android:maxLines="1" />
+                            android:textColor="@android:color/black" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <!-- LRN -->
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilLRN"
                         style="@style/Gr8TextInputStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -164,10 +168,10 @@
                             android:layout_height="52dp"
                             android:fontFamily="@font/lexend"
                             android:inputType="number"
+                            android:maxLines="1"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
-                            android:textColor="@android:color/black"
-                            android:maxLines="1" />
+                            android:textColor="@android:color/black" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <!-- Gender -->
@@ -190,6 +194,7 @@
 
                         <!-- FIX: Changed width to 0dp and weight to 1 -->
                         <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilGender"
                             style="@style/Gr8TextInputStyle"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -206,11 +211,11 @@
                                 android:id="@+id/etGender"
                                 android:layout_width="match_parent"
                                 android:layout_height="52dp"
+                                android:contentDescription="@string/hint_gender"
                                 android:entries="@array/gender_options"
                                 android:fontFamily="@font/lexend"
                                 android:hint="@string/hint_gender"
                                 android:importantForAccessibility="yes"
-                                android:contentDescription="@string/hint_gender"
                                 android:inputType="none"
                                 android:paddingStart="14dp"
                                 android:paddingEnd="14dp"
@@ -238,6 +243,7 @@
 
                         <!-- FIX: Changed width to 0dp and weight to 1 -->
                         <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilBirthdate"
                             style="@style/Gr8TextInputStyle"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -260,10 +266,10 @@
                                 android:fontFamily="@font/lexend"
                                 android:hint="@string/hint_birthdate_placeholder"
                                 android:inputType="none"
+                                android:maxLines="1"
                                 android:paddingStart="14dp"
                                 android:paddingEnd="14dp"
                                 android:textColor="@android:color/black"
-                                android:maxLines="1"
                                 tools:ignore="KeyboardInaccessibleWidget" />
                         </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>

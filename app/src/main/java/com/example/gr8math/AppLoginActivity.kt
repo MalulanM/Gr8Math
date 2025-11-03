@@ -18,6 +18,9 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import android.text.Editable
+import android.text.TextWatcher
+import com.example.gr8math.utils.UIUtils
 
 class AppLoginActivity : AppCompatActivity() {
     lateinit var btnLogin: Button
@@ -30,6 +33,12 @@ class AppLoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.app_login_activity)   // <-- must match your XML file name
         // inside AppLoginActivity after setContentView(...)
+
+        val toastMsg = intent.getStringExtra("toast_msg")
+        if (!toastMsg.isNullOrEmpty()) {
+            ShowToast.showMessage(this, toastMsg)
+        }
+
         init()
         findViewById<com.google.android.material.button.MaterialButton>(R.id.btnRegister).setOnClickListener {
             startActivity(android.content.Intent(this, RegisterActivity::class.java))
@@ -53,52 +62,30 @@ class AppLoginActivity : AppCompatActivity() {
         tilPassword = findViewById(R.id.tilPassword)
         tilEmail = findViewById(R.id.tilEmail)
 
+        etEmail.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                UIUtils.errorDisplay(this@AppLoginActivity, tilEmail, etEmail, true, "Please input valid credentials")
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+        etPassword.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                UIUtils.errorDisplay(this@AppLoginActivity, tilPassword, etPassword, false, "Please input valid credentials")
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
     }
     fun login(){
-        if(etEmail.text.toString().isEmpty() || etPassword.text.toString().isEmpty()){
-            if (etEmail.text.toString().isEmpty()) {
-                tilEmail.isErrorEnabled = true
-                tilEmail.error = "Please input valid credentials"
-                tilEmail.setErrorIconDrawable(R.drawable.ic_warning)
-                tilEmail.setErrorTextColor(ContextCompat.getColorStateList(this, R.color.colorRed))
-                tilEmail.setErrorIconTintList(ContextCompat.getColorStateList(this, R.color.colorRed))
-                tilEmail.setBoxStrokeColorStateList(ContextCompat.getColorStateList(this, R.color.colorRed))
-            } else {
-                tilEmail.isErrorEnabled = false
-                tilEmail.error = null
-                tilEmail.setBoxStrokeColorStateList(
-                    ContextCompat.getColorStateList(this, R.color.til_stroke)
-                )
-            }
 
-            if (etPassword.text.toString().isEmpty()) {
-                tilPassword.isErrorEnabled = true
-                tilPassword.error = "Please input valid credentials"
-                tilPassword.setErrorIconDrawable(null)
-                tilPassword.setErrorTextColor(ContextCompat.getColorStateList(this, R.color.colorRed))
-                tilPassword.setErrorIconTintList(ContextCompat.getColorStateList(this, R.color.colorRed))
-                tilPassword.setBoxStrokeColorStateList(ContextCompat.getColorStateList(this, R.color.colorRed))
-            } else {
-                tilPassword.isErrorEnabled = false
-                tilPassword.error = null
-                tilPassword.setBoxStrokeColorStateList(
-                    ContextCompat.getColorStateList(this, R.color.til_stroke)
-                )
-            }
-
+        if (etEmail.text.toString().isEmpty() || etPassword.text.toString().isEmpty()) {
+            UIUtils.errorDisplay(this@AppLoginActivity, tilEmail, etEmail, true, "Please input valid credentials")
+            UIUtils.errorDisplay(this@AppLoginActivity, tilPassword, etPassword, false, "Please input valid credentials")
             return
         }
-
-        tilEmail.isErrorEnabled = false
-        tilEmail.error = null
-        tilEmail.setBoxStrokeColorStateList(
-            ContextCompat.getColorStateList(this, R.color.til_stroke)
-        )
-        tilPassword.isErrorEnabled = false
-        tilPassword.error = null
-        tilPassword.setBoxStrokeColorStateList(
-            ContextCompat.getColorStateList(this, R.color.til_stroke)
-        )
 
         val apiService = ConnectURL.api
         val user = LoginUser(
@@ -146,7 +133,5 @@ class AppLoginActivity : AppCompatActivity() {
         })
 
     }
-
-
 
 }
