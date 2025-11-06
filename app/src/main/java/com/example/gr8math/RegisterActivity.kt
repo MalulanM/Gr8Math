@@ -12,25 +12,15 @@ import android.widget.TextView
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import okhttp3.ResponseBody
 import retrofit2.Call
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.sql.Date
 import java.text.SimpleDateFormat
 import java.util.*
-import android.widget.Toast
 import android.util.Log
 import android.view.View
-import androidx.core.content.ContextCompat
+import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.User
+import com.example.gr8math.utils.ShowToast
 import com.example.gr8math.utils.UIUtils
 import com.google.android.material.textfield.TextInputLayout
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.*
-
 
 
 class RegisterActivity : AppCompatActivity() {
@@ -214,16 +204,15 @@ class RegisterActivity : AppCompatActivity() {
         val apiService = ConnectURL.api
         // API call
             val user = User(
-            firstName = firstNameText,
-            lastName = lastNameText,
-            emailAdd = emailText,
-            passwordHash = passwordText,
-            passwordHashConfirmation = confirmPassText,
-            gender = genderText,
-            birthdate = birthDateText,
-            roles = "Student",
-            LRN = LRNText
-        )
+                firstName = firstNameText,
+                lastName = lastNameText,
+                emailAdd = emailText,
+                passwordHash = passwordText,
+                passwordHashConfirmation = confirmPassText,
+                gender = genderText,
+                birthdate = birthDateText,
+                LRN = LRNText
+            )
 
         password.isEnabled = false
         confirmPassword.isEnabled = false

@@ -4,4 +4,13 @@
         <item>Male</item>
         <item>Female</item>
     </string-array>
+    <string-array name="teaching_pos_options">
+        <item>Teacher I</item>
+        <item>Teacher II</item>
+        <item>Teacher III</item>
+        <item>Teacher IV</item>
+        <item>Teacher V</item>
+        <item>Teacher VI</item>
+        <item>Teacher VII</item>
+    </string-array>
 </resources>

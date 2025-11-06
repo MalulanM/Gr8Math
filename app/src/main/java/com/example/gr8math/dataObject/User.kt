@@ -1,4 +1,4 @@
-package com.example.gr8math
+package com.example.gr8math.dataObject
 
 import com.google.gson.annotations.SerializedName
 
@@ -13,10 +13,10 @@ data class User(
     var emailAdd: String,
 
     @SerializedName("password_hash")
-    var passwordHash: String,
+    var passwordHash: String? = null,
 
     @SerializedName("password_hash_confirmation")
-    var passwordHashConfirmation: String,
+    var passwordHashConfirmation: String? = null,
 
     @SerializedName("gender")
     var gender: String,
@@ -24,9 +24,10 @@ data class User(
     @SerializedName("birthdate")
     var birthdate: String,
 
-    @SerializedName("roles")
-    var roles: String = "Student",
-
     @SerializedName("learners_ref_number")
-    var LRN: String? = null
+    var LRN: String? = null,
+
+    @SerializedName("teaching_position")
+    var teacherPosition: String? = null
 )
+

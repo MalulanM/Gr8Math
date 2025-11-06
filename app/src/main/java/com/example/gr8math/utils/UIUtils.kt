@@ -1,11 +1,17 @@
 package com.example.gr8math.utils
+
 import android.content.Context
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import com.google.android.material.textfield.TextInputLayout
-import kotlinx.coroutines.*
 import com.example.gr8math.R
+import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 object UIUtils {
 
@@ -60,7 +66,7 @@ object UIUtils {
         til: TextInputLayout,
         field: TextView,
         showIcon: Boolean,
-        errorText: String = "Please enter a password"
+        errorText: String = "Please input valid credentials"
     ) {
         val textValue = field.text?.toString()?.trim() ?: ""
         if (textValue.isEmpty()) {

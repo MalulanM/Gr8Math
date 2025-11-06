@@ -1,10 +1,11 @@
-package com.example.gr8math
+package com.example.gr8math.utils
 
 import android.content.Context
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.widget.TextView
 import android.widget.Toast
+import com.example.gr8math.R
 
 object ShowToast {
     fun showMessage(context: Context, message: String) {

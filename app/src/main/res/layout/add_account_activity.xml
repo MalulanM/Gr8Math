@@ -7,6 +7,65 @@
     android:layout_height="match_parent"
     android:background="@color/white">
 
+    <View
+        android:id="@+id/loadingLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#80000000"
+        android:elevation="8dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- White box for progress -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/loadingProgressBg"
+        android:layout_width="180dp"
+        android:layout_height="80dp"
+        android:alpha="1"
+        android:background="#ECF1F4"
+        android:elevation="8dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Circular progress indicator centered inside the box -->
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/loadingSpinner"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="10dp"
+            android:indeterminate="true"
+            app:indicatorColor="#8C78F6"
+            app:indicatorInset="0dp"
+            app:indicatorSize="50dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:trackColor="#E2E5E6"
+            app:trackCornerRadius="3dp"
+            app:trackThickness="6dp" />
+
+
+        <TextView
+            android:id="@+id/loadingText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="25dp"
+            android:fontFamily="@font/lexend"
+            android:text="Loading"
+            android:typeface="normal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/loadingSpinner"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <!-- Top bar: back + bold centered title -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
@@ -149,30 +208,34 @@
 
                     <!-- LRN -->
                     <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilLRN"
+                        android:id="@+id/tilTeachingPos"
                         style="@style/Gr8TextInputStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/field_spacing"
-                        android:hint="@string/hint_lrn"
+                        android:layout_marginTop="16dp"
                         app:boxBackgroundColor="@color/white"
                         app:boxBackgroundMode="outline"
                         app:boxStrokeColor="@color/til_stroke"
                         app:boxStrokeWidth="1dp"
                         app:boxStrokeWidthFocused="2dp"
+                        app:endIconMode="dropdown_menu"
                         app:hintTextColor="@color/til_hint">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/LRN"
+                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                            android:id="@+id/etTeachingPos"
                             android:layout_width="match_parent"
                             android:layout_height="52dp"
+                            android:contentDescription="@string/hint_teachingPos"
+                            android:entries="@array/teaching_pos_options"
                             android:fontFamily="@font/lexend"
-                            android:inputType="number"
-                            android:maxLines="1"
+                            android:hint="@string/hint_teachingPos"
+                            android:importantForAccessibility="yes"
+                            android:inputType="none"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
                             android:textColor="@android:color/black" />
                     </com.google.android.material.textfield.TextInputLayout>
+
 
                     <!-- Gender -->
                     <LinearLayout

@@ -1,4 +1,4 @@
-package com.example.gr8math
+package com.example.gr8math.dataObject
 
 import com.google.gson.annotations.SerializedName
 

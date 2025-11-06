@@ -7,19 +7,13 @@ import android.content.Intent
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
-import androidx.core.content.ContextCompat
 import com.google.android.material.textfield.TextInputLayout
-import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import retrofit2.Call
-import retrofit2.Callback
 import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
-import android.text.Editable
-import android.text.TextWatcher
+import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.LoginUser
+import com.example.gr8math.utils.ShowToast
 import com.example.gr8math.utils.UIUtils
 
 class AppLoginActivity : AppCompatActivity() {
@@ -28,10 +22,16 @@ class AppLoginActivity : AppCompatActivity() {
     lateinit var etPassword : TextView
     lateinit var tilPassword: TextInputLayout
     lateinit var tilEmail: TextInputLayout
+    lateinit var loadingLayout : View
+
+    lateinit var loadingProgress : View
+
+    lateinit var loadingText : TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.app_login_activity)   // <-- must match your XML file name
+        ConnectURL.init(this)
         // inside AppLoginActivity after setContentView(...)
 
         val toastMsg = intent.getStringExtra("toast_msg")
@@ -61,22 +61,9 @@ class AppLoginActivity : AppCompatActivity() {
         etPassword = findViewById(R.id.etPassword)
         tilPassword = findViewById(R.id.tilPassword)
         tilEmail = findViewById(R.id.tilEmail)
-
-        etEmail.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                UIUtils.errorDisplay(this@AppLoginActivity, tilEmail, etEmail, true, "Please input valid credentials")
-            }
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
-
-        etPassword.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                UIUtils.errorDisplay(this@AppLoginActivity, tilPassword, etPassword, false, "Please input valid credentials")
-            }
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
+        loadingLayout =  findViewById<View>(R.id.loadingLayout)
+        loadingProgress = findViewById<View>(R.id.loadingProgressBg)
+        loadingText = findViewById<TextView>(R.id.loadingText)
 
     }
     fun login(){
@@ -87,22 +74,32 @@ class AppLoginActivity : AppCompatActivity() {
             return
         }
 
-        val apiService = ConnectURL.api
+        val apiService = ConnectURL.publicApi
         val user = LoginUser(
             email = etEmail.text.toString(),
             password = etPassword.text.toString()
         )
-
+        btnLogin.isEnabled = false
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
         val call = apiService.loginUser(user)
         call.enqueue(object : retrofit2.Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 try {
                     val responseString = response.errorBody()?.string() ?: response.body()?.string()
 
-                    Log.e("LoginResponse", "Code: ${response.code()} | Body: ${responseString}")
+                    Log.e("LoginResponse", "${responseString}")
 
                     if (responseString.isNullOrEmpty()) {
                         ShowToast.showMessage(this@AppLoginActivity, "Empty response from server.")
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                        btnLogin.isEnabled = true
+                        return
+                    }
+
+                    if (!responseString.trimStart().startsWith("{")) {
+                        ShowToast.showMessage(this@AppLoginActivity, "Invalid response from server.")
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                        btnLogin.isEnabled = true
                         return
                     }
 
@@ -111,23 +108,41 @@ class AppLoginActivity : AppCompatActivity() {
                     val msg = jsonObj.optString("message", "No message from server")
 
                     if (success) {
+                        val data = jsonObj.optJSONObject("data")
+//                        val token = data.optString("token")
+                        val role = data.optString("role")
+                        val pref = getSharedPreferences("user_session", MODE_PRIVATE)
+//                        pref.edit().putString("auth_token", token).apply()
+                        ConnectURL.init(this@AppLoginActivity)
                         ShowToast.showMessage(this@AppLoginActivity, "Login Successful")
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            val intent = Intent(this@AppLoginActivity, AppLoginActivity::class.java)
+                            val intent = if(role == "student" || role == "teacher") {
+                                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                                Intent(this@AppLoginActivity, AppLoginActivity::class.java)
+                            } else {
+                                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                                Intent(this@AppLoginActivity, AccountManagementActivity::class.java)
+                            }
                             startActivity(intent)
                             finish()
                         }, 3000)
                     } else {
+                        btnLogin.isEnabled = true
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                         ShowToast.showMessage(this@AppLoginActivity, msg)
                     }
                 } catch (e: Exception) {
+                    btnLogin.isEnabled = true
                     Log.e("loginSession", "Exception: ${e.message}", e)
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     ShowToast.showMessage(this@AppLoginActivity, "An error occurred while handling the response.")
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                btnLogin.isEnabled = true
                 Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                 ShowToast.showMessage(this@AppLoginActivity, "Failed to connect to server. Check your internet connection.")
             }
         })

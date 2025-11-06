@@ -17,8 +17,8 @@
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_person_default_icon"
-            android:contentDescription="@string/lorem_ipsum" />
+            android:contentDescription="@string/lorem_ipsum"
+            android:src="@drawable/ic_person_default_icon" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -28,6 +28,7 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/lexend"
@@ -37,6 +38,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/role"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/lexend"
@@ -46,6 +48,7 @@
         </LinearLayout>
 
         <ImageButton
+            android:id="@+id/acceptBtn"
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:background="?attr/selectableItemBackgroundBorderless"
@@ -53,6 +56,7 @@
             android:src="@drawable/ic_approve_yellow" />
 
         <ImageButton
+            android:id="@+id/rejectBtn"
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:layout_marginStart="8dp"

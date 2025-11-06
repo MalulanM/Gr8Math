@@ -93,20 +93,20 @@
                         android:paddingBottom="8dp"
                         android:paddingTop="8dp">
 
-                        <!-- Example Item 1 -->
-                        <include layout="@layout/item_active_account" />
-                        <!-- Example Item 2 -->
-                        <include layout="@layout/item_active_account" />
-                        <!-- Example Item 3 -->
-                        <include layout="@layout/item_active_account" />
-                        <!-- Example Item 4 -->
-                        <include layout="@layout/item_active_account" />
-                        <!-- Example Item 5 -->
-                        <include layout="@layout/item_active_account" />
-                        <!-- Add more items as needed for a long scrolling list -->
-                        <include layout="@layout/item_active_account" />
-                        <include layout="@layout/item_active_account" />
-                        <include layout="@layout/item_active_account" />
+<!--                        &lt;!&ndash; Example Item 1 &ndash;&gt;-->
+<!--                        <include layout="@layout/item_active_account" />-->
+<!--                        &lt;!&ndash; Example Item 2 &ndash;&gt;-->
+<!--                        <include layout="@layout/item_active_account" />-->
+<!--                        &lt;!&ndash; Example Item 3 &ndash;&gt;-->
+<!--                        <include layout="@layout/item_active_account" />-->
+<!--                        &lt;!&ndash; Example Item 4 &ndash;&gt;-->
+<!--                        <include layout="@layout/item_active_account" />-->
+<!--                        &lt;!&ndash; Example Item 5 &ndash;&gt;-->
+<!--                        <include layout="@layout/item_active_account" />-->
+<!--                        &lt;!&ndash; Add more items as needed for a long scrolling list &ndash;&gt;-->
+<!--                        <include layout="@layout/item_active_account" />-->
+<!--                        <include layout="@layout/item_active_account" />-->
+<!--                        <include layout="@layout/item_active_account" />-->
 
                     </LinearLayout>
                 </LinearLayout>

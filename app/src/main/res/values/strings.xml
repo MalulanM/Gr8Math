@@ -20,6 +20,7 @@
     <string name="hint_last_name">Last Name</string>
     <string name="hint_lrn">Learner’s Reference Number</string>
     <string name="hint_gender">Gender</string>
+    <string name="hint_teachingPos">Teaching Position</string>
     <string name="hint_dob">01/01/1995</string> <!-- placeholder -->
     <string name="action_submit">Submit</string>
     <string name="action_next">Next</string>

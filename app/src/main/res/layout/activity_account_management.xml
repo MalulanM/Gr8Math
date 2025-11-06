@@ -113,9 +113,9 @@
                         android:paddingTop="8dp">
 
                         <!-- Hardcoded items to match the layout (for front-end only) -->
-                        <include layout="@layout/item_active_account" />
-                        <include layout="@layout/item_active_account" />
-                        <include layout="@layout/item_active_account" />
+<!--                        <include layout="@layout/item_active_account" />-->
+<!--                        <include layout="@layout/item_active_account" />-->
+<!--                        <include layout="@layout/item_active_account" />-->
 
                     </LinearLayout>
 
@@ -132,7 +132,8 @@
                         android:padding="16dp"
                         android:text="@string/see_more"
                         android:textColor="@color/colorSubtleText"
-                        android:textSize="12sp" />
+                        android:textSize="12sp"
+                        android:visibility="gone"/>
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
@@ -187,14 +188,27 @@
                         android:paddingTop="8dp"
                         android:visibility="visible"> <!-- This list is now visible by default -->
 
+                        <TextView
+                            android:id="@+id/tvNoRequest"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            android:fontFamily="@font/lexend"
+                            android:padding="16dp"
+                            android:text="No new request"
+                            android:textAlignment="center"
+                            android:textColor="@color/colorSubtleText"
+                            android:textSize="12sp" />
                         <!-- Hardcoded items to match the layout (for front-end only) -->
-                        <include layout="@layout/item_account_request" />
-                        <include layout="@layout/item_account_request" />
-                        <include layout="@layout/item_account_request" />
+<!--                        <include layout="@layout/item_account_request" />-->
+<!--                        <include layout="@layout/item_account_request" />-->
+<!--                        <include layout="@layout/item_account_request" />-->
 
                     </LinearLayout>
 
                     <!-- See More -->
+
+
                     <TextView
                         android:id="@+id/tvSeeMoreRequests"
                         android:layout_width="wrap_content"
@@ -207,7 +221,10 @@
                         android:padding="16dp"
                         android:text="@string/see_more"
                         android:textColor="@color/colorSubtleText"
-                        android:textSize="12sp" />
+                        android:textSize="12sp"
+                        android:visibility="gone"/>
+
+
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>

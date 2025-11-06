@@ -12,43 +12,27 @@ import android.widget.TextView
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import okhttp3.ResponseBody
 import retrofit2.Call
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.sql.Date
 import java.text.SimpleDateFormat
 import java.util.*
-import android.widget.Toast
 import android.util.Log
 import android.view.View
-import androidx.core.content.ContextCompat
 import com.example.gr8math.utils.UIUtils // Make sure this import path is correct
 import com.google.android.material.textfield.TextInputLayout
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.*
 // Make sure you have these classes (or remove the lines if you don't use them)
-import com.example.gr8math.AppLoginActivity
-import com.example.gr8math.ConnectURL
-import com.example.gr8math.ShowToast
-import com.example.gr8math.User
+import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.utils.ShowToast
+import com.example.gr8math.dataObject.User
 
 
 class AddAccountActivity : AppCompatActivity() {
     lateinit  var genderField: MaterialAutoCompleteTextView
     lateinit  var date: EditText
-    lateinit  var registerButton: Button
 
     lateinit var email: EditText
-    lateinit var password: EditText
-
-    lateinit var confirmPassword: EditText
     lateinit var firstName: EditText
     lateinit var lastName: EditText
-    lateinit var LRN: EditText
+
+    lateinit var teachingPos : MaterialAutoCompleteTextView
 
     lateinit var MessageBox : TextView
 
@@ -63,13 +47,15 @@ class AddAccountActivity : AppCompatActivity() {
     lateinit var tilEmail : TextInputLayout
     lateinit var tilFirstName : TextInputLayout
     lateinit var tilLastName : TextInputLayout
-    lateinit var tilLRN : TextInputLayout
+    lateinit var tilTeachingPos : TextInputLayout
     lateinit var tilGender : TextInputLayout
     lateinit var tilBirthDate : TextInputLayout
 
 
 
     var selectedGender: String = ""
+    var selectedTeachingPos: String = ""
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,6 +71,10 @@ class AddAccountActivity : AppCompatActivity() {
 
         genderField.setOnItemClickListener { parent, view, position, id ->
             selectedGender = parent.getItemAtPosition(position).toString()
+        }
+
+        teachingPos.setOnItemClickListener { parent, view, position, id ->
+            selectedTeachingPos = parent.getItemAtPosition(position).toString()
         }
 
         date.setOnClickListener {
@@ -117,8 +107,8 @@ class AddAccountActivity : AppCompatActivity() {
 
         addButton.setOnClickListener {
 
-            val fields = listOf(email, firstName, lastName, LRN, date, genderField)
-            val tils = listOf(tilEmail, tilFirstName, tilLastName, tilLRN, tilBirthDate, tilGender)
+            val fields = listOf(email, firstName, lastName, teachingPos, date, genderField)
+            val tils = listOf(tilEmail, tilFirstName, tilLastName, tilTeachingPos, tilBirthDate, tilGender)
 
             var hasError = false
             for (i in fields.indices) {
@@ -132,98 +122,49 @@ class AddAccountActivity : AppCompatActivity() {
             }
 
             if (!hasError) {
-                showPasswordRegistration()
+                UserRegister()
             }
 
         }
 
     }
 
-    fun showPasswordRegistration(){
-        // Assuming you have a password layout named this (from your RegisterActivity)
-        setContentView(R.layout.change_password_activity)
-        Init2()
-        // Find the toolbar on this new layout
-        val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
-        // Set its title (optional)
-        toolbar.title = "Create Password"
-        // Set its back button to go back to the info screen
-        toolbar.setNavigationOnClickListener { showRegisterInfo() }
-
-
-        val enableBtn = {
-            registerButton.isEnabled = password.text.toString().isNotEmpty() && confirmPassword.text.toString().isNotEmpty()
-        }
-
-        val keyListener = { _: Any, _:Any, _:Any ->
-            enableBtn()
-            false
-        }
-
-        password.setOnKeyListener(keyListener)
-        confirmPassword.setOnKeyListener(keyListener)
-
-        registerButton.setOnClickListener {
-            UserRegister()
-        }
-
-    }
 
     fun Init() {
         email = findViewById<EditText>(R.id.email)
         firstName = findViewById<EditText>(R.id.firstName)
         lastName = findViewById<EditText>(R.id.lastName)
-        LRN = findViewById<EditText>(R.id.LRN)
+        teachingPos = findViewById<MaterialAutoCompleteTextView>(R.id.etTeachingPos)
         date = findViewById<EditText>(R.id.etDob)
         genderField = findViewById<MaterialAutoCompleteTextView>(R.id.etGender)
         val items = listOf("Male", "Female")
+        val itemsTeachingPosition = listOf("Teacher I", "Teacher II","Teacher III", "Teacher IV", "Teacher V", "Teacher VI", "Teacher VII")
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, items)
+        val adapterTeachingPosition = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, itemsTeachingPosition)
         genderField.setAdapter(adapter)
+        teachingPos.setAdapter(adapterTeachingPosition)
         MessageBox = findViewById<TextView>(R.id.message)
         addButton = findViewById(R.id.btnAdd)
         tilEmail = findViewById(R.id.tilEmail)
         tilFirstName = findViewById(R.id.tilFirstName)
         tilLastName = findViewById(R.id.tilLastName)
-        tilLRN = findViewById(R.id.tilLRN)
+        tilTeachingPos = findViewById(R.id.tilTeachingPos)
         tilGender = findViewById(R.id.tilGender)
         tilBirthDate = findViewById(R.id.tilBirthdate)
+        loadingLayout = findViewById(R.id.loadingLayout)
+        loadingProgress = findViewById(R.id.loadingProgressBg)
+        loadingText = findViewById(R.id.loadingText)
+
     }
 
-    fun Init2(){
-        password = findViewById<EditText>(R.id.etNewPass)
-        confirmPassword = findViewById<EditText>(R.id.etRePass)
-        registerButton = findViewById<Button>(R.id.btnSave)
-        loadingLayout =  findViewById<View>(R.id.loadingLayout)
-        loadingProgress = findViewById<View>(R.id.loadingProgressBg)
-        loadingText = findViewById<TextView>(R.id.loadingText)
-    }
-
-    fun isValidPassword(password: String): Boolean {
-        // Assuming your password requirements are the same
-        val passwordPattern = Regex("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^A-Za-z\\d])[A-Za-z\\d[^A-Za-z\\d]]{8,16}\$")
-        return passwordPattern.matches(password)
-    }
 
     fun UserRegister() {
         val emailText = email.text.toString().trim()
-        val passwordText = password.text.toString().trim()
-        val confirmPassText = confirmPassword.text.toString().trim()
         val firstNameText = firstName.text.toString().trim()
         val lastNameText = lastName.text.toString().trim()
-        val LRNText = LRN.text.toString().trim()
+        val teacherPosition = selectedTeachingPos.trim()
         val birthDateText = date.text.toString().trim()
         val genderText = selectedGender.trim()
-
-
-        if(passwordText != confirmPassText){
-            ShowToast.showMessage(this@AddAccountActivity, "Passwords do not match")
-            return
-        }
-
-        if(!isValidPassword(passwordText)){
-            ShowToast.showMessage(this@AddAccountActivity, "Password Invalid")
-            return
-        }
 
         val apiService = ConnectURL.api
         // API call
@@ -231,20 +172,19 @@ class AddAccountActivity : AppCompatActivity() {
             firstName = firstNameText,
             lastName = lastNameText,
             emailAdd = emailText,
-            passwordHash = passwordText,
-            passwordHashConfirmation = confirmPassText,
             gender = genderText,
             birthdate = birthDateText,
-            roles = "Student", // You might want to change this role
-            LRN = LRNText
+            teacherPosition = teacherPosition
         )
 
-        password.isEnabled = false
-        confirmPassword.isEnabled = false
+       addButton.isEnabled =  false
         UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
-        val call = apiService.registerUser(user) // Assuming you use the same API endpoint
+        val call = apiService.registerAdmin(user) // Assuming you use the same API endpoint
         call.enqueue(object : retrofit2.Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                val responseString = response.body()?.string()?:response.errorBody()?.string()
+                val jsonObj = org.json.JSONObject(responseString)
+                val message = jsonObj.getString("message")
                 try {
                     Log.e(
                         "AddAccountResponse", // Changed log tag
@@ -254,21 +194,22 @@ class AddAccountActivity : AppCompatActivity() {
                     )
                     if (response.isSuccessful) {
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-
-                            // UPDATED: Show a toast and finish() instead of going to Login
-                            ShowToast.showMessage(this@AddAccountActivity, "Account successfully created.")
+                            val intent = Intent(this@AddAccountActivity, AccountManagementActivity::class.java)
+                            intent.putExtra("toast_msg", message)
                             UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                            startActivity(intent)
                             finish() // Closes this page and returns to Account Management
                         }, 800)
                     } else {
-                        ShowToast.showMessage(this@AddAccountActivity, "An error occurred while handling the response.")
-
+                        ShowToast.showMessage(this@AddAccountActivity, "${message}")
                         UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                        addButton.isEnabled = true
                     }
                 } catch (e: Exception) {
                     Log.e("addAccount", "Exception: ${e.message}", e)
                     ShowToast.showMessage(this@AddAccountActivity, "An error occurred while handling the response.")
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                   addButton.isEnabled = true
                 }
             }
 
@@ -277,6 +218,7 @@ class AddAccountActivity : AppCompatActivity() {
                 Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
                 ShowToast.showMessage(this@AddAccountActivity, "Failed to connect to server. Check your internet connection.")
                 UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+               addButton.isEnabled = true
             }
         })
     }
