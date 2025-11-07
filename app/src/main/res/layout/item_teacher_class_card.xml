@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="@color/colorAccent"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Card Title (e.g., "Section1") -->
+        <TextView
+            android:id="@+id/tvSectionName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lexend"
+            android:text="@string/placeholder_section"
+            android:textColor="@color/colorText"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            tools:text="Section1" />
+
+        <!-- Schedule (e.g., "11:00 AM - 12:30 PM") -->
+        <TextView
+            android:id="@+id/tvSchedule"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="@font/lexend"
+            android:text="@string/placeholder_schedule"
+            android:textColor="@color/colorText"
+            android:textSize="14sp"
+            tools:text="11:00 AM - 12:30 PM" />
+
+        <!-- Student Count (e.g., "40 students") -->
+        <TextView
+            android:id="@+id/tvStudentCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:fontFamily="@font/lexend"
+            android:text="@string/student_count"
+            android:textColor="@color/colorSubtleText"
+            android:textSize="14sp"
+            tools:text="40 students" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

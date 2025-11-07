@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This root is a CardView to get the rounded corners -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="32dp"
+    android:layout_marginEnd="32dp"
+    app:cardBackgroundColor="@color/colorLight"
+    app:cardCornerRadius="28dp"
+    app:cardElevation="8dp">
+
+    <!-- This LinearLayout holds the actual content -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Title and Close Button -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                style="@style/Gr8Title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="@string/class_code_title" />
+
+            <ImageButton
+                android:id="@+id/btnCloseDialog"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/class_code_close_desc"
+                android:src="@drawable/ic_close"
+                app:tint="@color/colorSubtleText" />
+        </RelativeLayout>
+
+        <!-- The Class Code -->
+        <TextView
+            android:id="@+id/tvClassCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/lexend"
+            android:gravity="center"
+            android:letterSpacing="0.2"
+            android:text="@string/class_code_placeholder"
+            android:textColor="@color/colorText"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            tools:text="XXXXXX" />
+
+        <!-- Copy Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCopyCode"
+            style="@style/Gr8ButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="24dp"
+            android:text="@string/class_code_copy" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

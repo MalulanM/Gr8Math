@@ -54,4 +54,34 @@
     <string name="reject_request">Reject Request</string>
     <string name="add_account_title">Add Account</string>
     <string name="add">Add Account</string>
+
+    <!-- Student Class Manager -->
+    <string name="class_manager_title">Class Manager</string>
+    <string name="add_classes">Add Classes</string>
+    <string name="placeholder_section">Section1</string>
+    <string name="placeholder_schedule">11:00 AM - 12:30 PM</string>
+    <string name="placeholder_teacher">Juan Dela Cruz</string>
+    <string name="add_class_title">Add Class</string>
+    <string name="add_class_code_hint">Add Class Code</string>
+    <string name="join_class">Join Class</string>
+
+    <!-- Teacher Class Manager -->
+    <string name="teacher_class_manager_title">Class Manager</string>
+    <string name="search_hint">Search</string>
+    <string name="no_search_results">No results</string>
+    <string name="student_count">%d students</string> <!-- %d will be replaced by a number -->
+    <!-- Teacher - Add Class -->
+    <string name="teacher_add_class_title">Add Class</string>
+    <string name="add_class_subtitle">Please enter the needed details.</string>
+    <string name="section_hint">Section</string>
+    <string name="class_time">Class Time</string>
+    <string name="number_of_students_hint">Number of Students</string>
+    <string name="create_class">Create Class</string>
+    <string name="time_start_hint">Start Time</string>
+    <string name="time_end_hint">End Time</string>
+    <!-- Teacher - Class Code Dialog -->
+    <string name="class_code_title">Class Code</string>
+    <string name="class_code_copy">Copy</string>
+    <string name="class_code_placeholder">XXXXXX</string>
+    <string name="class_code_close_desc">Close Dialog</string>
 </resources>

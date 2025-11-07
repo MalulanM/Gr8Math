@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This root must be a MaterialCardView to get the rounded corners -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    app:cardBackgroundColor="@color/colorLight"
+    app:cardCornerRadius="28dp"
+    app:cardElevation="8dp">
+
+    <!-- Your original ConstraintLayout goes inside the card -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent">
+
+        <!-- Top bar: back + centered title -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="0dp"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@android:color/transparent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:navigationIcon="@drawable/ic_arrow_back_24">
+
+            <!-- FIX: This LinearLayout centers the icon and title together -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/add_class_title"
+                    android:textAppearance="@style/TextAppearance.Gr8.ToolbarTitle"
+                    android:textColor="@color/colorText" />
+
+            </LinearLayout>
+
+        </com.google.android.material.appbar.MaterialToolbar>
+
+        <!-- Class Code Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilClassCode"
+            style="@style/Gr8TextInputStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            app:boxBackgroundColor="@color/white"
+            app:layout_constraintBottom_toTopOf="@+id/btnJoinClass"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/toolbar"
+            app:layout_constraintVertical_chainStyle="packed">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etClassCode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/lexend"
+                android:hint="@string/add_class_code_hint"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textColor="@color/colorText" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Join Class Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnJoinClass"
+            style="@style/Gr8ButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="32dp"
+            android:fontFamily="@font/lexend"
+            android:text="@string/join_class"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/tilClassCode"
+            app:layout_constraintStart_toStartOf="@id/tilClassCode"
+            app:layout_constraintTop_toBottomOf="@id/tilClassCode" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

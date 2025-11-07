@@ -17,10 +17,10 @@
             android:name=".SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math">
-            <intent-filter>
+            <!--<intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            </intent-filter>-->
         </activity>
 
         <!-- Login Activity -->
@@ -69,6 +69,40 @@
             android:name=".AddAccountActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
+
+        <!-- STUDENT'S CLASS MANAGER-->
+        <activity
+            android:name=".StudentClassManagerActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Gr8Math">
+        <!--<intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>-->
+        </activity>
+
+        <!-- TEACHER'S CLASS MANAGER -->
+        <activity
+            android:name=".TeacherClassManagerActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Gr8Math">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- (NEW) STUDENT'S ADD CLASS PAGE (as a dialog) -->
+        <activity
+            android:name=".StudentAddClassActivity"
+            android:exported="false"
+            android:theme="@style/Theme.App.Dialog.Floating" />
+
+        <!-- (NEW) TEACHER'S ADD CLASS PAGE (as a dialog) -->
+        <activity
+            android:name=".TeacherAddClassActivity"
+            android:exported="false"
+            android:theme="@style/Theme.App.Dialog.Floating" />
 
     </application>
 </manifest>

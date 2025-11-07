@@ -72,5 +72,18 @@
         <item name="android:textColor">@color/colorText</item>
     </style>
 
+    <!-- This is the new style for your floating dialog page -->
+    <style name="Theme.App.Dialog.Floating" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- This makes the window float -->
+        <item name="android:windowIsFloating">true</item>
+        <!-- This makes the background behind the window transparent -->
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!-- This removes the standard window title bar -->
+        <item name="android:windowNoTitle">true</item>
+        <!-- This ensures the dialog doesn't take up the *entire* screen -->
+        <item name="android:windowMinWidthMajor">90%</item>
+        <item name="android:windowMinWidthMinor">90%</item>
+    </style>
+
 
 </resources>
