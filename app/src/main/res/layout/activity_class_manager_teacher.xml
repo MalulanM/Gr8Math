@@ -89,7 +89,7 @@
 
                 <!-- This is where your class cards will go -->
                 <!-- We include one as a placeholder, just like your design -->
-                <include layout="@layout/item_teacher_class_card" />
+<!--                <include layout="@layout/item_teacher_class_card" />-->
 
             </LinearLayout>
         </ScrollView>
@@ -153,6 +153,7 @@
                 android:maxLines="1"
                 android:textColor="@color/colorText" />
 
+
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- "No results" View -->
@@ -167,26 +168,30 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tilSearch" />
+            app:layout_constraintTop_toBottomOf="@id/tilSearch"
+            tools:visibility="gone" />
 
         <LinearLayout
             android:id="@+id/llPastSearches"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:visibility="visible"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="@id/tilSearch"
             app:layout_constraintStart_toStartOf="@id/tilSearch"
-            app:layout_constraintTop_toBottomOf="@id/tilSearch">
+            app:layout_constraintTop_toBottomOf="@id/tilSearch"
+            tools:visibility="visible">
 
             <!-- Divider -->
             <View
+                android:id="@+id/space"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@drawable/past_search_divider" />
 
             <!-- Past Search 1 -->
             <TextView
+                android:id="@+id/pastSearch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
@@ -200,44 +205,12 @@
                 tools:ignore="HardcodedText" />
 
             <!-- Divider -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@drawable/past_search_divider" />
 
             <!-- Past Search 2 -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true"
-                android:fontFamily="@font/lexend"
-                android:padding="16dp"
-                android:text="Past Search 2"
-                android:textColor="@color/colorSubtleText"
-                android:textSize="14sp"
-                tools:ignore="HardcodedText" />
 
             <!-- Divider -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@drawable/past_search_divider" />
 
             <!-- Past Search 3 -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true"
-                android:fontFamily="@font/lexend"
-                android:padding="16dp"
-                android:text="Past Search 3"
-                android:textColor="@color/colorSubtleText"
-                android:textSize="14sp"
-                tools:ignore="HardcodedText" />
         </LinearLayout>
 
         <!-- Search Results List (Hidden by default) -->
@@ -253,7 +226,9 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tilSearch"
-            tools:listitem="@layout/item_teacher_class_card" />
+            tools:itemCount="2"
+            tools:listitem="@layout/item_teacher_class_card"
+            tools:visibility="gone" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

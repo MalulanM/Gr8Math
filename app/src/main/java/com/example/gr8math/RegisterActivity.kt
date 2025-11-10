@@ -101,7 +101,6 @@ class RegisterActivity : AppCompatActivity() {
         }
 
         nextButton.setOnClickListener {
-
             val fields = listOf(email, firstName, lastName, LRN, date, genderField)
             val tils = listOf(tilEmail, tilFirstName, tilLastName, tilLRN, tilBirthDate, tilGender)
 
@@ -109,7 +108,7 @@ class RegisterActivity : AppCompatActivity() {
             for (i in fields.indices) {
                 val field = fields[i]
                 val til = tils[i]
-                UIUtils.errorDisplay(this@RegisterActivity,til, field, true, "Please enter the needed details")
+                UIUtils.errorDisplay(this@RegisterActivity,til, field, true, "Please enter the needed details.")
                 if (field.text.toString().trim().isEmpty()) {
                     hasError = true
                 }

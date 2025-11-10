@@ -119,6 +119,8 @@ class ForgotPasswordActivity : AppCompatActivity() {
     }
 
     fun sendCode() {
+        txtSendCode.isEnabled = false
+        txtSendCode.isClickable = false
         txtSendCode.setBackgroundColor(ContextCompat.getColor(this, R.color.colorLight))
 
         val apiService = ConnectURL.api
@@ -132,6 +134,8 @@ class ForgotPasswordActivity : AppCompatActivity() {
 
                     if (rawResponse.isEmpty()) {
                         ShowToast.showMessage(this@ForgotPasswordActivity,"Empty response from server.")
+                        txtSendCode.isEnabled = true
+                        txtSendCode.isClickable = true
                         return
                     }
 
@@ -186,6 +190,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
     }
 
     fun verifyCode() {
+        verifyBtn.isEnabled = false
         val apiService = ConnectURL.api
         val call = apiService.verifyCode(emailInput.text.toString().trim(), codeInput.text.toString().trim())
         call.enqueue(object : retrofit2.Callback<ResponseBody> {
@@ -215,10 +220,12 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     Log.e("verifyCode", "Exception: ${e.message}", e)
                     ShowToast.showMessage(this@ForgotPasswordActivity, "An error occurred while processing the response.")
+                    verifyBtn.isEnabled = true
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                verifyBtn.isEnabled = true
                 Log.e("verifyCode", "onFailure: ${t.localizedMessage}", t)
                 ShowToast.showMessage(this@ForgotPasswordActivity, "Failed to connect to the server. Please check your internet connection.")
             }

@@ -37,7 +37,7 @@ class AccountRequestsListActivity : AppCompatActivity() {
             ) {
                 if (response.isSuccessful) {
                     val users = response.body()?.data ?: emptyList()
-                    ParentLayoutReq.removeAllViews() // Clear old items
+                    ParentLayoutReq.removeAllViews()
                     users.forEach { user ->
                         val itemView = layoutInflater.inflate(
                             R.layout.item_account_request,

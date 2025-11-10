@@ -7,7 +7,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ConnectURL {
-    private const val BASE_URL = "http://10.0.2.2:8000/"
+    private const val BASE_URL = "https://gr8mathbackend.onrender.com"
+//    http://10.0.2.2:8000/
     private var appContext: Context? = null
 
     fun init(context: Context) {

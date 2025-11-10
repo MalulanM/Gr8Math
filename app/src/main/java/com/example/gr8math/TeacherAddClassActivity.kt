@@ -4,20 +4,28 @@ import android.app.Dialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.ClassData
+import com.example.gr8math.utils.ShowToast
+import com.example.gr8math.utils.UIUtils
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import okhttp3.ResponseBody
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -27,15 +35,33 @@ class TeacherAddClassActivity : AppCompatActivity() {
     private lateinit var etStartTime: TextInputEditText
     private lateinit var etEndTime: TextInputEditText
 
+    private lateinit var etSection: TextInputEditText
+
+    private lateinit var etNumStudents: TextInputEditText
+
+    private lateinit var tilSection : TextInputLayout
+    private lateinit var tilStartTime : TextInputLayout
+    private lateinit var tilEndTime: TextInputLayout
+    private lateinit var tilNumStudents : TextInputLayout
+
+
+    private lateinit var btnCreateClass: Button
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_add_class)
-
+        val id = intent.getIntExtra("id",0)
         // Find views
         val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
         val createButton: Button = findViewById(R.id.btnCreateClass)
         etStartTime = findViewById(R.id.etStartTime)
         etEndTime = findViewById(R.id.etEndTime)
+        etSection = findViewById(R.id.etSection)
+        etNumStudents = findViewById(R.id.etNumStudents)
+        btnCreateClass = findViewById(R.id.btnCreateClass)
+        tilSection = findViewById(R.id.tilSection)
+        tilNumStudents = findViewById(R.id.tilNumStudents)
+        tilStartTime = findViewById(R.id.tilStartTime)
+        tilEndTime = findViewById(R.id.tilEndTime)
 
         // 1. Make the toolbar's back button work
         toolbar.setNavigationOnClickListener {
@@ -44,8 +70,22 @@ class TeacherAddClassActivity : AppCompatActivity() {
 
         // 2. Set click listener for the "Create Class" button
         createButton.setOnClickListener {
-            // UPDATED: This now shows the "Class Code" dialog
-            showClassCodeDialog()
+            val fields = listOf(etSection, etNumStudents, etStartTime, etEndTime)
+            val tils = listOf(tilSection, tilNumStudents, tilStartTime, tilEndTime)
+
+            var hasError = false
+            for (i in fields.indices) {
+                val field = fields[i]
+                val til = tils[i]
+                UIUtils.errorDisplay(this@TeacherAddClassActivity,til, field, true, "Please enter the needed details.")
+                if (field.text.toString().trim().isEmpty()) {
+                    hasError = true
+                }
+            }
+
+            if (!hasError) {
+                addClass(id)
+            }
         }
 
         // 3. Set click listeners for the time fields
@@ -60,7 +100,7 @@ class TeacherAddClassActivity : AppCompatActivity() {
     /**
      * Shows the "Class Code" dialog.
      */
-    private fun showClassCodeDialog() {
+    private fun showClassCodeDialog(code : String) {
         // Inflate the custom dialog layout
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_class_code, null)
 
@@ -68,9 +108,8 @@ class TeacherAddClassActivity : AppCompatActivity() {
         val btnCloseDialog = dialogView.findViewById<ImageButton>(R.id.btnCloseDialog)
         val btnCopyCode = dialogView.findViewById<Button>(R.id.btnCopyCode)
         val tvClassCode = dialogView.findViewById<TextView>(R.id.tvClassCode)
+        tvClassCode.text = code
 
-        // TODO: This is where you would get the *real* class code from your API
-        // For now, we'll use the placeholder text.
         val classCode = tvClassCode.text.toString()
 
         // Build the dialog
@@ -83,7 +122,9 @@ class TeacherAddClassActivity : AppCompatActivity() {
 
         // 1. Close Button
         btnCloseDialog.setOnClickListener {
-            dialog.dismiss() // Close the dialog
+            dialog.dismiss()
+            setResult(RESULT_OK)
+            finish()
         }
 
         // 2. Copy Button
@@ -96,7 +137,7 @@ class TeacherAddClassActivity : AppCompatActivity() {
             clipboard.setPrimaryClip(clip)
 
             // Show a "Copied!" message
-            Toast.makeText(this, "Copied to clipboard!", Toast.LENGTH_SHORT).show()
+            ShowToast.showMessage(this, "Copied to clipboard!")
 
             // Optional: Close the dialog after copying
             // dialog.dismiss()
@@ -130,8 +171,60 @@ class TeacherAddClassActivity : AppCompatActivity() {
             // Format the time into "h:mm a" (e.g., "7:00 AM")
             val format = SimpleDateFormat("h:mm a", Locale.getDefault())
             timeEditText.setText(format.format(calendar.time))
+
+            val backendFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+            timeEditText.tag = backendFormat.format(calendar.time)
         }
 
         picker.show(supportFragmentManager, "TIME_PICKER_TAG")
+    }
+
+    private fun addClass(id: Int){
+        val apiService = ConnectURL.api
+
+        setInputsEnabled(false)
+
+        val classData = ClassData (
+            adviserId = id,
+            className = etSection.text.toString(),
+            arrivalTime = etStartTime.tag.toString(),
+            dismissalTime = etEndTime.tag.toString(),
+            classSize = etNumStudents.text.toString().toInt()
+        )
+
+        val call = apiService.saveClass(classData)
+        call.enqueue(object : retrofit2.Callback<ResponseBody> {
+            override fun onResponse(call: retrofit2.Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                Log.e("Response_Ress", response.toString())
+                val responseString = response.errorBody()?.string() ?: response.body()?.string()
+                val jsonObj = org.json.JSONObject(responseString)
+                val success = jsonObj.optBoolean("success")
+                val message = jsonObj.optString("message")
+                val data = jsonObj.optString("data")
+                if (response.isSuccessful && success) {
+                    ShowToast.showMessage(this@TeacherAddClassActivity, message)
+
+                    showClassCodeDialog(data)
+                } else {
+                    ShowToast.showMessage(this@TeacherAddClassActivity, message)
+                    setInputsEnabled(true)
+                }
+            }
+            override fun onFailure(call: retrofit2.Call<ResponseBody>, t: Throwable) {
+                Log.e("Error_Response", "Error: ${t.message}")
+                ShowToast.showMessage(this@TeacherAddClassActivity, "Error: ${t.message}")
+                setInputsEnabled(true)
+            }
+        })
+
+
+    }
+
+    private fun setInputsEnabled(enabled: Boolean) {
+        etSection.isEnabled = enabled
+        etNumStudents.isEnabled = enabled
+        etStartTime.isEnabled = enabled
+        etEndTime.isEnabled = enabled
+        btnCreateClass.isEnabled = enabled
     }
 }

@@ -37,12 +37,15 @@ class AccountManagementActivity : AppCompatActivity() {
 
         // See More / Add Account Buttons
         findViewById<TextView>(R.id.tvSeeMoreActive).setOnClickListener {
+            finish()
             startActivity(Intent(this, ActiveAccountsListActivity::class.java))
         }
         findViewById<TextView>(R.id.tvSeeMoreRequests).setOnClickListener {
+            finish()
             startActivity(Intent(this, AccountRequestsListActivity::class.java))
         }
         findViewById<Button>(R.id.btnAddAccount).setOnClickListener {
+            finish()
             startActivity(Intent(this, AddAccountActivity::class.java))
         }
     }
@@ -56,7 +59,7 @@ class AccountManagementActivity : AppCompatActivity() {
     }
 
     private fun inflateRequest() {
-        val apiService = ConnectURL.publicApi
+        val apiService = ConnectURL.api
         apiService.getRequest().enqueue(object : retrofit2.Callback<AccountRequestResponse> {
             override fun onResponse(
                 call: Call<AccountRequestResponse>,

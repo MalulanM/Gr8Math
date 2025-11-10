@@ -1,6 +1,7 @@
 package com.example.gr8math.api
 
 import com.example.gr8math.AccountRequestResponse
+import com.example.gr8math.dataObject.ClassData
 import com.example.gr8math.dataObject.LoginUser
 import com.example.gr8math.dataObject.User
 import okhttp3.ResponseBody
@@ -11,6 +12,7 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
 
@@ -52,4 +54,42 @@ interface ApiService {
 
     @POST("api/admin/reject-request/{id}")
     fun rejectRequest(@Path("id") userId: Int): Call<ResponseBody>
+
+    @GET("api/classes/display-class")
+    fun getClasses(
+        @Query("user_id") userId: Int,
+        @Query("role") role: String,
+        @Query("search") searchTerm : String? = null
+    ): Call<ResponseBody>
+
+
+    @POST("api/teacher/store")
+    fun saveClass(@Body classData : ClassData): Call<ResponseBody>
+
+    @FormUrlEncoded
+    @POST("api/search/record-search-history")
+    fun recordSearch(
+        @Field("user_id") userId: Int,
+        @Field("search_term") searchTerm: String
+    ): Call<ResponseBody>
+
+    @GET("api/search/search-history")
+    fun getSearchHistory(@Query("user_id") userId: Int): Call<ResponseBody>
+
+    @GET("api/search/suggestions")
+    fun getUserSuggestions(
+        @Query("user_id") userId: Int,
+        @Query("q") query: String,
+        @Query("role") role: String
+    ): Call<ResponseBody>
+
+    @FormUrlEncoded
+    @POST("api/student/join-class")
+    fun joinClass(
+        @Field("user_id") userId: Int,
+        @Field("code") code: String
+    ): Call<ResponseBody>
+
+
+
 }

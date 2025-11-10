@@ -87,7 +87,7 @@ class AppLoginActivity : AppCompatActivity() {
                 try {
                     val responseString = response.errorBody()?.string() ?: response.body()?.string()
 
-                    Log.e("LoginResponse", "${responseString}")
+//                    Log.e("LoginResponse", "${responseString}")
 
                     if (responseString.isNullOrEmpty()) {
                         ShowToast.showMessage(this@AppLoginActivity, "Empty response from server.")
@@ -109,23 +109,29 @@ class AppLoginActivity : AppCompatActivity() {
 
                     if (success) {
                         val data = jsonObj.optJSONObject("data")
+                        val user =  data.optJSONObject("user")
 //                        val token = data.optString("token")
                         val role = data.optString("role")
+                        val id = user.optInt("id")
                         val pref = getSharedPreferences("user_session", MODE_PRIVATE)
 //                        pref.edit().putString("auth_token", token).apply()
                         ConnectURL.init(this@AppLoginActivity)
-                        ShowToast.showMessage(this@AppLoginActivity, "Login Successful")
+
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            val intent = if(role == "student" || role == "teacher") {
-                                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                                Intent(this@AppLoginActivity, AppLoginActivity::class.java)
-                            } else {
-                                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                                Intent(this@AppLoginActivity, AccountManagementActivity::class.java)
+                            val nextIntent = when(role) {
+                                "student" -> Intent(this@AppLoginActivity, StudentClassManagerActivity::class.java)
+                                "teacher" -> Intent(this@AppLoginActivity, TeacherClassManagerActivity::class.java)
+                                else -> Intent(this@AppLoginActivity, AccountManagementActivity::class.java)
                             }
-                            startActivity(intent)
+                            nextIntent.putExtra("toast_msg", msg)
+                            nextIntent.putExtra("id", id)
+                            nextIntent.putExtra("role", role)
+
+                            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                            startActivity(nextIntent)
                             finish()
                         }, 3000)
+
                     } else {
                         btnLogin.isEnabled = true
                         UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
@@ -133,7 +139,7 @@ class AppLoginActivity : AppCompatActivity() {
                     }
                 } catch (e: Exception) {
                     btnLogin.isEnabled = true
-                    Log.e("loginSession", "Exception: ${e.message}", e)
+//                    Log.e("loginSession", "Exception: ${e.message}", e)
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     ShowToast.showMessage(this@AppLoginActivity, "An error occurred while handling the response.")
                 }

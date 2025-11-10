@@ -19,7 +19,6 @@ class ActiveAccountsListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Set the layout file for this activity
         setContentView(R.layout.activity_active_accounts_list)
         ParentLayoutActive = findViewById(R.id.activeAccountsContainer)
         inflateActive()
