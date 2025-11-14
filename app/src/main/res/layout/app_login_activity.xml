@@ -19,19 +19,24 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/topGuide"/>
 
-    <!-- red area height ≈45% -->
+    <!--
+      FIX: Changed Guideline from fixed 329dp to a flexible 45%
+    -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/topGuide"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_begin="329dp" />
+        app:layout_constraintGuide_percent="0.45" />
 
     <!-- Logo -->
     <ImageView
         android:id="@+id/logo"
-        android:layout_width="220dp"
-        android:layout_height="220dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        app:layout_constraintWidth_percent="0.6"
+        app:layout_constraintWidth_max="300dp"
         android:src="@drawable/ic_gr8_logo"
         android:contentDescription="@string/app_name"
         app:layout_constraintTop_toTopOf="@id/topBand"
@@ -40,7 +45,6 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- White card -->
-
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card"
         android:layout_width="0dp"
@@ -217,7 +221,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/loadingSpinner"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="HardcodedText" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

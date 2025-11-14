@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Gr8Math" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.Gr8Math" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="android:fontFamily">@font/lexend</item>
         <item name="fontFamily">@font/lexend</item>
 
@@ -32,6 +32,12 @@
         <item name="boxCornerRadiusBottomStart">8dp</item>
         <item name="boxCornerRadiusBottomEnd">8dp</item>
         <item name="hintTextColor">@color/til_hint</item>
+    </style>
+
+    <style name="Gr8PickerEditTextStyle">
+        <item name="android:focusable">false</item>
+        <item name="android:clickable">true</item>
+        <item name="android:inputType">none</item>
     </style>
 
     <style name="Gr8ButtonStyle" parent="Widget.MaterialComponents.Button">
@@ -73,7 +79,7 @@
     </style>
 
     <!-- This is the new style for your floating dialog page -->
-    <style name="Theme.App.Dialog.Floating" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.App.Dialog.Floating" parent="Theme.Gr8Math">
         <!-- This makes the window float -->
         <item name="android:windowIsFloating">true</item>
         <!-- This makes the background behind the window transparent -->

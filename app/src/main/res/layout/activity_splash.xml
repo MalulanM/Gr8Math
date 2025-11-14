@@ -6,40 +6,31 @@
     android:layout_height="match_parent"
     android:background="@color/colorRed">
 
-    <!-- Top red band (for design purposes) -->
-
-    <!-- Red area height ≈45% -->
-
-    <View
-        android:id="@+id/topBand"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@color/colorRed"
-        app:layout_constraintBottom_toTopOf="@id/topGuide"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/topGuide"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_begin="700dp" /> <!-- Adjust this value for the height -->
+    <!--
+    FIXES:
+    1. Removed the fixed 700dp Guideline and the extra <View>
+    2. Set logo width to 70% of the screen (app:layout_constraintWidth_percent)
+    3. Set logo height to "wrap_content" to maintain aspect ratio
+    4. Created a vertical "packed" chain to group the logo and text together
+    5. Centered this new group vertically in the parent
+    -->
 
     <!-- Logo (Centered) -->
     <ImageView
         android:id="@+id/logo"
-        android:layout_width="292dp"
-        android:layout_height="256dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
         android:contentDescription="@string/app_name"
         android:src="@drawable/ic_gr8_logo"
-        app:layout_constraintBottom_toTopOf="@id/topGuide"
+        app:layout_constraintBottom_toTopOf="@+id/gr8MathText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintWidth_percent="0.7"
+        app:layout_constraintWidth_max="550dp" /> <!-- FIX: This stops the logo from growing too large -->
 
     <!-- Gr8 Math Text below the logo -->
     <TextView
@@ -51,8 +42,10 @@
         android:textColor="@android:color/white"
         android:textSize="38sp"
         android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/logo" />
+        app:layout_constraintTop_toBottomOf="@id/logo"
+        tools:ignore="HardcodedText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
