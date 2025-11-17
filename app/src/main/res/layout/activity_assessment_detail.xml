@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorLight"
+    tools:context=".AssessmentDetailActivity">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@android:color/transparent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navigationIcon="@drawable/ic_arrow_back_24"
+        app:titleCentered="true"
+        app:titleTextAppearance="@style/TextAppearance.Gr8.ToolbarTitle"
+        app:titleTextColor="@color/colorLight"
+        tools:title="Assessment" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStartAssessment"
+        style="@style/Gr8ButtonStyle"
+        android:layout_width="0dp"
+        android:layout_height="52dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="32dp"
+        android:text="@string/start_assessment_test"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="16dp"
+        app:layout_constraintBottom_toTopOf="@id/btnStartAssessment"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintVertical_bias="0.4">
+
+        <TextView
+            android:id="@+id/tvAssessmentNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lexend"
+            android:textColor="@color/colorText"
+            android:textSize="20sp"
+            tools:text="Assessment 2" />
+
+        <TextView
+            android:id="@+id/tvAssessmentTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lexend"
+            android:textColor="@color/colorText"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            tools:text="Polynomial" />
+
+        <TextView
+            android:id="@+id/tvNumberOfItems"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:fontFamily="@font/lexend"
+            android:textColor="@color/colorSubtleText"
+            android:textSize="14sp"
+            tools:text="Number of Items: 10" />
+
+        <TextView
+            android:id="@+id/tvStartsAt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/lexend"
+            android:textColor="@color/colorText"
+            android:textSize="14sp"
+            tools:text="Starts: 1/1/2026 - 11:00 AM" />
+
+        <TextView
+            android:id="@+id/tvEndsAt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="@font/lexend"
+            android:textColor="@color/colorText"
+            android:textSize="14sp"
+            tools:text="Ends: 1/1/2026 - 12:00 PM" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

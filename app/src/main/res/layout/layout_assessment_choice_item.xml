@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginBottom="8dp">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilAnswerChoice"
+        style="@style/Gr8TextInputStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/answer_choice_hint"
+        app:boxBackgroundColor="@color/colorAccent"
+        app:startIconDrawable="@drawable/radio_button_selector"
+        app:startIconCheckable="true">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etAnswerChoice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lexend"
+            android:inputType="textCapSentences|textMultiLine"
+            android:textColor="@color/colorText" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>

@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Login screen -->
     <string name="app_name">Gr8Math</string>
     <string name="title_small_login">Login</string>
@@ -39,6 +39,8 @@
     <string name="fp_save">Save Password</string>
     <string name="fp_password_requirements">Please create a new password. The password needs to follow the following requirements:\n\n- Minimum of 8 and maximum of 16 characters\n- At least one uppercase letter\n- At least one number and one special character</string>
     <string name="cp_title">Create Password</string>
+    <!-- Terms and Conditions Dialog -->
+    <string name="terms_and_conditions_checkbox">By checking this box, you are agreeing to our Terms and Conditions and Privacy Policy.</string>
 
     <!-- Account Management -->
     <string name="account_management_title">Account Management</string>
@@ -58,7 +60,7 @@
     <!-- Student Class Manager -->
     <string name="class_manager_title">Class Manager</string>
     <string name="add_classes">Add Classes</string>
-    <string name="placeholder_section">Section1</string>
+    <string name="placeholder_section" tools:ignore="Typos">Section1</string>
     <string name="placeholder_schedule">11:00 AM - 12:30 PM</string>
     <string name="placeholder_teacher">Juan Dela Cruz</string>
     <string name="add_class_title">Add Class</string>
@@ -84,4 +86,87 @@
     <string name="class_code_copy">Copy</string>
     <string name="class_code_placeholder">XXXXXX</string>
     <string name="class_code_close_desc">Close Dialog</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_class">Class</string>
+    <string name="nav_badges">Badges</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="nav_grades">Grades</string>
+
+    <!-- Class Page -->
+    <string name="class_page_title_placeholder">Section 1</string>
+    <string name="play_a_game">Play a Game</string>
+    <string name="lesson_week_placeholder">Week 1</string>
+    <string name="lesson_title_placeholder">Lesson Title</string>
+    <string name="lesson_desc_placeholder">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris pretium…</string>
+    <string name="assessment_placeholder">Assessment 1</string>
+    <string name="add_button">Add</string>
+    <string name="edit_lesson">Edit Lesson</string>
+
+    <!-- Teacher - Add Options Dialog -->
+    <string name="add_options_title">Add Options</string>
+    <string name="option_write_lesson">Write a Lesson</string>
+    <string name="option_create_assessment">Create an Assessment Test</string>
+    <string name="option_lesson_log">Daily Lesson Log</string>
+    <string name="proceed">Proceed</string>
+
+    <!-- Teacher - Write a Lesson Page -->
+    <string name="write_lesson_title">Write a Lesson</string>
+    <string name="week_number_hint">Week Number</string>
+    <string name="lesson_title_hint">Lesson Title</string>
+    <string name="next_button">Next</string>
+
+    <!-- Teacher - Lesson Content Page-->
+    <string name="lesson_content_title">Lesson Content</string>
+    <string name="add_media">Add Media</string>
+    <string name="save">Save</string>
+    <string name="lesson_content_hint">Lorem Ipsum</string>
+    <string name="dialog_save_message">Are you sure you want to save?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="discard_title">Discard changes?</string>
+    <string name="discard_message">You have unsaved content. If you go back, your changes will be lost.</string>
+    <string name="discard_action">Discard</string>
+    <string name="cancel_action">Cancel</string>
+
+    <!-- Teacher - Lesson See More Page-->
+    <string name="lesson_detail_title">Lesson</string>
+    <string name="lesson_full_desc_placeholder">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas luctus lectus dui. Vestibulum accumsan sapien et ex varius, in rhoncus metus mollis. Aliquam turpis eros, fringilla convallis convallis eu, finibus at ligula.</string>
+
+    <!-- Teacher - Edit A Lesson Dialog Page-->
+    <string name="edit_lesson_title">Edit a Lesson</string>
+    <string name="error_blank_field">Please enter the needed details.</string>
+
+    <!-- Teacher - Assessment Dialog Page-->
+    <string name="create_assessment_title">Assessment Test</string>
+    <string name="assessment_number_hint">Assessment Number</string>
+    <string name="assessment_title_hint">Assessment Title</string>
+    <string name="available_from_hint">Available From</string>
+    <string name="available_until_hint">Available Until</string>
+    <string name="publish_assessment_test">Publish Assessment Test</string>
+    <string name="add_question">Add Question</string>
+    <string name="question_hint">Question</string>
+    <string name="add_choices">Add Choices</string>
+    <string name="answer_key">Answer Key</string>
+    <string name="answer_choice_hint">Answer Choice</string>
+    <string name="select_answer_key_title">Select Answer Key</string>
+    <string name="dialog_save_assessment_message">Are you sure you want to save this assessment?</string>
+    <string name="dialog_discard_assessment_title">Discard Changes?</string>
+    <string name="dialog_discard_assessment_message">You have unsaved content. If you go back, your changes will be lost.</string>
+
+    <string name="assessment_detail_title">Assessment</string>
+    <string name="number_of_items">Number of Items: %d</string>
+    <string name="starts_at">Starts: %s</string>
+    <string name="ends_at">Ends: %s</string>
+    <string name="start_assessment_test">Start Assessment Test</string>
+
+    <string name="default_timer">00:00</string>
+    <string name="previous_button">Previous</string>
+    <string name="dialog_review_title">Review Answers</string>
+    <string name="dialog_review_message">Do you want to review your answers?</string>
+
+    <string name="assessment_results_title">Results</string>
+    <string name="assessment_completed">Assessment Test completed!</string>
+    <string name="score">Score: %d</string>
+    <string name="date_accomplished">Date Accomplished: %s</string>
 </resources>

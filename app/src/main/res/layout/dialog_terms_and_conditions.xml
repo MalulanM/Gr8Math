@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This root is a CardView to get the rounded corners -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="32dp"
+    android:layout_marginEnd="32dp"
+    app:cardBackgroundColor="@color/colorLight"
+    app:cardCornerRadius="28dp"
+    app:cardElevation="8dp">
+
+    <!-- This LinearLayout holds the actual content -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!--
+          Checkbox for Terms. The text comes from your strings.xml.
+          We use "app:buttonTint" to make the checkbox yellow.
+        -->
+        <CheckBox
+            android:id="@+id/cbTerms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lexend"
+            android:text="@string/terms_and_conditions_checkbox"
+            android:textColor="@color/colorText"
+            android:textSize="14sp"
+            app:buttonTint="@color/saffron" />
+
+        <!-- Proceed Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnProceed"
+            style="@style/Gr8ButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="24dp"
+            android:enabled="false"
+            android:text="@string/proceed"
+            app:backgroundTint="@color/btn_primary_state" />
+        <!-- Using the state selector makes it blue when enabled -->
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

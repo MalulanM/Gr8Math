@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This root is a CardView to get the rounded corners -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="32dp"
+    android:layout_marginEnd="32dp"
+    app:cardBackgroundColor="@color/colorLight"
+    app:cardCornerRadius="28dp"
+    app:cardElevation="8dp">
+
+    <!-- This LinearLayout holds the actual content -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Close Button -->
+        <ImageButton
+            android:id="@+id/btnCloseDialog"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="end"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/class_code_close_desc"
+            android:src="@drawable/ic_close"
+            app:tint="@color/colorSubtleText" />
+
+        <!-- Radio Group for Options -->
+        <RadioGroup
+            android:id="@+id/rgOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
+            <RadioButton
+                android:id="@+id/rbWriteLesson"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/lexend"
+                android:text="@string/option_write_lesson"
+                android:textColor="@color/colorText"
+                android:textSize="16sp" />
+
+            <RadioButton
+                android:id="@+id/rbCreateAssessment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/lexend"
+                android:text="@string/option_create_assessment"
+                android:textColor="@color/colorText"
+                android:textSize="16sp" />
+
+            <RadioButton
+                android:id="@+id/rbLessonLog"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/lexend"
+                android:text="@string/option_lesson_log"
+                android:textColor="@color/colorText"
+                android:textSize="16sp" />
+
+        </RadioGroup>
+
+        <!-- Proceed Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnProceed"
+            style="@style/Gr8ButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="24dp"
+            android:text="@string/proceed" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
