@@ -29,6 +29,8 @@ import java.util.Locale
 
 class TeacherClassPageActivity : AppCompatActivity() {
 
+    private lateinit var bottomNav: BottomNavigationView
+
     // Launcher for CREATING a new lesson
     private val lessonContentLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -64,8 +66,38 @@ class TeacherClassPageActivity : AppCompatActivity() {
         }
 
         // --- Setup Bottom Navigation ---
-        val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
+        bottomNav = findViewById(R.id.bottom_navigation)
         bottomNav.selectedItemId = R.id.nav_class
+
+        // --- Handle Bottom Navigation Item Clicks ---
+        bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_class -> {
+                    // Already on the Class page
+                    true
+                }
+                R.id.nav_participants -> {
+                    // Navigate to Participants Activity
+                    Toast.makeText(this, "Participants clicked", Toast.LENGTH_SHORT).show()
+                    // startActivity(Intent(this, ParticipantsActivity::class.java))
+                    true
+                }
+                R.id.nav_notifications -> {
+                    // Navigate to Notifications Activity
+                    startActivity(Intent(this, TeacherNotificationsActivity::class.java))
+                    // We return false here so the icon doesn't stay highlighted on this page
+                    // while the new activity opens on top of it.
+                    false
+                }
+                R.id.nav_dll -> {
+                    // Navigate to DLL (Daily Lesson Log) Activity
+                    Toast.makeText(this, "DLL clicked", Toast.LENGTH_SHORT).show()
+                    // startActivity(Intent(this, DLLActivity::class.java))
+                    true
+                }
+                else -> false
+            }
+        }
 
         // --- Setup Floating "Add" Button ---
         val btnAdd = findViewById<Button>(R.id.btnAdd)
@@ -109,14 +141,20 @@ class TeacherClassPageActivity : AppCompatActivity() {
         iconAssessment.contentDescription = getString(R.string.assessment_placeholder)
         titleAssessment.text = getString(R.string.assessment_placeholder)
 
-        // --- NEW CODE: Set click listener for the assessment arrow ---
+        // --- Set click listener for the assessment arrow ---
         val ivArrow = assessmentCard.findViewById<ImageView>(R.id.ivArrow)
         ivArrow.setOnClickListener {
-            // --- TODO: Pass real assessment ID/data ---
             val intent = Intent(this, AssessmentDetailActivity::class.java)
             startActivity(intent)
         }
-        // --- END OF NEW CODE ---
+    }
+
+    // --- FIX: Reset the navigation item when returning to this page ---
+    override fun onResume() {
+        super.onResume()
+        if (::bottomNav.isInitialized) {
+            bottomNav.selectedItemId = R.id.nav_class
+        }
     }
 
     /**

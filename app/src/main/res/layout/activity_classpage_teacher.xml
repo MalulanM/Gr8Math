@@ -27,14 +27,14 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/white"
-
         app:itemIconTint="@color/bottom_nav_color_selector"
         app:itemTextColor="@color/bottom_nav_color_selector"
         app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_nav_menu" />
+
+        app:menu="@menu/bottom_nav_menu_teacher" />
 
     <!-- Scrollable content area -->
     <ScrollView

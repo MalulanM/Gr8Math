@@ -169,4 +169,30 @@
     <string name="assessment_completed">Assessment Test completed!</string>
     <string name="score">Score: %d</string>
     <string name="date_accomplished">Date Accomplished: %s</string>
+
+    <!-- Notification Page-->
+    <string name="notifications_title">Notifications</string>
+    <string name="mark_all_read">Mark all as read</string>
+    <string name="notification_settings_title">Notifications and Reminders</string>
+    <string name="enable_class_schedule">Enable Class Schedule Reminder</string>
+    <string name="enable_student_submission">Enable Student Submission Notification</string>
+
+    <string name="notif_title_1">Time for class!</string>
+    <string name="notif_desc_1">You have a class in Section 1.</string>
+    <string name="notif_title_2">Student Submission</string>
+    <string name="notif_desc_2">A student submitted their work</string>
+
+    <string name="enable_posted_lesson">Enable Posted Lesson Notification</string>
+    <string name="enable_posted_assessment">Enable Posted Assessment Notification</string>
+
+    <string name="hi_user">Hi, %s!</string>
+    <string name="account_settings">Account Settings</string>
+    <string name="notifications_and_reminders">Notifications and Reminders</string>
+    <string name="terms_and_conditions">Terms and Conditions</string>
+    <string name="privacy_policy">Privacy Policy</string>
+
+    <string name="enable_account_approval">Enable Account Approval Request Notifications</string>
+
+    <string name="notif_new_request">New Request!</string>
+    <string name="notif_new_request_desc">There is a new account request.</string>
 </resources>

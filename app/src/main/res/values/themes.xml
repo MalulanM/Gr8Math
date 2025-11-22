@@ -40,6 +40,25 @@
         <item name="android:inputType">none</item>
     </style>
 
+    <style name="Shape.Gr8.Rounded28" parent="">
+        <item name="cornerSize">28dp</item>
+    </style>
+
+    <style name="Theme.Gr8.TimePicker.Blue" parent="ThemeOverlay.MaterialComponents.TimePicker">
+        <item name="colorSurface">@color/white</item> <item name="colorPrimary">@color/colorMatisse</item> <item name="colorOnPrimary">@color/white</item>       <item name="colorOnSurface">@color/colorText</item>   <item name="shapeAppearanceMediumComponent">@style/Shape.Gr8.Rounded28</item>
+
+        <item name="buttonBarPositiveButtonStyle">@style/Button.Gr8.TimePicker.Blue</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Button.Gr8.TimePicker.Blue</item>
+
+        <item name="textInputStyle">@style/Gr8TextInputStyle</item>
+    </style>
+
+    <style name="Button.Gr8.TimePicker.Blue" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/colorMatisse</item>
+        <item name="android:fontFamily">@font/lexend</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <style name="Gr8ButtonStyle" parent="Widget.MaterialComponents.Button">
         <item name="cornerRadius">12dp</item>
         <item name="android:textAllCaps">false</item>

@@ -141,6 +141,21 @@
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
+        <activity
+            android:name=".TeacherNotificationsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".StudentNotificationsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".FacultyNotificationsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
     </application>
 </manifest>
 

@@ -6,44 +6,19 @@
     android:layout_height="match_parent"
     android:background="@color/colorLight">
 
-    <!-- Top bar: Centered Icon + Title -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
         android:background="@android:color/transparent"
+        app:navigationIcon="@drawable/ic_menu"
+        app:title="@string/account_management_title"
+        app:titleCentered="true"
+        app:titleTextAppearance="@style/TextAppearance.Gr8.ToolbarTitle"
+        app:titleTextColor="@color/colorText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <!-- This LinearLayout holds the icon and title together -->
-        <!-- and is centered inside the Toolbar -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginEnd="8dp"
-                android:contentDescription="@string/account_management_title"
-                android:src="@drawable/ic_icon_acc_manage"
-                app:tint="@color/colorMatisse" />
-            <!-- Note: You can remove app:tint if your icon is already blue -->
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/account_management_title"
-                android:textAppearance="@style/TextAppearance.Gr8.ToolbarTitle"
-                android:textColor="@color/colorText" />
-
-        </LinearLayout>
-
-    </com.google.android.material.appbar.MaterialToolbar>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ScrollView
         android:layout_width="0dp"
@@ -62,7 +37,6 @@
             android:paddingEnd="8dp"
             android:paddingBottom="16dp">
 
-            <!-- Active Accounts Card -->
             <com.google.android.material.card.MaterialCardView
                 style="@style/Gr8Card"
                 android:layout_width="match_parent"
@@ -73,7 +47,6 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <!-- Card Header -->
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -104,7 +77,6 @@
                             android:textSize="12sp" />
                     </RelativeLayout>
 
-                    <!-- List of Active Accounts -->
                     <LinearLayout
                         android:id="@+id/active_accounts_list"
                         android:layout_width="match_parent"
@@ -112,14 +84,8 @@
                         android:orientation="vertical"
                         android:paddingTop="8dp">
 
-                        <!-- Hardcoded items to match the layout (for front-end only) -->
-<!--                        <include layout="@layout/item_active_account" />-->
-<!--                        <include layout="@layout/item_active_account" />-->
-<!--                        <include layout="@layout/item_active_account" />-->
-
                     </LinearLayout>
 
-                    <!-- See More -->
                     <TextView
                         android:id="@+id/tvSeeMoreActive"
                         android:layout_width="wrap_content"
@@ -138,7 +104,6 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Account Requests Card -->
             <com.google.android.material.card.MaterialCardView
                 style="@style/Gr8Card"
                 android:layout_width="match_parent"
@@ -150,7 +115,6 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <!-- Card Header -->
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -166,7 +130,6 @@
                             android:text="@string/account_requests" />
                     </RelativeLayout>
 
-                    <!-- "No new requests" View -->
                     <TextView
                         android:id="@+id/tvNoRequests"
                         android:layout_width="match_parent"
@@ -177,16 +140,15 @@
                         android:text="@string/no_new_requests"
                         android:textColor="@color/colorSubtleText"
                         android:textSize="14sp"
-                        android:visibility="gone" /> <!-- FIX: Set to "gone" to be hidden by default -->
+                        android:visibility="gone" />
 
-                    <!-- List of Account Requests -->
                     <LinearLayout
                         android:id="@+id/account_requests_list"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:paddingTop="8dp"
-                        android:visibility="visible"> <!-- This list is now visible by default -->
+                        android:visibility="visible">
 
                         <TextView
                             android:id="@+id/tvNoRequest"
@@ -199,15 +161,8 @@
                             android:textAlignment="center"
                             android:textColor="@color/colorSubtleText"
                             android:textSize="12sp" />
-                        <!-- Hardcoded items to match the layout (for front-end only) -->
-<!--                        <include layout="@layout/item_account_request" />-->
-<!--                        <include layout="@layout/item_account_request" />-->
-<!--                        <include layout="@layout/item_account_request" />-->
 
                     </LinearLayout>
-
-                    <!-- See More -->
-
 
                     <TextView
                         android:id="@+id/tvSeeMoreRequests"
@@ -224,7 +179,6 @@
                         android:textSize="12sp"
                         android:visibility="gone"/>
 
-
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
@@ -232,4 +186,3 @@
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
-
