@@ -4,4 +4,9 @@
     <dimen name="card_top_overlap">-28dp</dimen>
     <dimen name="screen_side_login">24dp</dimen>
     <dimen name="screen_side_register">16dp</dimen>
+
+    <dimen name="podium_rank_text_size">10sp</dimen>
+    <dimen name="podium_name_text_size">10sp</dimen>
+    <dimen name="podium_1st_rank_text_size">12sp</dimen>
+    <dimen name="podium_1st_name_text_size">12sp</dimen>
 </resources>

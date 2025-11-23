@@ -169,4 +169,55 @@
     <string name="assessment_completed">Assessment Test completed!</string>
     <string name="score">Score: %d</string>
     <string name="date_accomplished">Date Accomplished: %s</string>
+
+    <!-- Notification Page-->
+    <string name="notifications_title">Notifications</string>
+    <string name="mark_all_read">Mark all as read</string>
+    <string name="notification_settings_title">Notifications and Reminders</string>
+    <string name="enable_class_schedule">Enable Class Schedule Reminder</string>
+    <string name="enable_student_submission">Enable Student Submission Notification</string>
+
+    <string name="notif_title_1">Time for class!</string>
+    <string name="notif_desc_1">You have a class in Section 1.</string>
+    <string name="notif_title_2">Student Submission</string>
+    <string name="notif_desc_2">A student submitted their work</string>
+
+    <string name="enable_posted_lesson">Enable Posted Lesson Notification</string>
+    <string name="enable_posted_assessment">Enable Posted Assessment Notification</string>
+
+    <string name="hi_user">Hi, %s!</string>
+    <string name="account_settings">Account Settings</string>
+    <string name="notifications_and_reminders">Notifications and Reminders</string>
+    <string name="terms_and_conditions">Terms and Conditions</string>
+    <string name="privacy_policy">Privacy Policy</string>
+
+    <string name="enable_account_approval">Enable Account Approval Request Notifications</string>
+
+    <string name="notif_new_request">New Request!</string>
+    <string name="notif_new_request_desc">There is a new account request.</string>
+
+    <!-- Participants and Grades Page-->
+    <string name="participants_title">Participants</string>
+    <string name="scores_title">Scores</string>
+    <string name="quarterly_report_btn">Quarterly Completion Report</string>
+    <string name="quarterly_report_title">Quarterly Completion Report</string>
+    <string name="quarter_label">Quarter 1</string>
+    <string name="generate_copy">Generate a copy</string>
+
+    <string name="label_assessment_no">Assessment Test Number:</string>
+    <string name="label_assessment_title">Assessment Test Title:</string>
+    <string name="label_student_score">Student’s Assessment Test Score:</string>
+    <string name="label_num_items">Number of Items:</string>
+    <string name="label_percentage">Percentage of Score:</string>
+    <string name="label_date_accomplished">Date Accomplished:</string>
+    <string name="label_time_accomplished">Time Accomplished:</string>
+
+    <string name="col_test_no">Assessment Test No.</string>
+    <string name="col_test_score">Assessment Test Score</string>
+    <string name="col_percentage">Percentage of Score</string>
+    <string name="col_no_items">No. of Items</string>
+    <string name="total_score">Total Score</string>
+    <string name="total_items">Total No. of Items</string>
+
+    <string name="grades_title">Grades</string>
 </resources>

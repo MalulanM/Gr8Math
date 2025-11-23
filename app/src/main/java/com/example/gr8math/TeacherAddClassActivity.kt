@@ -157,6 +157,7 @@ class TeacherAddClassActivity : AppCompatActivity() {
             .setHour(12)
             .setMinute(0)
             .setTitleText(title)
+            .setTheme(R.style.Theme_Gr8_TimePicker_Blue)
             .build()
 
         picker.addOnPositiveButtonClickListener {

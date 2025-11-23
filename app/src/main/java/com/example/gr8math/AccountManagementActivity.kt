@@ -1,9 +1,16 @@
 package com.example.gr8math
 
+import android.app.Dialog // <--- Changed import
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.util.Log
+import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.view.Window // <--- New Import
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -11,6 +18,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gr8math.api.ConnectURL
 import com.example.gr8math.utils.ShowToast
+import com.google.android.material.appbar.MaterialToolbar
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
@@ -21,12 +29,19 @@ class AccountManagementActivity : AppCompatActivity() {
     lateinit var ParentLayoutActive: LinearLayout
 
     lateinit var noRequest : TextView
-    lateinit var  seeMoreReq : TextView
+    lateinit var seeMoreReq : TextView
     lateinit var seeMoreActive : TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_account_management)
+
+        // --- Setup Toolbar Navigation ---
+        val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
+        toolbar.setNavigationOnClickListener {
+            showFacultyMenu()
+        }
+
         val toastMsg = intent.getStringExtra("toast_msg")
         if(!toastMsg.isNullOrEmpty()){
             ShowToast.showMessage(this, toastMsg)
@@ -48,6 +63,56 @@ class AccountManagementActivity : AppCompatActivity() {
             finish()
             startActivity(Intent(this, AddAccountActivity::class.java))
         }
+    }
+
+    // --- FIX: Use standard Dialog to force full-height sidebar ---
+    private fun showFacultyMenu() {
+        // 1. Create a standard Dialog (Not MaterialAlertDialogBuilder)
+        val dialog = Dialog(this)
+
+        // 2. Remove the default title bar
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+
+        // 3. Inflate layout
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_faculty_menu, null)
+        dialog.setContentView(dialogView)
+
+        // --- Menu Click Listeners ---
+        dialogView.findViewById<View>(R.id.btnNotifications).setOnClickListener {
+            startActivity(Intent(this, FacultyNotificationsActivity::class.java))
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<View>(R.id.btnAccountSettings).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<View>(R.id.btnTerms).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<View>(R.id.btnPrivacy).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        // 4. Configure the Window to stretch properly
+        val window = dialog.window
+        if (window != null) {
+            // Make background transparent so we only see our layout
+            window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+            // Position at the Top-Left
+            val params = window.attributes
+            params.gravity = Gravity.START or Gravity.TOP
+
+            // Set Width to 85% of screen, Height to MATCH_PARENT (Full Screen Vertical)
+            params.width = (resources.displayMetrics.widthPixels * 0.85).toInt()
+            params.height = WindowManager.LayoutParams.MATCH_PARENT
+
+            window.attributes = params
+        }
+
+        dialog.show()
     }
 
     private fun init() {
@@ -94,13 +159,10 @@ class AccountManagementActivity : AppCompatActivity() {
 
                         ParentLayoutReq.addView(itemView)
                     }
-                } else {
-//                    Log.e("API_ERROR", "Failed to load requests: ${response.errorBody()?.string()}")
                 }
             }
 
             override fun onFailure(call: Call<AccountRequestResponse>, t: Throwable) {
-//                Log.e("API_ERROR", "Request failed: ${t.localizedMessage}", t)
             }
         })
     }
@@ -123,7 +185,7 @@ class AccountManagementActivity : AppCompatActivity() {
                         )
 
                         if(users.isNotEmpty()){
-                           seeMoreActive.visibility = View.VISIBLE
+                            seeMoreActive.visibility = View.VISIBLE
                         } else{
                             seeMoreActive.visibility = View.GONE
                         }
@@ -137,7 +199,7 @@ class AccountManagementActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<AccountRequestResponse>, t: Throwable) {
-                Log.e("API_ERROR", "Active accounts failed: ${t.localizedMessage}", t)
+                // Log error
             }
         })
     }
@@ -154,13 +216,11 @@ class AccountManagementActivity : AppCompatActivity() {
                     ShowToast.showMessage(this@AccountManagementActivity, "${message}")
                     inflateRequest()
                 } else {
-//                    Log.e("ACCEPT", "Accept failed: ${response.errorBody()?.string()}")
                     ShowToast.showMessage(this@AccountManagementActivity, "${message}")
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-//                Log.e("ACCEPT", "Accept failed: ${t.localizedMessage}", t)
                 ShowToast.showMessage(this@AccountManagementActivity, "Error")
             }
         })
@@ -178,16 +238,13 @@ class AccountManagementActivity : AppCompatActivity() {
                     ShowToast.showMessage(this@AccountManagementActivity, "${message}")
                     inflateRequest() // Refresh request list
                 } else {
-//                    Log.e("REJECT", "Reject failed: ${response.errorBody()?.string()}")
                     ShowToast.showMessage(this@AccountManagementActivity, "${message}")
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-//                Log.e("REJECT", "Reject failed: ${t.localizedMessage}", t)
                 ShowToast.showMessage(this@AccountManagementActivity, "Error")
             }
         })
     }
-
 }
