@@ -195,4 +195,29 @@
 
     <string name="notif_new_request">New Request!</string>
     <string name="notif_new_request_desc">There is a new account request.</string>
+
+    <!-- Participants and Grades Page-->
+    <string name="participants_title">Participants</string>
+    <string name="scores_title">Scores</string>
+    <string name="quarterly_report_btn">Quarterly Completion Report</string>
+    <string name="quarterly_report_title">Quarterly Completion Report</string>
+    <string name="quarter_label">Quarter 1</string>
+    <string name="generate_copy">Generate a copy</string>
+
+    <string name="label_assessment_no">Assessment Test Number:</string>
+    <string name="label_assessment_title">Assessment Test Title:</string>
+    <string name="label_student_score">Student’s Assessment Test Score:</string>
+    <string name="label_num_items">Number of Items:</string>
+    <string name="label_percentage">Percentage of Score:</string>
+    <string name="label_date_accomplished">Date Accomplished:</string>
+    <string name="label_time_accomplished">Time Accomplished:</string>
+
+    <string name="col_test_no">Assessment Test No.</string>
+    <string name="col_test_score">Assessment Test Score</string>
+    <string name="col_percentage">Percentage of Score</string>
+    <string name="col_no_items">No. of Items</string>
+    <string name="total_score">Total Score</string>
+    <string name="total_items">Total No. of Items</string>
+
+    <string name="grades_title">Grades</string>
 </resources>

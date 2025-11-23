@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorLight">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:navigationIcon="@drawable/ic_arrow_back_24"
+        app:title="@string/quarterly_report_title"
+        app:titleCentered="true"
+        app:titleTextAppearance="@style/TextAppearance.Gr8.ToolbarTitle"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvQuarter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="@string/quarter_label"
+        android:fontFamily="@font/lexend"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/colorText"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="16dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/colorDarkCyan"
+        app:layout_constraintTop_toBottomOf="@id/tvQuarter"
+        app:layout_constraintBottom_toTopOf="@id/btnGenerateCopy"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <ScrollView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fillViewport="true">
+
+                <TableLayout
+                    android:id="@+id/reportTable"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:stretchColumns="*">
+
+                    <TableRow android:background="@color/colorAccent">
+                        <TextView
+                            android:text="@string/col_test_no"
+                            android:padding="16dp"
+                            android:gravity="center"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="@color/colorText"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:text="@string/col_test_score"
+                            android:padding="16dp"
+                            android:gravity="center"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="@color/colorText"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:text="@string/col_percentage"
+                            android:padding="16dp"
+                            android:gravity="center"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="@color/colorText"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:text="@string/col_no_items"
+                            android:padding="16dp"
+                            android:gravity="center"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="@color/colorText"
+                            android:textStyle="bold"/>
+                    </TableRow>
+
+                    <TableRow android:background="@color/colorAccent">
+                        <TextView
+                            android:text="@string/total_score"
+                            android:padding="16dp"
+                            android:gravity="center"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="@color/colorText"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:id="@+id/tvTotalScore"
+                            android:text="0"
+                            android:padding="16dp"
+                            android:gravity="center"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="@color/colorText"
+                            android:textStyle="bold"/>
+
+                        <TextView
+                            android:text=""
+                            android:padding="16dp"
+                            android:gravity="center"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="@color/colorText"
+                            android:textStyle="bold"/>
+
+                        <TextView
+                            android:id="@+id/tvTotalItems"
+                            android:text="0"
+                            android:padding="16dp"
+                            android:gravity="center"
+                            android:fontFamily="@font/lexend"
+                            android:textColor="@color/colorText"
+                            android:textStyle="bold"/>
+                    </TableRow>
+
+                </TableLayout>
+            </ScrollView>
+        </HorizontalScrollView>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnGenerateCopy"
+        style="@style/Gr8ButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_margin="16dp"
+        android:text="@string/generate_copy"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

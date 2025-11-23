@@ -46,9 +46,8 @@ class StudentClassPageActivity : AppCompatActivity() {
                     false // Don't highlight this tab, we are moving away
                 }
                 R.id.nav_grades -> {
-                    // TODO: Navigate to Grades Activity
-                    Toast.makeText(this, "Grades clicked", Toast.LENGTH_SHORT).show()
-                    true
+                    startActivity(Intent(this, StudentGradesActivity::class.java))
+                    false
                 }
                 else -> false
             }

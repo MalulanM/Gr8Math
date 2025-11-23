@@ -141,6 +141,7 @@
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
+        <!-- (NEW) NOTIFICATION PAGES -->
         <activity
             android:name=".TeacherNotificationsActivity"
             android:exported="false"
@@ -153,6 +154,27 @@
 
         <activity
             android:name=".FacultyNotificationsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <!-- (NEW) GRADES AND PARTICIPANTS PAGES -->
+        <activity
+            android:name=".TeacherParticipantsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".StudentScoresActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".QuarterlyReportActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".StudentGradesActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 

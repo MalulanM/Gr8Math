@@ -77,10 +77,9 @@ class TeacherClassPageActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_participants -> {
-                    // Navigate to Participants Activity
-                    Toast.makeText(this, "Participants clicked", Toast.LENGTH_SHORT).show()
-                    // startActivity(Intent(this, ParticipantsActivity::class.java))
-                    true
+                    // UPDATED: Open the Participants Page
+                    startActivity(Intent(this, TeacherParticipantsActivity::class.java))
+                    false // Return false so the highlighting happens in the new activity
                 }
                 R.id.nav_notifications -> {
                     // Navigate to Notifications Activity
