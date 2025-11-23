@@ -99,7 +99,16 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         llPastSearches = findViewById(R.id.llPastSearches)
         // Setup RecyclerView and Adapter
         searchLayout = findViewById(R.id.rvSearchResults) // or your actual ID
-        classAdapter = ClassAdapter(mutableListOf())
+        classAdapter = ClassAdapter(mutableListOf()) { selectedClass ->
+
+            val intent = Intent(this, TeacherClassPageActivity::class.java)
+            intent.putExtra("id", id)
+            intent.putExtra("role", role)
+            intent.putExtra("courseId", selectedClass.courseId)
+            intent.putExtra("sectionName", selectedClass.sectionName)
+            startActivity(intent)
+        }
+
         searchLayout.adapter = classAdapter
         searchLayout.layoutManager = LinearLayoutManager(this)
 
@@ -146,9 +155,9 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                     recordSearch(id)
                     inflateSearchResults(role, id, searchText)
                 }
-                true // Consume the action
+                true
             } else {
-                false // Pass other actions through
+                false
             }
         }
 
@@ -362,7 +371,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                     for (i in 0 until dataArray.length()) {
                         val item = dataArray.getJSONObject(i)
                         val sectionName = item.optString("class_name", "Unknown Class")
-
+                        val courseId = item.optInt("course_content_id", 0)
                         if (!sectionName.contains(searchTerm, ignoreCase = true)) continue
 
                         val studentCount = item.optInt("class_size", 0)
@@ -373,7 +382,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                             "${outputFormat.format(inputFormat.parse(arrival))}-${outputFormat.format(inputFormat.parse(dismiss))}"
                         } else "-"
 
-                        searchResults.add(TeacherClass(sectionName, schedule, studentCount))
+                        searchResults.add(TeacherClass(sectionName, schedule, studentCount, courseId))
                     }
 
                     runOnUiThread {
@@ -417,7 +426,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                     val message = jsonObj.optString("message", "No message")
                     val dataArray = jsonObj.optJSONArray("data") ?: org.json.JSONArray()
 
-                    Log.e("API_RESPONSE", message)
+                    Log.e("API_RESPONSE", dataArray.toString())
 
                     parentLayout.removeAllViews()
 
@@ -439,7 +448,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                         val studentCount = item.optInt("class_size", 0)
                         val arrival = item.optString("arrival_time", "-")
                         val dismiss = item.optString("dismissal_time", "-")
-
+                        val courseId = item.optInt("course_content_id", 0)
                         val schedule = if (arrival != "-" && dismiss != "-") {
                             "${outputFormat.format(inputFormat.parse(arrival))}-${outputFormat.format(inputFormat.parse(dismiss))}"
                         } else "-"
@@ -449,6 +458,18 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                             parentLayout,
                             false
                         )
+
+                        itemView.isClickable = true
+                        itemView.setOnClickListener {
+                            val intent = Intent(this@TeacherClassManagerActivity,
+                                TeacherClassPageActivity::class.java)
+                            intent.putExtra("id", id)
+                            intent.putExtra("role", role)
+                            intent.putExtra("courseId", courseId)
+                            intent.putExtra("sectionName", sectionName)
+                            startActivity(intent)
+                        }
+
 
                         itemView.findViewById<TextView>(R.id.tvSectionName).text = sectionName
                         itemView.findViewById<TextView>(R.id.tvSchedule).text = schedule

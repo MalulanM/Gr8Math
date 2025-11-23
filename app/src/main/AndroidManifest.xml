@@ -17,7 +17,10 @@
             android:name=".SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math">
-
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <!-- Login Activity -->
@@ -105,16 +108,16 @@
             android:name=".TeacherClassPageActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
 
         <activity
             android:name=".LessonContentActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Gr8Math" />
+            android:exported="true" android:theme="@style/Theme.Gr8Math" >
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+        </activity>
 
         <activity
             android:name=".LessonDetailActivity"

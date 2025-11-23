@@ -39,8 +39,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/lexend"
             android:textColor="@color/colorText"
-            android:textSize="20sp"
-            tools:text="Assessment 2" />
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/tvAssessmentTitle"
@@ -49,8 +48,7 @@
             android:fontFamily="@font/lexend"
             android:textColor="@color/colorText"
             android:textSize="34sp"
-            android:textStyle="bold"
-            tools:text="Polynomial" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvCompletionMessage"
@@ -58,7 +56,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:fontFamily="@font/lexend"
-            android:text="@string/assessment_completed"
             android:textColor="@color/colorText"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -70,8 +67,7 @@
             android:layout_marginTop="16dp"
             android:fontFamily="@font/lexend"
             android:textColor="@color/colorText"
-            android:textSize="14sp"
-            tools:text="Score: 10" />
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/tvNumberOfItems"
@@ -80,8 +76,7 @@
             android:layout_marginTop="4dp"
             android:fontFamily="@font/lexend"
             android:textColor="@color/colorText"
-            android:textSize="14sp"
-            tools:text="Number of Items: 10" />
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/tvDate"
@@ -90,8 +85,7 @@
             android:layout_marginTop="4dp"
             android:fontFamily="@font/lexend"
             android:textColor="@color/colorText"
-            android:textSize="14sp"
-            tools:text="Date Accomplished: Jan. 1, 2026" />
+            android:textSize="14sp" />
 
     </LinearLayout>
 

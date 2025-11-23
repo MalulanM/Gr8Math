@@ -185,7 +185,9 @@ class ForgotPasswordActivity : AppCompatActivity() {
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 Log.e("sendCode", "onFailure: ${t.localizedMessage}", t)
                 ShowToast.showMessage(this@ForgotPasswordActivity, "Failed to connect to server. Check your internet connection.")
-                  }
+                txtSendCode.isEnabled = true
+                txtSendCode.isClickable = true
+            }
         })
     }
 

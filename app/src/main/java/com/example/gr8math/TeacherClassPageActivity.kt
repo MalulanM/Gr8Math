@@ -7,61 +7,81 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.CurrentCourse
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
 class TeacherClassPageActivity : AppCompatActivity() {
 
+    private var id: Int = 0
+    private var courseId: Int = 0
+    private lateinit var role: String
+    private lateinit var parentLayout : LinearLayout
+    private var isEditMode = false
+
     // Launcher for CREATING a new lesson
     private val lessonContentLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result: ActivityResult ->
         if (result.resultCode == Activity.RESULT_OK) {
-            val data = result.data
-            val week = data?.getStringExtra("EXTRA_WEEK_NUMBER") ?: ""
-            val title = data?.getStringExtra("EXTRA_LESSON_TITLE") ?: ""
-            showWriteALessonDialog(week, title)
+            inflateAssessmentAndLesson(courseId)
         }
     }
 
-    // Launcher for EDITING an existing lesson
     private val editLessonLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ) { result: ActivityResult ->
+    ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            val data = result.data
-            val week = data?.getStringExtra("EXTRA_WEEK_NUMBER") ?: ""
-            val title = data?.getStringExtra("EXTRA_LESSON_TITLE") ?: ""
-            showEditALessonDialog(week, title)
+            inflateAssessmentAndLesson(courseId)  // refresh the list
         }
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_classpage_teacher)
 
+        if (CurrentCourse.userId == 0) CurrentCourse.userId = intent.getIntExtra("id", 0)
+        if (CurrentCourse.courseId == 0) CurrentCourse.courseId = intent.getIntExtra("courseId", 0)
+        if (CurrentCourse.currentRole.isEmpty()) CurrentCourse.currentRole = intent.getStringExtra("role") ?: ""
+        if (CurrentCourse.sectionName.isEmpty()) CurrentCourse.sectionName = intent.getStringExtra("sectionName") ?: ""
+
+        id = CurrentCourse.userId
+        courseId = CurrentCourse.courseId
+        role = CurrentCourse.currentRole
+        parentLayout = findViewById(R.id.parentLayout)
+
         // --- Setup Toolbar ---
         val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
+        toolbar.title = CurrentCourse.sectionName
         toolbar.setNavigationOnClickListener {
+
             finish()
         }
+        inflateAssessmentAndLesson(courseId)
 
         // --- Setup Bottom Navigation ---
         val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
@@ -73,51 +93,110 @@ class TeacherClassPageActivity : AppCompatActivity() {
             showAddOptionsDialog()
         }
 
-        // --- Customize Cards for Teacher ---
-
-        // 1. "Lesson Title" card
-        val lessonCard: View = findViewById(R.id.lesson_card)
-        val ibEditLesson = lessonCard.findViewById<ImageButton>(R.id.ibEditLesson)
-        ibEditLesson.visibility = View.VISIBLE
-
-        ibEditLesson.setOnClickListener {
-            val week = lessonCard.findViewById<TextView>(R.id.tvWeek).text.toString()
-            val title = lessonCard.findViewById<TextView>(R.id.tvTitle).text.toString()
-            showEditALessonDialog(week, title)
-        }
-
-        val tvSeeMore = lessonCard.findViewById<TextView>(R.id.tvSeeMore)
-        tvSeeMore.setOnClickListener {
-            val tvWeek = lessonCard.findViewById<TextView>(R.id.tvWeek)
-            val tvTitle = lessonCard.findViewById<TextView>(R.id.tvTitle)
-            val week = tvWeek.text.toString()
-            val title = tvTitle.text.toString()
-            val fullDescription = getString(R.string.lesson_full_desc_placeholder)
-            val intent = Intent(this, LessonDetailActivity::class.java).apply {
-                putExtra("EXTRA_WEEK", week)
-                putExtra("EXTRA_TITLE", title)
-                putExtra("EXTRA_DESCRIPTION", fullDescription)
-            }
-            startActivity(intent)
-        }
-
-        // 2. "Assessment" card
-        val assessmentCard: View = findViewById(R.id.assessment_card)
-        val iconAssessment = assessmentCard.findViewById<ImageView>(R.id.ivIcon)
-        val titleAssessment = assessmentCard.findViewById<TextView>(R.id.tvTitle)
-        iconAssessment.setImageResource(R.drawable.ic_assessment_green)
-        iconAssessment.contentDescription = getString(R.string.assessment_placeholder)
-        titleAssessment.text = getString(R.string.assessment_placeholder)
-
-        // --- NEW CODE: Set click listener for the assessment arrow ---
-        val ivArrow = assessmentCard.findViewById<ImageView>(R.id.ivArrow)
-        ivArrow.setOnClickListener {
-            // --- TODO: Pass real assessment ID/data ---
-            val intent = Intent(this, AssessmentDetailActivity::class.java)
-            startActivity(intent)
-        }
-        // --- END OF NEW CODE ---
     }
+
+
+    fun inflateAssessmentAndLesson(courseId: Int) {
+        val apiService = ConnectURL.api
+        val call = apiService.getClassContent(courseId)
+
+        call.enqueue(object : retrofit2.Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                val responseString = response.body()?.string() ?: response.errorBody()?.string()
+                if (responseString.isNullOrEmpty()) {
+                    Log.e("API_ERROR", "Empty response")
+                    return
+                }
+
+                try {
+                    val jsonObj = org.json.JSONObject(responseString)
+                    val dataArray = jsonObj.optJSONArray("data") ?: org.json.JSONArray()
+
+                    parentLayout.removeAllViews()
+
+                    for (i in 0 until dataArray.length()) {
+                        val item = dataArray.getJSONObject(i)
+                        val type = item.optString("type", "lesson")
+
+                        val itemView: View = when (type) {
+                            "lesson" -> layoutInflater.inflate(R.layout.item_class_lesson_card, parentLayout, false)
+                            "assessment" -> layoutInflater.inflate(R.layout.item_class_assessment_card, parentLayout, false)
+                            else -> continue
+                        }
+
+                        val id = item.optInt("id")
+                        val cleanContent = removeBase64(item.optString("lesson_content", ""))
+
+                        when (type) {
+                            "lesson" -> {
+                                val week = itemView.findViewById<TextView>(R.id.tvWeek)
+                                val title = itemView.findViewById<TextView>(R.id.tvTitle)
+                                val previewDesc = itemView.findViewById<TextView>(R.id.tvDescription)
+                                val seeMore = itemView.findViewById<TextView>(R.id.tvSeeMore)
+                                val editLesson = itemView.findViewById<ImageButton>(R.id.ibEditLesson)
+
+                                week.text = item.optInt("week_number").toString()
+                                title.text = item.optString("lesson_title")
+                                previewDesc.text = getFirstSentence(cleanContent)
+
+                                seeMore.setOnClickListener {
+                                    val intent = Intent(this@TeacherClassPageActivity, LessonDetailActivity::class.java)
+                                    intent.putExtra("lesson_id", id)
+                                    startActivity(intent)
+                                }
+
+                                editLesson.setOnClickListener {
+                                    showEditALessonDialog(
+                                        item.optInt("week_number").toString(),
+                                        item.optString("lesson_title"),
+                                        id
+                                    )
+                                }
+                            }
+                            "assessment" -> {
+                                val assessmentTitle = itemView.findViewById<TextView>(R.id.tvTitle)
+                                val arrowView = itemView.findViewById<ImageView>(R.id.ivArrow)
+                                assessmentTitle.text = "Assessment ${item.optInt("assessment_number")}"
+
+                                arrowView.setOnClickListener {
+                                    val intent = Intent(this@TeacherClassPageActivity, AssessmentDetailActivity::class.java)
+                                    intent.putExtra("AssessmentId", id)
+                                    startActivity(intent)
+                                }
+                            }
+                        }
+
+                        parentLayout.addView(itemView)
+                    }
+
+                } catch (e: Exception) {
+                    Log.e("API_ERROR", "Failed to parse response: ${e.localizedMessage}", e)
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.e("API_ERROR", "Internet: ${t.localizedMessage}", t)
+            }
+        })
+    }
+
+    /** Remove Base64 image data from lesson content */
+    private fun removeBase64(content: String): String {
+        return content.replace(Regex("data:image/[^;]+;base64,[A-Za-z0-9+/=]+"), "[image]")
+            .trim()
+    }
+
+    /** Extract first sentence for preview */
+    private fun getFirstSentence(text: String): String {
+        val cleanText = text.replace(Regex("<img[^>]*>"), "")
+        val lines = cleanText.split("\n").map { it.trim() }.filter { it.isNotEmpty() }
+        if (lines.isEmpty()) return ""
+        val firstLine = lines[0]
+        val periodIndex = firstLine.indexOf(".")
+        return if (periodIndex != -1) firstLine.substring(0, periodIndex + 1) else firstLine
+    }
+
+
 
     /**
      * Shows the "Add Options" dialog.
@@ -208,6 +287,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
             val intent = Intent(this, LessonContentActivity::class.java).apply {
                 putExtra("EXTRA_WEEK_NUMBER", weekNumber)
                 putExtra("EXTRA_LESSON_TITLE", lessonTitle)
+
             }
             lessonContentLauncher.launch(intent)
             dialog.dismiss()
@@ -219,7 +299,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
     /**
      * Shows the "Edit a Lesson" dialog.
      */
-    private fun showEditALessonDialog(weekToPreload: String, titleToPreload: String) {
+    private fun showEditALessonDialog(weekToPreload: String, titleToPreload: String, lessonId : Int) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_edit_a_lesson, null)
         val toolbar = dialogView.findViewById<MaterialToolbar>(R.id.toolbar)
         val btnNext = dialogView.findViewById<Button>(R.id.btnNext)
@@ -261,12 +341,11 @@ class TeacherClassPageActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val lessonContent = getString(R.string.lesson_full_desc_placeholder)
 
             val intent = Intent(this, LessonContentActivity::class.java).apply {
                 putExtra("EXTRA_WEEK_NUMBER", weekNumber)
-                putExtra("EXTRA_LESSON_TITLE", lessonTitle)
-                putExtra("EXTRA_LESSON_CONTENT", lessonContent)
+                putExtra("EXTRA_LESSON_TITLE", lessonId)
+                putExtra("EXTRA_LESSON_ID", lessonId)
             }
 
             editLessonLauncher.launch(intent)
@@ -420,4 +499,8 @@ class TeacherClassPageActivity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
     }
+
+
+
+
 }

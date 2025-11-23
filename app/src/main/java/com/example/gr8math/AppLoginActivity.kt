@@ -1,11 +1,22 @@
 package com.example.gr8math   // <-- match your real package!
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
+import android.view.LayoutInflater
 import android.widget.Button
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import com.google.android.material.textfield.TextInputLayout
 import okhttp3.ResponseBody
@@ -15,6 +26,8 @@ import com.example.gr8math.api.ConnectURL
 import com.example.gr8math.dataObject.LoginUser
 import com.example.gr8math.utils.ShowToast
 import com.example.gr8math.utils.UIUtils
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class AppLoginActivity : AppCompatActivity() {
     lateinit var btnLogin: Button
@@ -27,6 +40,15 @@ class AppLoginActivity : AppCompatActivity() {
     lateinit var loadingProgress : View
 
     lateinit var loadingText : TextView
+
+    //for teacher initial login
+    lateinit var newPasswordInput: EditText
+    lateinit var confirmPasswordInput: EditText
+    lateinit var savePassBtn : Button
+    lateinit var tillNewPassLayout : TextInputLayout
+    lateinit var tillConfirmPassLayout : TextInputLayout
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,6 +88,17 @@ class AppLoginActivity : AppCompatActivity() {
         loadingText = findViewById<TextView>(R.id.loadingText)
 
     }
+
+    fun init2(){
+        newPasswordInput = findViewById(R.id.etNewPass);
+        confirmPasswordInput = findViewById(R.id.etRePass);
+        savePassBtn = findViewById(R.id.btnSave);
+        tillNewPassLayout = findViewById(R.id.tilNewPassword)
+        tillConfirmPassLayout = findViewById(R.id.tilReEnterPassword)
+        loadingLayout = findViewById(R.id.loadingLayout)
+        loadingProgress = findViewById(R.id.loadingProgressBg)
+        loadingText = findViewById(R.id.loadingText)
+    }
     fun login(){
 
         if (etEmail.text.toString().isEmpty() || etPassword.text.toString().isEmpty()) {
@@ -87,7 +120,7 @@ class AppLoginActivity : AppCompatActivity() {
                 try {
                     val responseString = response.errorBody()?.string() ?: response.body()?.string()
 
-//                    Log.e("LoginResponse", "${responseString}")
+                    Log.e("LoginResponse", "${responseString}")
 
                     if (responseString.isNullOrEmpty()) {
                         ShowToast.showMessage(this@AppLoginActivity, "Empty response from server.")
@@ -113,24 +146,49 @@ class AppLoginActivity : AppCompatActivity() {
 //                        val token = data.optString("token")
                         val role = data.optString("role")
                         val id = user.optInt("id")
+                        val isfirstLogin = user.optBoolean("first_login")
                         val pref = getSharedPreferences("user_session", MODE_PRIVATE)
 //                        pref.edit().putString("auth_token", token).apply()
                         ConnectURL.init(this@AppLoginActivity)
 
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            val nextIntent = when(role) {
-                                "student" -> Intent(this@AppLoginActivity, StudentClassManagerActivity::class.java)
-                                "teacher" -> Intent(this@AppLoginActivity, TeacherClassManagerActivity::class.java)
-                                else -> Intent(this@AppLoginActivity, AccountManagementActivity::class.java)
-                            }
-                            nextIntent.putExtra("toast_msg", msg)
-                            nextIntent.putExtra("id", id)
-                            nextIntent.putExtra("role", role)
+                        Log.e("isFirst", isfirstLogin.toString())
+                        if(isfirstLogin == true && role == "student"){
+                            showUserAgreement(role, id)
+                        } else if (isfirstLogin == true && role == "teacher"){
+                            showForgotPasswordActivity(etEmail.text.toString(), id, role)
+                        } else {
 
-                            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                            startActivity(nextIntent)
-                            finish()
-                        }, 3000)
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                val nextIntent = when (role) {
+                                    "student" -> Intent(
+                                        this@AppLoginActivity,
+                                        StudentClassManagerActivity::class.java
+                                    )
+
+                                    "teacher" -> Intent(
+                                        this@AppLoginActivity,
+                                        TeacherClassManagerActivity::class.java
+                                    )
+
+                                    else -> Intent(
+                                        this@AppLoginActivity,
+                                        AccountManagementActivity::class.java
+                                    )
+                                }
+                                nextIntent.putExtra("toast_msg", msg)
+                                nextIntent.putExtra("id", id)
+                                nextIntent.putExtra("role", role)
+
+                                UIUtils.showLoading(
+                                    loadingLayout,
+                                    loadingProgress,
+                                    loadingText,
+                                    false
+                                )
+                                startActivity(nextIntent)
+                                finish()
+                            }, 3000)
+                        }
 
                     } else {
                         btnLogin.isEnabled = true
@@ -155,4 +213,166 @@ class AppLoginActivity : AppCompatActivity() {
 
     }
 
+    private fun showForgotPasswordActivity(email : String, id : Int, role : String){
+        setContentView(R.layout.forgot_password_activity_one)
+        init2()
+        findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
+
+        savePassBtn.isEnabled = true
+
+        newPasswordInput.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                UIUtils.errorDisplay(this@AppLoginActivity, tillNewPassLayout, newPasswordInput, false,"Please enter a password")
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+        confirmPasswordInput.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                UIUtils.errorDisplay(this@AppLoginActivity, tillConfirmPassLayout, confirmPasswordInput, false,"Please enter a password")
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+        savePassBtn.setOnClickListener {
+            updatePassword(email, id, role)
+        }
+    }
+
+    fun isValidPassword(password: String): Boolean {
+        val passwordPattern = Regex("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^A-Za-z\\d])[A-Za-z\\d[^A-Za-z\\d]]{8,16}\$")
+        return passwordPattern.matches(password)
+    }
+    fun updatePassword(email: String, id: Int, role : String){
+
+        if(newPasswordInput.text.toString().isEmpty() || confirmPasswordInput.text.toString().isEmpty()){
+            UIUtils.errorDisplay(this@AppLoginActivity, tillNewPassLayout, newPasswordInput, false,"Please enter a password")
+            UIUtils.errorDisplay(this@AppLoginActivity, tillConfirmPassLayout, confirmPasswordInput, false,"Please enter a password")
+            return
+        }
+
+
+        if(newPasswordInput.text.toString() != confirmPasswordInput.text.toString()){
+            ShowToast.showMessage(this@AppLoginActivity, "Passwords do not match")
+            return
+        }
+
+        if(!isValidPassword(newPasswordInput.text.toString())){
+            ShowToast.showMessage(this@AppLoginActivity, "Password Invalid")
+            return
+        }
+
+        newPasswordInput.isEnabled = false
+        confirmPasswordInput.isEnabled = false
+        savePassBtn.isEnabled = false
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+
+        val apiService = ConnectURL.api
+        val call = apiService.savePass(email, null, newPasswordInput.text.toString(), confirmPasswordInput.text.toString())
+        call.enqueue(object : retrofit2.Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                val responseBody = response.body()?.string()
+                val errorBody = response.errorBody()?.string()
+                val responseString = responseBody ?: errorBody
+
+                Log.e("newPass", "Code: ${response.code()} | Body: ${responseString}")
+
+                val jsonObj = org.json.JSONObject(responseString);
+                val msg = jsonObj.getString("message")
+                if(response.isSuccessful){
+//                    ShowToast.showMessage(this@ForgotPasswordActivity, msg)
+
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                        showUserAgreement(role, id);
+                    }, 800)
+
+                } else {
+                    ShowToast.showMessage(this@AppLoginActivity, msg)
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                    newPasswordInput.isEnabled = true
+                    confirmPasswordInput.isEnabled = true
+                    savePassBtn.isEnabled = true
+                }
+            }
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                newPasswordInput.isEnabled = true
+                confirmPasswordInput.isEnabled = true
+                savePassBtn.isEnabled = true
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+
+                Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
+                ShowToast.showMessage(this@AppLoginActivity, "Failed to connect to the server. Please check your internet connection.")
+            }
+        })
+    }
+
+    private fun showUserAgreement(role : String, id : Int) {
+        // Inflate the custom dialog layout
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_terms_and_conditions, null)
+
+        // Find the views inside the custom dialog
+        val chkBoxAgree = dialogView.findViewById<CheckBox>(R.id.cbTerms)
+        val btnProceed =  dialogView.findViewById<Button>(R.id.btnProceed)
+
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+
+        btnProceed.isEnabled = false
+
+        chkBoxAgree.setOnCheckedChangeListener { _, isChecked ->
+            btnProceed.isEnabled = isChecked
+        }
+
+        btnProceed.setOnClickListener {
+            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+            dialog.dismiss()
+            updateStatus(id)
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                val nextIntent = when(role) {
+                    "student" -> Intent(this@AppLoginActivity, StudentClassManagerActivity::class.java)
+                    "teacher" -> Intent(this@AppLoginActivity, TeacherClassManagerActivity::class.java)
+                    else -> Intent(this@AppLoginActivity, AccountManagementActivity::class.java)
+                }
+                nextIntent.putExtra("toast_msg", "Login Successful")
+                nextIntent.putExtra("id", id)
+                nextIntent.putExtra("role", role)
+
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                startActivity(nextIntent)
+                finish()
+            }, 3000)
+            setResult(RESULT_OK)
+        }
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        dialog.show()
+
+    }
+
+    private fun updateStatus(id:Int){
+        val apiService = ConnectURL.api
+        val call = apiService.updateStatus(id)
+        call.enqueue(object : retrofit2.Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody?>, response: Response<ResponseBody?>) {
+                val responseBody = response.body()?.string()
+                val errorBody = response.errorBody()?.string()
+                val responseString = responseBody ?: errorBody
+
+                Log.e("updateStat", "Code: ${response.code()} | Body: ${responseString}")
+            }
+
+            override fun onFailure(call: Call<ResponseBody?>, t: Throwable) {
+
+            }
+        })
+    }
 }

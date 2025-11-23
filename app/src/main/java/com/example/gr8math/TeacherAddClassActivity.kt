@@ -112,15 +112,12 @@ class TeacherAddClassActivity : AppCompatActivity() {
 
         val classCode = tvClassCode.text.toString()
 
-        // Build the dialog
         val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
             .setCancelable(false) // User can't click outside to close
             .create()
 
-        // --- Set Click Listeners for the Dialog ---
 
-        // 1. Close Button
         btnCloseDialog.setOnClickListener {
             dialog.dismiss()
             setResult(RESULT_OK)

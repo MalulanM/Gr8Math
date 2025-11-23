@@ -2,11 +2,13 @@ package com.example.gr8math // Make sure this matches your package name
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
@@ -19,10 +21,19 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.AssessmentRequest
+import com.example.gr8math.dataObject.Choice
+import com.example.gr8math.dataObject.CurrentCourse
+import com.example.gr8math.dataObject.Question
+import com.example.gr8math.utils.ShowToast
+import com.example.gr8math.utils.UIUtils
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import okhttp3.ResponseBody
+import retrofit2.Call
 import java.io.Serializable
 
 // --- Data Classes to hold assessment structure ---
@@ -78,6 +89,8 @@ class QuestionCardManager(
         etQuestion.addTextChangedListener(AfterTextChangedWatcher { text ->
             question.questionText = text
             tilQuestion.error = null // Clear error on text change
+            tilQuestion.isErrorEnabled = false
+            tilQuestion.boxStrokeColor = ContextCompat.getColor(context, R.color.til_stroke)
             onQuestionChanged()
         })
 
@@ -93,7 +106,7 @@ class QuestionCardManager(
             if (question.choices.isNotEmpty()) {
                 showAnswerKeySelectionDialog()
             } else {
-                Toast.makeText(context, "Please add choices first.", Toast.LENGTH_SHORT).show()
+                ShowToast.showMessage(context, "Please add choices first.")
             }
         }
 
@@ -122,9 +135,6 @@ class QuestionCardManager(
         tvAnswerKey.visibility = if (question.choices.isNotEmpty()) View.VISIBLE else View.GONE
     }
 
-    //
-    // --- NO LONGER NEEDED: updateAnswerKeyText() was removed to keep the button text stationary ---
-    //
 
     private fun showAnswerKeySelectionDialog() {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_select_answer_key, null)
@@ -185,19 +195,17 @@ class QuestionCardManager(
         dialog.show()
     }
 
-
-    // Validation method for the question card
     fun isValid(): Boolean {
         var valid = true
+
         if (etQuestion.text.isNullOrBlank()) {
-            tilQuestion.error = context.getString(R.string.error_blank_field)
+            UIUtils.errorDisplay(context, tilQuestion, etQuestion, true, context.getString(R.string.error_blank_field))
             valid = false
-        } else {
-            tilQuestion.error = null
         }
 
         if (question.choices.isEmpty()) {
-            // If there are no choices, it's only valid if you don't require choices.
+            UIUtils.errorDisplay(context, tilQuestion, etQuestion, true, context.getString(R.string.error_blank_field))
+            valid = false
         } else {
             // Validate each choice
             choiceManagers.forEach { choiceManager ->
@@ -205,16 +213,17 @@ class QuestionCardManager(
                     valid = false
                 }
             }
-        }
 
-        // Validate if an answer key is selected if choices exist
-        if (question.choices.isNotEmpty() && question.correctAnswerIndex == -1) {
-            // --- REMOVED: No longer changing text color ---
-            valid = false
+            // Validate answer key
+            if (question.correctAnswerIndex == -1) {
+                ShowToast.showMessage(context, "Please select an answer key for this question.")
+                valid = false
+            }
         }
 
         return valid
     }
+
 }
 
 // This class will manage the views for a single answer choice input
@@ -255,6 +264,11 @@ class ChoiceItemManager(
 
 class AssessmentCreatorActivity : AppCompatActivity() {
 
+    lateinit var loadingLayout : View
+
+    lateinit var loadingProgress : View
+
+    lateinit var loadingText : TextView
     private lateinit var questionsContainer: LinearLayout
     private lateinit var btnAddQuestion: Button
     private lateinit var btnPublishAssessmentTest: Button
@@ -267,32 +281,40 @@ class AssessmentCreatorActivity : AppCompatActivity() {
     private var hasUnsavedChanges = false
 
     // Hold Assessment details from intent
-    private var assessmentNumber: String? = null
+    private var assessmentNumber: Int? = 0
+
     private var assessmentTitle: String? = null
     private var availableFrom: String? = null
     private var availableUntil: String? = null
+    private var courseId: Int? = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_assessment_creator)
 
         // Get data from intent
-        assessmentNumber = intent.getStringExtra("EXTRA_ASSESSMENT_NUMBER")
+        assessmentNumber = intent.getStringExtra("EXTRA_ASSESSMENT_NUMBER")?.toIntOrNull() ?: 0
         assessmentTitle = intent.getStringExtra("EXTRA_ASSESSMENT_TITLE")
         availableFrom = intent.getStringExtra("EXTRA_AVAILABLE_FROM")
         availableUntil = intent.getStringExtra("EXTRA_AVAILABLE_UNTIL")
+        courseId = CurrentCourse.courseId
 
+        Log.e("CONTENT_PPPP", "${assessmentNumber}, ${assessmentTitle}, ${courseId}")
         toolbar = findViewById(R.id.toolbar)
         questionsContainer = findViewById(R.id.questionsContainer)
         btnAddQuestion = findViewById(R.id.btnAddQuestion)
         btnPublishAssessmentTest = findViewById(R.id.btnPublishAssessmentTest)
-
+        loadingLayout =  findViewById<View>(R.id.loadingLayout)
+        loadingProgress = findViewById<View>(R.id.loadingProgressBg)
+        loadingText = findViewById<TextView>(R.id.loadingText)
         // Set the title from the intent
         toolbar.title = assessmentTitle ?: "Create Assessment"
 
         toolbar.setNavigationOnClickListener {
             handleBackPress()
         }
+
+
 
         // Handle system back button
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -400,7 +422,6 @@ class AssessmentCreatorActivity : AppCompatActivity() {
     private fun validateAllQuestions(): Boolean {
         var allValid = true
         if (questionManagers.isEmpty()) {
-            Toast.makeText(this, "Please add at least one question.", Toast.LENGTH_SHORT).show()
             return false
         }
         questionManagers.forEach { manager ->
@@ -412,29 +433,77 @@ class AssessmentCreatorActivity : AppCompatActivity() {
     }
 
     private fun saveAssessment(publish: Boolean) {
-        // TODO: Implement actual saving/publishing logic here
 
-        val assessmentData = questionManagers.map { it.question }
-
-        // For demonstration, just log the data and show a toast
-        println("--- SAVING ASSESSMENT ---")
-        println("Title: $assessmentTitle ($assessmentNumber)")
-        println("Available: $availableFrom to $availableUntil")
-        assessmentData.forEachIndexed { qIndex, question ->
-            println("Question ${qIndex + 1}: ${question.questionText}")
-            question.choices.forEachIndexed { cIndex, choice ->
-                println("  Choice ${cIndex + 1}: $choice")
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+        val request = AssessmentRequest(
+            course_id = courseId!!,
+            title = assessmentTitle ?: "",
+            start_time = availableFrom ?: "",
+            end_time = availableUntil ?: "",
+            assessment_items = questionManagers.size,
+            assessment_number = assessmentNumber!!,
+            questions = questionManagers.map { manager ->
+                val q = manager.question
+                Question(
+                    question_text = q.questionText,
+                    choices = q.choices.mapIndexed { index, text ->
+                        Choice(
+                            choice_text = text,
+                            is_correct = index == q.correctAnswerIndex
+                        )
+                    }
+                )
             }
-            println("  Correct Answer Index: ${question.correctAnswerIndex}")
-        }
-        println("-------------------------")
+        )
 
-        Toast.makeText(this, if (publish) "Assessment Published!" else "Assessment Saved!", Toast.LENGTH_SHORT).show()
-        hasUnsavedChanges = false // Reset after saving
+        val apiService = ConnectURL.api
+        val call = apiService.storeAssessment(request)
 
-        setResult(Activity.RESULT_OK)
-        finish() // Exit after saving/publishing
+        call.enqueue(object : retrofit2.Callback<ResponseBody> {
+            override fun onResponse(
+                call: Call<ResponseBody>,
+                response: retrofit2.Response<ResponseBody>
+            ) {
+
+                val responseString = response.body()?.string() ?: response.errorBody()?.string()
+
+                if (responseString.isNullOrEmpty()) {
+                    Log.e("API_ERROR", "Empty response")
+                    return
+                }
+                try {
+                    val jsonObj = org.json.JSONObject(responseString)
+                    val success = jsonObj.optBoolean("success", false)
+                    val message = jsonObj.optString("message", "No message")
+                    val dataArray = jsonObj.optJSONArray("data") ?: org.json.JSONArray()
+
+                    if(success) {
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                        val intent = Intent(
+                            this@AssessmentCreatorActivity,
+                            TeacherClassPageActivity::class.java
+                        ).apply {
+                            intent.putExtra("toast_msg", message)
+                        }
+                        startActivity(intent)
+                    }
+                }  catch (e: Exception) {
+                Log.e("API_ERROR", "Failed to parse response: ${e.localizedMessage}", e)
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+            }
+
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Toast.makeText(
+                    this@AssessmentCreatorActivity,
+                    "Network Error: ${t.localizedMessage}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
     }
+
 
     private fun updatePublishButtonState() {
         // Publish button should be enabled if there's at least one question and there are unsaved changes.

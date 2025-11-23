@@ -1,8 +1,9 @@
-package com.example.gr8math // Make sure this matches your package name
+package com.example.gr8math
 
 import android.content.Intent
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.RadioButton
@@ -10,15 +11,24 @@ import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.gr8math.dataObject.AssessmentData
+import com.example.gr8math.dataObject.QuestionData
+import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.AnswerItem
+import com.example.gr8math.dataObject.AnswerPayload
+import com.example.gr8math.dataObject.CurrentCourse
+import com.example.gr8math.utils.ShowToast
+import com.example.gr8math.utils.UIUtils
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.gson.Gson
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.TimeUnit
-
-// Simple data class for a question
-data class QuizQuestion(
-    val questionText: String,
-    val choices: List<String>
-)
 
 class TakeAssessmentActivity : AppCompatActivity() {
 
@@ -30,23 +40,22 @@ class TakeAssessmentActivity : AppCompatActivity() {
 
     private var countDownTimer: CountDownTimer? = null
 
-    // --- TODO: Replace with real data from Intent ---
-    private val questions = listOf(
-        QuizQuestion("Lorem ipsum dolor sit amet.",
-            listOf("Choice A", "Choice B", "Choice C", "Choice D")),
-        QuizQuestion("This is the second question.",
-            listOf("Option 1", "Option 2", "Option 3")),
-        QuizQuestion("This is the final question.",
-            listOf("Answer X", "Answer Y", "Answer Z", "Answer W", "Answer V"))
-    )
-
+    private lateinit var questions: List<QuestionData>
     private var currentQuestionIndex = 0
+
+    private var assessmentId: Int = 0
+
+    private val selectedAnswers = mutableMapOf<Int, Int>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_take_assessment)
 
-        // Find Views
+        val assessmentJson = intent.getStringExtra("assessment_data")
+        val assessment = Gson().fromJson(assessmentJson, AssessmentData::class.java)
+
+        questions = assessment.questions
+
         val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
         tvTimer = findViewById(R.id.tvTimer)
         tvQuestion = findViewById(R.id.tvQuestion)
@@ -54,108 +63,89 @@ class TakeAssessmentActivity : AppCompatActivity() {
         btnPrevious = findViewById(R.id.btnPrevious)
         btnNext = findViewById(R.id.btnNext)
 
-        // Toolbar Back Button
+        assessmentId = assessment.id
+
         toolbar.setNavigationOnClickListener {
-            // TODO: Add a "Are you sure you want to quit?" dialog
             finish()
         }
 
-        // Load the first question
         loadQuestion(currentQuestionIndex)
         startTimer()
 
-        // Button Click Listeners
-        btnNext.setOnClickListener {
-            onNextClicked()
-        }
-        btnPrevious.setOnClickListener {
-            onPreviousClicked()
-        }
+        btnNext.setOnClickListener { onNextClicked() }
+        btnPrevious.setOnClickListener { onPreviousClicked() }
     }
 
     private fun startTimer() {
-        // --- TODO: Set a real duration ---
-        val testDurationMillis: Long = 60 * 60 * 1000 // 60 minutes
+        val testDurationMillis: Long = 60 * 60 * 1000
 
         countDownTimer = object : CountDownTimer(testDurationMillis, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                // Format as HH:mm:ss
+                val hours = TimeUnit.MILLISECONDS.toHours(millisUntilFinished)
                 val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) % 60
                 val seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) % 60
-                val hours = TimeUnit.MILLISECONDS.toHours(millisUntilFinished)
-
                 tvTimer.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
             }
 
             override fun onFinish() {
                 tvTimer.text = "00:00:00"
-                // TODO: Auto-submit the test
-                Toast.makeText(this@TakeAssessmentActivity, "Time's up!", Toast.LENGTH_SHORT).show()
                 finishAssessment()
             }
         }.start()
     }
 
     private fun loadQuestion(index: Int) {
-        val question = questions[index]
+        val q = questions[index]
 
-        // Set question text
-        tvQuestion.text = question.questionText
-
-        // Clear old choices
+        tvQuestion.text = q.question_text
         rgChoices.removeAllViews()
 
-        // Add new choices
-        question.choices.forEach { choiceText ->
-            val radioButton = RadioButton(this)
-            radioButton.text = choiceText
-            radioButton.setPadding(8, 24, 8, 24)
-            radioButton.textSize = 16f
-            radioButton.layoutParams = RadioGroup.LayoutParams(
+        q.choices.forEach { choice ->
+            val rb = RadioButton(this)
+            rb.text = choice.choice_text
+            rb.tag = choice.id
+            rb.setPadding(8, 24, 8, 24)
+            rb.textSize = 16f
+            rb.layoutParams = RadioGroup.LayoutParams(
                 RadioGroup.LayoutParams.MATCH_PARENT,
                 RadioGroup.LayoutParams.WRAP_CONTENT
             )
-            rgChoices.addView(radioButton)
+
+
+            if (selectedAnswers[q.id] == choice.id) {
+                rb.isChecked = true
+            }
+
+
+            rb.setOnClickListener {
+                selectedAnswers[q.id] = choice.id
+            }
+
+            rgChoices.addView(rb)
         }
 
-        // --- TODO: Restore saved answer for this question ---
-        // rgChoices.check(savedAnswerId)
-
-        // Update button visibility
         updateNavigationButtons()
     }
 
     private fun updateNavigationButtons() {
-        // Show "Previous" button if not on the first question
         btnPrevious.visibility = if (currentQuestionIndex > 0) View.VISIBLE else View.GONE
 
-        // Change "Next" button text to "Submit" on the last question
-        if (currentQuestionIndex == questions.size - 1) {
-            btnNext.text = "Submit" // Or "Finish"
-        } else {
-            btnNext.text = "Next"
-        }
+        btnNext.text =
+            if (currentQuestionIndex == questions.size - 1) "Submit"
+            else "Next"
     }
 
     private fun onNextClicked() {
-        // --- TODO: Save the current answer ---
-        // val selectedId = rgChoices.checkedRadioButtonId
-
         if (currentQuestionIndex < questions.size - 1) {
-            // Go to next question
             currentQuestionIndex++
             loadQuestion(currentQuestionIndex)
         } else {
-            // This is the last question, show the review dialog
             showReviewDialog()
         }
     }
 
     private fun onPreviousClicked() {
         if (currentQuestionIndex > 0) {
-            // --- TODO: Save the current answer ---
-
-            // Go to previous question
             currentQuestionIndex--
             loadQuestion(currentQuestionIndex)
         }
@@ -165,39 +155,66 @@ class TakeAssessmentActivity : AppCompatActivity() {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.dialog_review_title)
             .setMessage(R.string.dialog_review_message)
-            // "Yes" is the Negative button to be on the left
             .setNegativeButton(R.string.yes) { _, _ ->
-                // TODO: User wants to review. Implement review logic.
-                Toast.makeText(this, "Review logic not implemented.", Toast.LENGTH_SHORT).show()
+                currentQuestionIndex = 0
+                loadQuestion(currentQuestionIndex)
             }
-            // "No" is the Positive button to be on the right
             .setPositiveButton(R.string.no) { _, _ ->
-                // User does not want to review. Finish the assessment.
                 finishAssessment()
             }
             .show()
     }
 
     private fun finishAssessment() {
-        countDownTimer?.cancel() // Stop the timer
-        // --- TODO: Calculate score ---
-        val score = 10 // Placeholder
-        val items = questions.size
+        countDownTimer?.cancel()
 
-        val intent = Intent(this, AssessmentResultActivity::class.java).apply {
-            // Pass results to the next screen
-            putExtra("EXTRA_SCORE", score)
-            putExtra("EXTRA_ITEMS", items)
-            putExtra("EXTRA_TITLE", "Polynomial") // TODO: Pass real title
-            putExtra("EXTRA_NUMBER", "Assessment 2") // TODO: Pass real number
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val currentTimestamp = sdf.format(Date())
+
+        val answersList = questions.map { q ->
+            AnswerItem(
+                question_id = q.id,
+                choice_id = selectedAnswers[q.id] ?: 0,
+                timestamp = currentTimestamp
+            )
         }
-        startActivity(intent)
-        finish() // Finish this activity
+
+        val payload = AnswerPayload(
+            student_id = CurrentCourse.userId,
+            assessment_id = assessmentId,
+            answers = answersList
+        )
+
+        ConnectURL.api.answerAssessment(payload).enqueue(object : Callback<Map<String, Any>> {
+            override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
+                try {
+                    if (!response.isSuccessful || response.body() == null) {
+                        ShowToast.showMessage(this@TakeAssessmentActivity, "Error submitting")
+                        return
+                    }
+
+                    val res = response.body()!!
+                    val assessmentId = (res["assessment_id"] as Double).toInt()
+
+                    val intent = Intent(this@TakeAssessmentActivity, AssessmentResultActivity::class.java)
+                    intent.putExtra("assessment_id", assessmentId)
+                    startActivity(intent)
+                    finish()
+                } catch (e: Exception) {
+                    Log.e("TakeAssessmentActivity", "Error parsing response", e)
+                    ShowToast.showMessage(this@TakeAssessmentActivity, "Unexpected error occurred")
+                }
+            }
+
+            override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
+                ShowToast.showMessage(this@TakeAssessmentActivity, "Network error")
+            }
+        })
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
-        // Make sure to cancel the timer to prevent memory leaks
         countDownTimer?.cancel()
     }
 }

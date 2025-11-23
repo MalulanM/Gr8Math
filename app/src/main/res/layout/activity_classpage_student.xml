@@ -45,6 +45,7 @@
         app:layout_constraintTop_toBottomOf="@id/toolbar">
 
         <LinearLayout
+            android:id="@+id/parentLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -53,19 +54,19 @@
                 android:id="@+id/game_card"
                 layout="@layout/item_class_game_card" />
 
-            <include
-                android:id="@+id/lesson_card"
-                layout="@layout/item_class_lesson_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp" />
+<!--            <include-->
+<!--                android:id="@+id/lesson_card"-->
+<!--                layout="@layout/item_class_lesson_card"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="8dp" />-->
 
-            <include
-                android:id="@+id/assessment_card"
-                layout="@layout/item_class_assessment_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp" />
+<!--            <include-->
+<!--                android:id="@+id/assessment_card"-->
+<!--                layout="@layout/item_class_assessment_card"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="8dp" />-->
 
         </LinearLayout>
     </ScrollView>

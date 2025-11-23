@@ -138,7 +138,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
                         val adviserName = item.optString("adviser_name")
                         val arrival = item.optString("arrival_time", "-")
                         val dismiss = item.optString("dismissal_time", "-")
-
+                        val courseId = item.optInt("course_content_id", 0)
                         val schedule = if (arrival != "-" && dismiss != "-") {
                             "${outputFormat.format(inputFormat.parse(arrival))}-${outputFormat.format(inputFormat.parse(dismiss))}"
                         } else "-"
@@ -148,6 +148,17 @@ class StudentClassManagerActivity : AppCompatActivity() {
                             parentLayout,
                             false
                         )
+
+                        itemView.isClickable = true
+                        itemView.setOnClickListener {
+                            val intent = Intent(this@StudentClassManagerActivity,
+                                StudentClassPageActivity::class.java)
+                            intent.putExtra("id", id)
+                            intent.putExtra("role", role)
+                            intent.putExtra("courseId", courseId)
+                            intent.putExtra("sectionName", sectionName)
+                            startActivity(intent)
+                        }
 
                         itemView.findViewById<TextView>(R.id.tvSectionName).text = sectionName
                         itemView.findViewById<TextView>(R.id.tvSchedule).text = schedule
