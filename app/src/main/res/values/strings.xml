@@ -220,4 +220,38 @@
     <string name="total_items">Total No. of Items</string>
 
     <string name="grades_title">Grades</string>
+
+    <!-- Badges Page-->
+    <string name="badges_title">Badges</string>
+    <string name="you_acquired_the">You\'ve acquired the</string>
+
+    <string name="badge_first_ace_list_title">First Ace!</string>
+    <string name="badge_first_timer_list_title">First-Timer</string>
+    <string name="badge_first_escape_list_title">First Escape!</string>
+    <string name="badge_perfect_escape_list_title">Perfect Escape!</string>
+    <string name="badge_first_explo_list_title">First Exploration...</string>
+    <string name="badge_full_explo_list_title">Full Exploration...</string>
+    <string name="badge_three_quarter_list_title">Three-Quarter Score!</string>
+    <string name="badge_triple_ace_list_title">Triple Ace</string>
+
+    <string name="badge_first_ace_dialog_title">First Ace! Badge!</string>
+    <string name="badge_first_timer_dialog_title">First-Timer Badge!</string>
+    <string name="badge_first_escape_dialog_title">First Escape! Badge!</string>
+    <string name="badge_perfect_escape_dialog_title">Perfect Escape! Badge!</string>
+    <string name="badge_first_explo_dialog_title">First Exploration... Badge!</string>
+    <string name="badge_full_explo_dialog_title">Full Exploration... Badge!</string>
+    <string name="badge_three_quarter_dialog_title">Three-Quarter Score! Badge!</string>
+    <string name="badge_triple_ace_dialog_title">Triple Ace Badge!</string>
+
+    <string name="badge_first_ace_desc">This badge will be obtained when a student acquired a perfect score in an assessment test for the first time.</string>
+    <string name="badge_first_timer_desc">This badge will be obtained when a student answered an assessment test for the first time.</string>
+    <string name="badge_first_escape_desc">This badge will be obtained when a student successfully finished an Escape Room level for the first time.</string>
+    <string name="badge_perfect_escape_desc">This badge will be obtained when a student answered all the problems correctly in the Escape Room game.</string>
+    <string name="badge_first_explo_desc">This badge will be obtained when a student successfully finished a Maze level for the first time.</string>
+    <string name="badge_full_explo_desc">This badge will be obtained when a student answered all the problems correctly in the Maze game.</string>
+    <string name="badge_three_quarter_desc">This badge will be obtained when a student acquired at least 75% in their score in an assessment test.</string>
+    <string name="badge_triple_ace_desc">This badge will be obtained when a student acquired a perfect score in an assessment test 3 times.</string>
+
+    <string name="badge_date_placeholder">Acquired: 1/1/2026</string>
+    <string name="badge_date_locked">Acquired: -</string>
 </resources>
