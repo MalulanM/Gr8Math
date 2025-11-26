@@ -1,8 +1,10 @@
-package com.example.gr8math // Make sure this matches your package name
+package com.example.gr8math
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
@@ -11,11 +13,20 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.gr8math.adapter.MarkAllReadRequest
 import com.example.gr8math.adapter.TeacherNotification
 import com.example.gr8math.adapter.TeacherNotificationAdapter
+import com.example.gr8math.adapter.TeacherNotificationResponse
+import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.CurrentCourse
+import com.example.gr8math.utils.ShowToast
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-
+import com.google.gson.Gson
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import com.example.gr8math.utils.NotificationHelper
 class TeacherNotificationsActivity : AppCompatActivity() {
 
     private lateinit var rvNotifications: RecyclerView
@@ -23,112 +34,176 @@ class TeacherNotificationsActivity : AppCompatActivity() {
     private lateinit var btnMarkAllRead: Button
     private lateinit var bottomNav: BottomNavigationView
 
-    // Dummy data list
     private val notifications = mutableListOf<TeacherNotification>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_notifications)
 
-        // --- 1. Setup Toolbar ---
+        // --- Toolbar ---
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<ImageView>(R.id.btnSettings).setOnClickListener { showSettingsDialog() }
 
-        // --- 2. Initialize Bottom Navigation (MOVED UP) ---
-        // We must find this view BEFORE calling checkUnreadStatus()
+        // --- Bottom Navigation ---
         bottomNav = findViewById(R.id.bottom_navigation)
-        bottomNav.selectedItemId = R.id.nav_notifications // Highlight "Notifications"
+        bottomNav.selectedItemId = R.id.nav_notifications
 
-        // --- 3. Setup Dummy Data ---
-        notifications.add(TeacherNotification("Time for class!", "You have a class in Section 1.", "07:00 AM", false))
-        notifications.add(TeacherNotification("Student Submission", "A student submitted their work", "07:00 AM", false))
-        notifications.add(TeacherNotification("Old Notification", "This one is already read.", "Yesterday", true))
-
-        // --- 4. Setup RecyclerView ---
+        // --- RecyclerView ---
         rvNotifications = findViewById(R.id.rvNotifications)
         rvNotifications.layoutManager = LinearLayoutManager(this)
-        adapter = TeacherNotificationAdapter(notifications)
-        rvNotifications.adapter = adapter
 
-        // --- 5. Setup Mark All Read Button ---
-        btnMarkAllRead = findViewById(R.id.btnMarkAllRead)
+        adapter = TeacherNotificationAdapter(notifications) { item, position ->
 
-        // Now it is safe to check status because bottomNav is initialized
-        checkUnreadStatus()
+            // Mark as read
+            item.is_read = true
+            adapter.notifyItemChanged(position)
 
-        btnMarkAllRead.setOnClickListener {
-            // Set all to read
-            notifications.forEach { it.isRead = true }
-            adapter.notifyDataSetChanged()
-            checkUnreadStatus() // Re-check to hide button and badge
-            Toast.makeText(this, "All notifications marked as read", Toast.LENGTH_SHORT).show()
+
+            NotificationHelper.fetchUnreadCount(bottomNav)
+
+            ConnectURL.api.markNotificationRead(item.id)
+                .enqueue(object : Callback<Void> {
+                    override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                        Log.d("NOTIF", "Marked read: ${item.id}")
+                    }
+
+                    override fun onFailure(call: Call<Void>, t: Throwable) {
+                        Log.e("NOTIF_ERROR", t.localizedMessage ?: "")
+                    }
+                })
+
+
+
+            when (item.type) {
+
+                "assessment_submission" -> {
+                    val intent = Intent(this, TeacherParticipantsActivity::class.java)
+                    startActivity(intent)
+                }
+
+                "class_time" -> {
+                    val intent = Intent(this, TeacherClassPageActivity::class.java)
+                    startActivity(intent)
+                }
+            }
         }
 
-        // --- 6. Setup Bottom Navigation Click Listener ---
+        rvNotifications.adapter = adapter
+
+        // --- Button: Mark All Read ---
+        btnMarkAllRead = findViewById(R.id.btnMarkAllRead)
+
+        fetchNotifications()
+
+
+        btnMarkAllRead.setOnClickListener {
+            if (notifications.isEmpty()) return@setOnClickListener
+
+            val notifIds = notifications.map { it.id }
+
+            // Optimistically mark all read in the UI
+            notifications.forEach { it.is_read = true }
+            adapter.notifyDataSetChanged()
+
+            NotificationHelper.fetchUnreadCount(bottomNav)
+
+            val request = MarkAllReadRequest(notifIds)
+            Log.e("JSON_SENT", Gson().toJson(request))
+
+            ConnectURL.api.markAllNotificationsRead(request)
+                .enqueue(object : Callback<Void> {
+                    override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                        if (response.isSuccessful) {
+                            Log.d("NOTIF", "All notifications marked read")
+                        } else {
+                            Log.e("NOTIF_ERROR", "Failed to mark all read: ${response.code()}")
+                        }
+                    }
+
+                    override fun onFailure(call: Call<Void>, t: Throwable) {
+                        Log.e("NOTIF_ERROR", t.localizedMessage ?: "")
+                    }
+                })
+
+            ShowToast.showMessage(this, "All notifications marked as read")
+        }
+
+
+
+
+        // --- Bottom Nav Clicks ---
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_class -> {
-                    finish() // Go back to class page
+                    startActivity(Intent(this, TeacherClassPageActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
+                    finish()
                     true
                 }
                 R.id.nav_participants -> {
-                    // TODO: Navigate to Participants Activity
-                    Toast.makeText(this, "Participants clicked", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this, TeacherParticipantsActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
+                    finish()
                     true
                 }
                 R.id.nav_notifications -> {
-                    // Already here
-                    true
-                }
-                R.id.nav_dll -> {
-                    // TODO: Navigate to DLL Activity
-                    Toast.makeText(this, "DLL clicked", Toast.LENGTH_SHORT).show()
-                    true
+                    true // Already here
                 }
                 else -> false
             }
         }
+        NotificationHelper.fetchUnreadCount(bottomNav)
     }
 
-    private fun checkUnreadStatus() {
-        // If any item is NOT read, show the button
-        val hasUnread = notifications.any { !it.isRead }
+    // ----------------------------------------------------------
+    // Fetch Notifications from API
+    // ----------------------------------------------------------
+    private fun fetchNotifications() {
+        val apiService = ConnectURL.api
+        val call = apiService.getTeacherNotifications(
+            CurrentCourse.userId,
+            CurrentCourse.courseId
+        )
 
-        if (hasUnread) {
-            btnMarkAllRead.visibility = View.VISIBLE
-        } else {
-            btnMarkAllRead.visibility = View.GONE
-        }
-        updateBadge()
+        call.enqueue(object : Callback<TeacherNotificationResponse> {
+            override fun onResponse(
+                call: Call<TeacherNotificationResponse>,
+                response: Response<TeacherNotificationResponse>
+            ) {
+                if (response.isSuccessful && response.body() != null) {
+
+                    notifications.clear()
+                    notifications.addAll(response.body()!!.notifications)
+                    adapter.notifyDataSetChanged()
+
+
+                } else {
+                    Toast.makeText(this@TeacherNotificationsActivity, "No notifications found", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<TeacherNotificationResponse>, t: Throwable) {
+                Log.e("RetrofitError", t.localizedMessage ?: "")
+                ShowToast.showMessage(this@TeacherNotificationsActivity, "Failed to connect to server.")
+            }
+        })
     }
 
-    private fun updateBadge() {
-        val hasUnread = notifications.any { !it.isRead }
 
-        // This line caused the crash before because bottomNav wasn't found yet
-        val badge = bottomNav.getOrCreateBadge(R.id.nav_notifications)
-
-        if (hasUnread) {
-            badge.isVisible = true
-            badge.backgroundColor = Color.RED
-        } else {
-            badge.isVisible = false
-        }
-    }
-
+    // ----------------------------------------------------------
+    // Settings Dialog
+    // ----------------------------------------------------------
     private fun showSettingsDialog() {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_teacher_notification_settings, null)
+        val dialogView = LayoutInflater.from(this)
+            .inflate(R.layout.dialog_teacher_notification_settings, null)
 
         val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
             .setCancelable(true)
             .create()
 
-        // Handle Back button inside dialog
-        val btnBackSettings = dialogView.findViewById<ImageView>(R.id.btnBackSettings)
-        btnBackSettings.setOnClickListener {
-            dialog.dismiss()
-        }
+        dialogView.findViewById<ImageView>(R.id.btnBackSettings)
+            .setOnClickListener { dialog.dismiss() }
 
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()

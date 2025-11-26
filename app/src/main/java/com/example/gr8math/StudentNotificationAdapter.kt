@@ -8,16 +8,27 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gr8math.R
+import java.text.SimpleDateFormat
+import java.util.Locale
 
+
+data class StudentNotificationResponse(
+    val success: Boolean,
+    val notifications: List<StudentNotification>
+)
 // Data Class
 data class StudentNotification(
     val title: String,
-    val description: String,
-    val time: String,
-    var isRead: Boolean
+    val message: String,
+    val created_at: String,
+    var is_read: Boolean,
+    val type : String,
+    val id : Int
 )
 
-class StudentNotificationAdapter(private val notificationList: List<StudentNotification>) :
+class StudentNotificationAdapter(
+    private val notificationList: List<StudentNotification>,
+    private val onItemClick: (StudentNotification, Int) -> Unit) :
     RecyclerView.Adapter<StudentNotificationAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -36,18 +47,79 @@ class StudentNotificationAdapter(private val notificationList: List<StudentNotif
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = notificationList[position]
-        val context = holder.itemView.context
 
         holder.tvTitle.text = item.title
-        holder.tvDescription.text = item.description
-        holder.tvTime.text = item.time
+        holder.tvDescription.text = item.message
+        holder.tvTime.text = formatTime(item.created_at)
 
-        if (item.isRead) {
-            holder.ivIcon.setColorFilter(ContextCompat.getColor(context, R.color.colorDarkCyan))
-        } else {
-            holder.ivIcon.setColorFilter(ContextCompat.getColor(context, R.color.saffron))
+        val iconRes = when (item.type) {
+            "class" -> if (item.is_read) {
+                R.drawable.ic_read_class
+            } else {
+                R.drawable.ic_unread_class
+            }
+
+            "lesson" -> if (item.is_read) {
+                R.drawable.ic_read_lesson
+            } else {
+                R.drawable.ic_unread_lesson
+            }
+
+            "assessment" -> if (item.is_read) {
+                R.drawable.ic_read_lesson
+            } else {
+                R.drawable.ic_unread_lesson
+            }
+
+            else -> if (item.is_read) {
+                R.drawable.ic_read_lesson
+            } else {
+                R.drawable.ic_unread_lesson
+            }
+        }
+
+        holder.ivIcon.setImageResource(iconRes)
+
+        // Remove color filter — this ruins your icons!
+        holder.ivIcon.clearColorFilter()
+        holder.itemView.setOnClickListener {
+            onItemClick(item, position)
         }
     }
 
+
     override fun getItemCount() = notificationList.size
+
+    private fun formatTime(raw: String): String {
+        return try {
+            // Parse Supabase timestamp: yyyy-MM-dd HH:mm:ss.SSSS
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.getDefault())
+            val date = inputFormat.parse(raw) ?: return raw
+
+            val now = System.currentTimeMillis()
+            val diff = now - date.time
+
+            val oneHour = 60 * 60 * 1000L
+            val oneDay = 24 * oneHour
+            val oneYear = 365 * oneDay
+
+            return when {
+                diff < oneDay -> {
+                    val timeFormat = SimpleDateFormat("h:mma", Locale.getDefault())
+                    timeFormat.format(date)  // 1:00AM
+                }
+                diff < oneYear -> {
+                    val monthDayFormat = SimpleDateFormat("MMM d", Locale.getDefault())
+                    monthDayFormat.format(date)  // May 16
+                }
+                else -> {
+                    val fullFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+                    fullFormat.format(date)  // May 16, 2025
+                }
+            }
+
+        } catch (e: Exception) {
+            raw
+        }
+    }
 }

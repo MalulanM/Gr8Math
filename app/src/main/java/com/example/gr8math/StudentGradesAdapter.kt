@@ -7,7 +7,13 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gr8math.R
 
-data class GradeItem(val title: String, val score: Int)
+data class GradeItem(
+    val title: String,
+    val score: Int,
+    val assessmentNumber : Int,
+    val id : Int,
+    val dateAccomplished : String,
+    val assessment_items : Int)
 
 class StudentGradesAdapter(
     private val grades: List<GradeItem>,

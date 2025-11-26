@@ -1,9 +1,10 @@
-package com.example.gr8math // Make sure this matches your package name
+package com.example.gr8math
 
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,20 +13,41 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.CurrentCourse
+import com.example.gr8math.utils.ShowToast
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import okhttp3.ResponseBody
+import org.json.JSONObject
+import retrofit2.Call
+import java.text.SimpleDateFormat
+import java.util.Locale
 
-// Simple data class for scores
-data class StudentScore(val title: String, val score: Int)
+// Data class that matches Laravel response
+data class StudentScore(
+    val id: Int,
+    val assessmentNumber: Int,
+    val title: String,
+    val score: Int,
+    val dateAccomplished: String,
+    val assessment_items : Int
+)
 
 class StudentScoresActivity : AppCompatActivity() {
+
+    private var studentName = ""
+    private var studentId = 0
+    private lateinit var rvScores: RecyclerView
+    private val assessmentList = ArrayList<StudentScore>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_student_scores)
 
-        // Get student name
-        val studentName = intent.getStringExtra("EXTRA_STUDENT_NAME") ?: "Student"
+        // Get passed values
+        studentName = intent.getStringExtra("EXTRA_STUDENT_NAME") ?: "Student"
+        studentId = intent.getIntExtra("EXTRA_STUDENT_ID", 0)
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
@@ -35,20 +57,16 @@ class StudentScoresActivity : AppCompatActivity() {
 
         val btnQuarterlyReport = findViewById<Button>(R.id.btnQuarterlyReport)
         btnQuarterlyReport.setOnClickListener {
-            startActivity(Intent(this, QuarterlyReportActivity::class.java))
+            val intent = Intent(this, QuarterlyReportActivity::class.java)
+            intent.putExtra("EXTRA_STUDENT_ID", studentId)
+            startActivity(intent)
         }
 
-        // --- Setup Scores List ---
-        val scores = listOf(
-            StudentScore("Assessment 1", 10),
-            StudentScore("Assessment 2", 8)
-        )
-
-        val rvScores = findViewById<RecyclerView>(R.id.rvScores)
+        // RecyclerView setup
+        rvScores = findViewById(R.id.rvScores)
         rvScores.layoutManager = LinearLayoutManager(this)
-        rvScores.adapter = ScoreAdapter(scores) { scoreItem ->
-            showAssessmentDetailsDialog(scoreItem)
-        }
+
+        displayAllAssessments()
     }
 
     private fun showAssessmentDetailsDialog(scoreItem: StudentScore) {
@@ -57,10 +75,29 @@ class StudentScoresActivity : AppCompatActivity() {
             .setView(dialogView)
             .create()
 
-        // Populate Dialog Data (Hardcoded based on your request, but you can use scoreItem)
-        dialogView.findViewById<TextView>(R.id.tvDetailTitle).text = scoreItem.title
-        dialogView.findViewById<TextView>(R.id.tvDetailScore).text = scoreItem.score.toString()
-        // ... set other fields ...
+        dialogView.findViewById<TextView>(R.id.tvDetailNumber)
+            .text = "Assessment ${scoreItem.assessmentNumber}"
+
+        dialogView.findViewById<TextView>(R.id.tvDetailTitle)
+            .text = scoreItem.title
+
+        dialogView.findViewById<TextView>(R.id.tvDetailScore)
+            .text = "${scoreItem.score}"
+
+        dialogView.findViewById<TextView>(R.id.tvDetailItems)
+            .text = "${scoreItem.assessment_items}"
+
+        val percentage = (scoreItem.score/scoreItem.assessment_items)*100
+
+        dialogView.findViewById<TextView>(R.id.tvDetailPercentage)
+            .text = "${percentage}%"
+
+        dialogView.findViewById<TextView>(R.id.tvDetailDate)
+            .text = formatDate(scoreItem.dateAccomplished)
+
+        dialogView.findViewById<TextView>(R.id.tvDetailTime)
+            .text = formatTime(scoreItem.dateAccomplished)
+
 
         dialogView.findViewById<View>(R.id.btnClose).setOnClickListener {
             dialog.dismiss()
@@ -70,7 +107,7 @@ class StudentScoresActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    // --- Internal Adapter Class for Scores ---
+    // RecyclerView Adapter
     class ScoreAdapter(
         private val scores: List<StudentScore>,
         private val onClick: (StudentScore) -> Unit
@@ -78,14 +115,10 @@ class StudentScoresActivity : AppCompatActivity() {
 
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val title: TextView = view.findViewById(R.id.tvTitle)
-
-            // --- FIX IS HERE: Added <View> to findViewById ---
-            // We must tell Kotlin what type of view 'ivArrow' is before asking for its parent
             val card: View = view.findViewById<View>(R.id.ivArrow).parent as View
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            // Reusing your existing assessment card layout!
             val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.item_class_assessment_card, parent, false)
             return ViewHolder(view)
@@ -93,10 +126,92 @@ class StudentScoresActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = scores[position]
-            holder.title.text = item.title
+            holder.title.text = "Assessment ${item.assessmentNumber}"
             holder.itemView.setOnClickListener { onClick(item) }
         }
 
         override fun getItemCount() = scores.size
     }
+
+    private fun displayAllAssessments() {
+
+        val call = ConnectURL.api.getStudentAssessment(CurrentCourse.courseId, studentId)
+
+        call.enqueue(object : retrofit2.Callback<ResponseBody> {
+            override fun onResponse(
+                call: Call<ResponseBody>,
+                response: retrofit2.Response<ResponseBody>
+            ) {
+                val body = response.body()?.string()
+                Log.d("API_RESPONSE", body.toString())
+
+
+                if (body == null) {
+                    ShowToast.showMessage(this@StudentScoresActivity, "Empty server response.")
+                    return
+                }
+
+                try {
+                    val json = JSONObject(body)
+                    val arr = json.getJSONArray("answered_assessments")
+
+                    assessmentList.clear()
+
+                    for (i in 0 until arr.length()) {
+                        val obj = arr.getJSONObject(i)
+
+                        assessmentList.add(
+                            StudentScore(
+                                id = obj.getInt("id"),
+                                assessmentNumber = obj.getInt("assessment_number"),
+                                title = obj.getString("title"),
+                                score = obj.getInt("score"),
+                                dateAccomplished = obj.getString("date_accomplished"),
+                                assessment_items = obj.getInt("assessment_items")
+                            )
+                        )
+                    }
+
+                    rvScores.adapter = ScoreAdapter(assessmentList) { scoreItem ->
+                        showAssessmentDetailsDialog(scoreItem)
+                    }
+
+                } catch (e: Exception) {
+                    Log.e("displayAssessments", e.message ?: "Error")
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
+                ShowToast.showMessage(this@StudentScoresActivity, "Failed to connect to server.")
+            }
+        })
+    }
+
+    private fun formatDate(timestamp: String): String {
+        return try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.getDefault())
+            val date = inputFormat.parse(timestamp) ?: return timestamp
+
+            val output = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+            output.format(date)
+        } catch (e: Exception) {
+            timestamp
+        }
+    }
+
+    private fun formatTime(timestamp: String): String {
+        return try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.getDefault())
+            val date = inputFormat.parse(timestamp) ?: return timestamp
+
+            val output = SimpleDateFormat("h:mm a", Locale.getDefault())
+            output.format(date)
+        } catch (e: Exception) {
+            timestamp
+        }
+    }
+
+
 }
+

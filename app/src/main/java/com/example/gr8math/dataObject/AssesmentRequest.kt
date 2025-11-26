@@ -16,6 +16,7 @@ data class AssessmentRequest(
     val start_time: String,
     val end_time: String,
     val assessment_number: Int,
+    val assessment_quarter: Int,
     val assessment_items: Int,
     val questions: List<Question>
 )

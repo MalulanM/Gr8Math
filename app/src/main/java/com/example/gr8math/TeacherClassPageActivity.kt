@@ -22,6 +22,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gr8math.api.ConnectURL
 import com.example.gr8math.dataObject.CurrentCourse
+import com.example.gr8math.utils.Notifs
+import com.example.gr8math.utils.ShowToast
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -33,12 +35,15 @@ import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import com.example.gr8math.utils.NotificationHelper
 
 class TeacherClassPageActivity : AppCompatActivity() {
 
     private var id: Int = 0
     private var courseId: Int = 0
     private lateinit var role: String
+
+    private lateinit var sectionName : String
     private lateinit var parentLayout : LinearLayout
     private var isEditMode = false
 
@@ -64,14 +69,32 @@ class TeacherClassPageActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_classpage_teacher)
 
-        if (CurrentCourse.userId == 0) CurrentCourse.userId = intent.getIntExtra("id", 0)
-        if (CurrentCourse.courseId == 0) CurrentCourse.courseId = intent.getIntExtra("courseId", 0)
-        if (CurrentCourse.currentRole.isEmpty()) CurrentCourse.currentRole = intent.getStringExtra("role") ?: ""
-        if (CurrentCourse.sectionName.isEmpty()) CurrentCourse.sectionName = intent.getStringExtra("sectionName") ?: ""
+        // Get incoming values (if any)
+        val incomingCourseId = intent.getIntExtra("courseId", -1)
+        val incomingSectionName = intent.getStringExtra("sectionName")
+        val incomingRole = intent.getStringExtra("role")
+        val incomingUserId = intent.getIntExtra("id", -1)
 
-        id = CurrentCourse.userId
+// Update ONLY if a new class is selected
+        if (incomingCourseId != -1 && incomingCourseId != CurrentCourse.courseId) {
+
+            // Update global course data
+            CurrentCourse.courseId = incomingCourseId
+            CurrentCourse.sectionName = incomingSectionName ?: ""
+            CurrentCourse.currentRole = incomingRole ?: ""
+            CurrentCourse.userId = incomingUserId
+
+            Log.d("TeacherClassPage", "Switched to NEW CLASS: ${CurrentCourse.sectionName}")
+        } else {
+            Log.d("TeacherClassPage", "Same class — keeping CurrentCourse data.")
+        }
+
+// Now use CurrentCourse for the UI
         courseId = CurrentCourse.courseId
+        sectionName = CurrentCourse.sectionName
         role = CurrentCourse.currentRole
+        id = CurrentCourse.userId
+
         parentLayout = findViewById(R.id.parentLayout)
 
         // --- Setup Toolbar ---
@@ -86,7 +109,30 @@ class TeacherClassPageActivity : AppCompatActivity() {
         // --- Setup Bottom Navigation ---
         val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
         bottomNav.selectedItemId = R.id.nav_class
-
+        bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_class -> {
+                    startActivity(Intent(this, TeacherClassPageActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
+                    finish()
+                    true
+                }
+                R.id.nav_participants -> {
+                    startActivity(Intent(this, TeacherParticipantsActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
+                    finish()
+                    true
+                }
+                R.id.nav_notifications -> {
+                    startActivity(Intent(this, TeacherNotificationsActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
+                    finish()
+                    true
+                }
+                else -> false
+            }
+        }
+        NotificationHelper.fetchUnreadCount(bottomNav)
         // --- Setup Floating "Add" Button ---
         val btnAdd = findViewById<Button>(R.id.btnAdd)
         btnAdd.setOnClickListener {
@@ -176,6 +222,8 @@ class TeacherClassPageActivity : AppCompatActivity() {
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 Log.e("API_ERROR", "Internet: ${t.localizedMessage}", t)
+                Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
+                ShowToast.showMessage(this@TeacherClassPageActivity, "Failed to connect to server. Check your internet connection.")
             }
         })
     }
@@ -188,7 +236,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
 
     /** Extract first sentence for preview */
     private fun getFirstSentence(text: String): String {
-        val cleanText = text.replace(Regex("<img[^>]*>"), "")
+        val cleanText = text.replace(Regex("<ic_read_admin[^>]*>"), "")
         val lines = cleanText.split("\n").map { it.trim() }.filter { it.isNotEmpty() }
         if (lines.isEmpty()) return ""
         val firstLine = lines[0]
@@ -364,6 +412,8 @@ class TeacherClassPageActivity : AppCompatActivity() {
         // Find views
         val toolbar = dialogView.findViewById<MaterialToolbar>(R.id.toolbar)
         val btnNext = dialogView.findViewById<Button>(R.id.btnNext)
+        val etQuarterNumber = dialogView.findViewById<TextInputEditText>(R.id.etQuarterNumber)
+        val tilQuarterNumber = dialogView.findViewById<TextInputLayout>(R.id.tilQuarterNumber)
         val etAssessmentNumber = dialogView.findViewById<TextInputEditText>(R.id.etAssessmentNumber)
         val tilAssessmentNumber = dialogView.findViewById<TextInputLayout>(R.id.tilAssessmentNumber)
         val etAssessmentTitle = dialogView.findViewById<TextInputEditText>(R.id.etAssessmentTitle)
@@ -452,12 +502,14 @@ class TeacherClassPageActivity : AppCompatActivity() {
             val assessmentTitle = etAssessmentTitle.text.toString().trim()
             val availableFrom = etAvailableFrom.text.toString().trim()
             val availableUntil = etAvailableUntil.text.toString().trim()
+            val assessmentQuarter = etQuarterNumber.text.toString().trim()
 
             // Validation
             tilAssessmentNumber.error = null
             tilAssessmentTitle.error = null
             tilAvailableFrom.error = null
             tilAvailableUntil.error = null
+            tilQuarterNumber.error = null
 
             var isValid = true
             val errorMsg = getString(R.string.error_blank_field)
@@ -478,7 +530,10 @@ class TeacherClassPageActivity : AppCompatActivity() {
                 tilAvailableUntil.error = errorMsg
                 isValid = false
             }
-
+            if(assessmentQuarter.isEmpty()){
+                tilQuarterNumber.error = errorMsg
+                isValid = false
+            }
             if (!isValid) {
                 return@setOnClickListener
             }
@@ -490,6 +545,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
                 putExtra("EXTRA_ASSESSMENT_TITLE", assessmentTitle)
                 putExtra("EXTRA_AVAILABLE_FROM", availableFrom)
                 putExtra("EXTRA_AVAILABLE_UNTIL", availableUntil)
+                putExtra("EXTRA_AVAILABLE_QUARTER", assessmentQuarter)
             }
             startActivity(intent)
 

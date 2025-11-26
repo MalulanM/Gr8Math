@@ -146,12 +146,13 @@ class AppLoginActivity : AppCompatActivity() {
 //                        val token = data.optString("token")
                         val role = data.optString("role")
                         val id = user.optInt("id")
+                        val firstName = user.optString("first_name")
                         val isfirstLogin = user.optBoolean("first_login")
                         val pref = getSharedPreferences("user_session", MODE_PRIVATE)
 //                        pref.edit().putString("auth_token", token).apply()
                         ConnectURL.init(this@AppLoginActivity)
 
-                        Log.e("isFirst", isfirstLogin.toString())
+                        Log.e("isFirst", firstName)
                         if(isfirstLogin == true && role == "student"){
                             showUserAgreement(role, id)
                         } else if (isfirstLogin == true && role == "teacher"){
@@ -178,6 +179,7 @@ class AppLoginActivity : AppCompatActivity() {
                                 nextIntent.putExtra("toast_msg", msg)
                                 nextIntent.putExtra("id", id)
                                 nextIntent.putExtra("role", role)
+                                nextIntent.putExtra("name", firstName)
 
                                 UIUtils.showLoading(
                                     loadingLayout,

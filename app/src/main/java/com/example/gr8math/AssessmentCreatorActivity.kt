@@ -106,7 +106,7 @@ class QuestionCardManager(
             if (question.choices.isNotEmpty()) {
                 showAnswerKeySelectionDialog()
             } else {
-                ShowToast.showMessage(context, "Please add choices first.")
+
             }
         }
 
@@ -283,6 +283,8 @@ class AssessmentCreatorActivity : AppCompatActivity() {
     // Hold Assessment details from intent
     private var assessmentNumber: Int? = 0
 
+    private var assessmentQuarter: Int? = 0
+
     private var assessmentTitle: String? = null
     private var availableFrom: String? = null
     private var availableUntil: String? = null
@@ -297,6 +299,7 @@ class AssessmentCreatorActivity : AppCompatActivity() {
         assessmentTitle = intent.getStringExtra("EXTRA_ASSESSMENT_TITLE")
         availableFrom = intent.getStringExtra("EXTRA_AVAILABLE_FROM")
         availableUntil = intent.getStringExtra("EXTRA_AVAILABLE_UNTIL")
+        assessmentQuarter = intent.getStringExtra("EXTRA_AVAILABLE_QUARTER")?.toIntOrNull() ?: 0
         courseId = CurrentCourse.courseId
 
         Log.e("CONTENT_PPPP", "${assessmentNumber}, ${assessmentTitle}, ${courseId}")
@@ -333,8 +336,8 @@ class AssessmentCreatorActivity : AppCompatActivity() {
             if (validateAllQuestions()) {
                 showSaveConfirmationDialog(isPublishing = true)
             } else {
-                Toast.makeText(this, "Please fix errors before publishing.", Toast.LENGTH_SHORT).show()
-            }
+                ShowToast.showMessage(this, "Please fix errors before publishing.")
+                 }
         }
 
         // Add the first question automatically on start
@@ -442,6 +445,7 @@ class AssessmentCreatorActivity : AppCompatActivity() {
             end_time = availableUntil ?: "",
             assessment_items = questionManagers.size,
             assessment_number = assessmentNumber!!,
+            assessment_quarter = assessmentQuarter!!,
             questions = questionManagers.map { manager ->
                 val q = manager.question
                 Question(

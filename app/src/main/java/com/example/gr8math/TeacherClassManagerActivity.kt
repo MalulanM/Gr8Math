@@ -1,11 +1,18 @@
 package com.example.gr8math // Make sure this matches your package name
 
+import android.app.Dialog
 import android.content.Intent // <-- NEW IMPORT
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.util.TypedValue
+import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
+import android.view.Window
+import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.ImageView
@@ -27,6 +34,7 @@ import com.example.gr8math.adapter.ClassAdapter
 import com.example.gr8math.api.ConnectURL
 import com.example.gr8math.dataObject.TeacherClass
 import com.example.gr8math.utils.ShowToast
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,7 +64,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
     //for search suggestions //remember!!!!!!
     private lateinit var llPastSearches : LinearLayout
 
-    private var currentCall: Call<ResponseBody>? = null // <-- track active API call
+    private var currentCall: Call<ResponseBody>? = null
 
     private lateinit var tvNoResults : TextView
     private lateinit var pastSearch: TextView
@@ -69,12 +77,15 @@ class TeacherClassManagerActivity : AppCompatActivity() {
     private lateinit var addClassLauncher: ActivityResultLauncher<Intent>
     private lateinit var parentLayout : LinearLayout
 
+    private lateinit var name:String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_class_manager_teacher)
 
         id = intent.getIntExtra("id", 0)
             role = intent.getStringExtra("role")?:""
+        name = intent.getStringExtra("name")?:""
 
         if (!role.isNullOrEmpty() && id > 0) {
             inflateClasses(role, id)
@@ -98,7 +109,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         tvNoResults = findViewById(R.id.tvNoResults)
         llPastSearches = findViewById(R.id.llPastSearches)
         // Setup RecyclerView and Adapter
-        searchLayout = findViewById(R.id.rvSearchResults) // or your actual ID
+        searchLayout = findViewById(R.id.rvSearchResults)
         classAdapter = ClassAdapter(mutableListOf()) { selectedClass ->
 
             val intent = Intent(this, TeacherClassPageActivity::class.java)
@@ -115,17 +126,12 @@ class TeacherClassManagerActivity : AppCompatActivity() {
 
         // --- Set up Click Listeners ---
 
-        // 1. Main toolbar's profile icon
+
         mainToolbar.setNavigationOnClickListener {
-            finish()
+            showFacultyMenu()
         }
 
-//        // 2. "Add Classes" button
-//        addClassesButton.setOnClickListener {
-//            val intent = Intent(this@TeacherClassManagerActivity, TeacherAddClassActivity::class.java)
-//            intent.putExtra("id", id)
-//            startActivity(intent)
-//        }
+
 
         // 3. Search Icon in the main toolbar (This is correct)
         searchIcon.setOnClickListener {
@@ -220,6 +226,58 @@ class TeacherClassManagerActivity : AppCompatActivity() {
             super.onBackPressed()
         }
     }
+
+    private fun showFacultyMenu() {
+        // 1. Create a standard Dialog (Not MaterialAlertDialogBuilder)
+        val dialog = Dialog(this)
+
+        // 2. Remove the default title bar
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+
+        // 3. Inflate layout
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_faculty_menu, null)
+        dialog.setContentView(dialogView)
+
+        val name = dialog.findViewById<TextView>(R.id.tvGreeting)
+        name.text = "Hi, ${this.name}!"
+
+        // --- Menu Click Listeners ---
+        dialogView.findViewById<View>(R.id.btnNotifications).visibility = View.GONE
+
+        dialogView.findViewById<View>(R.id.btnAccountSettings).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<View>(R.id.btnTerms).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<View>(R.id.btnPrivacy).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        // 4. Configure the Window to stretch properly
+        val window = dialog.window
+        if (window != null) {
+            // Make background transparent so we only see our layout
+            window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+            // Position at the Top-Left
+            val params = window.attributes
+            params.gravity = Gravity.START or Gravity.TOP
+
+            // Set Width to 85% of screen, Height to MATCH_PARENT (Full Screen Vertical)
+            params.width = (resources.displayMetrics.widthPixels * 0.85).toInt()
+            params.height = WindowManager.LayoutParams.MATCH_PARENT
+
+            window.attributes = params
+        }
+
+        dialog.show()
+    }
+
+
+
 
     fun recordSearch(id: Int){
         val searchTerm = etSearch.text.toString().trim()

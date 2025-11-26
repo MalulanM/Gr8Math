@@ -1,6 +1,12 @@
 package com.example.gr8math.api
 
 import com.example.gr8math.AccountRequestResponse
+import com.example.gr8math.adapter.FacultyNotification
+import com.example.gr8math.adapter.MarkAllReadRequest
+import com.example.gr8math.adapter.StudentNotification
+import com.example.gr8math.adapter.StudentNotificationResponse
+import com.example.gr8math.adapter.TeacherNotification
+import com.example.gr8math.adapter.TeacherNotificationResponse
 import com.example.gr8math.dataObject.AnswerPayload
 import com.example.gr8math.dataObject.AssessmentRequest
 import com.example.gr8math.dataObject.AssessmentResponse
@@ -154,4 +160,47 @@ interface ApiService {
         @Query("student_id") userId: Int,
         @Query("assessment_id") assessmentId: Int
     ): Call<ResponseBody>
+
+    @GET("api/admin/notifications")
+    fun getAdminNotifications(@Query("user_id") userId: Int): Call<List<FacultyNotification>>
+
+    @GET("api/teacher/notifications")
+    fun getTeacherNotifications(@Query("user_id") userId: Int,
+                              @Query("course_id") courseId : Int): Call<TeacherNotificationResponse>
+
+
+    @GET("api/student/notifications")
+    fun getStudentNotifications(@Query("user_id") userId: Int,
+                              @Query("course_id") courseId : Int): Call<StudentNotificationResponse>
+
+    @GET("api/participant/display-ranking")
+    fun getStudents(@Query("course_id") courseId: Int): Call<ResponseBody>
+
+    //participant/display-own-student-assessment
+    @GET("api/participant/display-student-assessment")
+    fun getStudentAssessment(@Query("course_id") courseId: Int,
+                             @Query("student_id") studentId: Int): Call<ResponseBody>
+
+    @GET("api/participant/display-own-student-assessment")
+    fun getStudentOwnAssessment(@Query("course_id") courseId: Int,
+                             @Query("student_id") studentId: Int): Call<ResponseBody>
+
+    @FormUrlEncoded
+    @POST("api/device/store-token")
+    fun storeDeviceToken(@Field("user_id") userId: Int, @Field("token") token: String): Call<ResponseBody>
+
+    @POST("api/teacher/notifications/read/{id}")
+    fun markNotificationRead(
+        @Path("id") id: Int
+    ): Call<Void>
+
+    @POST("api/teacher/notifications/read-all")
+    fun markAllNotificationsRead(
+        @Body request: MarkAllReadRequest
+    ): Call<Void>
+
+
+
 }
+
+

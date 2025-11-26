@@ -2,11 +2,13 @@ package com.example.gr8math
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gr8math.api.ConnectURL
 import com.example.gr8math.dataObject.CurrentCourse
 import com.example.gr8math.utils.ShowToast
+import com.example.gr8math.utils.UIUtils
 import com.google.android.material.appbar.MaterialToolbar
 import okhttp3.ResponseBody
 import org.json.JSONObject
@@ -20,6 +22,10 @@ class AssessmentResultActivity : AppCompatActivity() {
     private lateinit var tvNumberOfItems: TextView
     private lateinit var tvDate: TextView
     private lateinit var tvCompletionMessage : TextView
+
+    lateinit var loadingLayout : View
+    lateinit var loadingProgress : View
+    lateinit var loadingText : TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,12 +41,18 @@ class AssessmentResultActivity : AppCompatActivity() {
 
         assessmentId = intent.getIntExtra("assessment_id", 0)
 
+        loadingLayout = findViewById(R.id.loadingLayout)
+        loadingProgress = findViewById(R.id.loadingProgressBg)
+        loadingText = findViewById(R.id.loadingText)
+
         toolbar.setNavigationOnClickListener { finish() }
 
         displayResult()
     }
 
     private fun displayResult() {
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+
         val apiService = ConnectURL.api
 
         val studentId = CurrentCourse.userId
@@ -62,6 +74,8 @@ class AssessmentResultActivity : AppCompatActivity() {
                         val success = jsonObj.optBoolean("success", false)
 
                         if (success) {
+                            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+
                             val recordObj = jsonObj.optJSONObject("record")
                             val assessmentObj = jsonObj.optJSONObject("assessment_details")
 
@@ -83,10 +97,14 @@ class AssessmentResultActivity : AppCompatActivity() {
                                     tvDate.text = "Date Accomplished: $formattedDate"
 
                         } else {
+                            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+
                             val message = jsonObj.optString("message", "Failed to fetch result")
                             ShowToast.showMessage(this@AssessmentResultActivity, message)
                         }
                     } catch (e: Exception) {
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+
                         Log.e("API_PARSE_ERROR", e.localizedMessage ?: "")
                         ShowToast.showMessage(this@AssessmentResultActivity, "Error parsing result")
                     }
@@ -94,7 +112,8 @@ class AssessmentResultActivity : AppCompatActivity() {
 
                 override fun onFailure(call: retrofit2.Call<ResponseBody>, t: Throwable) {
                     Log.e("API_ERROR", t.localizedMessage ?: "")
-                    ShowToast.showMessage(this@AssessmentResultActivity, "Network error: ${t.localizedMessage}")
+                    ShowToast.showMessage(this@AssessmentResultActivity, "Failed to connect to server. Check your internet connection.")
+
                 }
             })
     }

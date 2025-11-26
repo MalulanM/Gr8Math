@@ -1,9 +1,16 @@
 package com.example.gr8math // Make sure this matches your package name
 
+import android.app.Dialog
 import android.content.Intent // <-- IMPORT ADDED
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
+import android.view.Window
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -35,14 +42,15 @@ class StudentClassManagerActivity : AppCompatActivity() {
     private lateinit var addClassesButton: Button
     private lateinit var addClassLauncher: ActivityResultLauncher<Intent>
     private lateinit var parentLayout : LinearLayout
-    private lateinit var role: String
 
     lateinit var loadingLayout : View
 
     lateinit var loadingProgress : View
 
     lateinit var loadingText : TextView
+    private lateinit var role: String
     private var id: Int = 0
+    private lateinit var name:String
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +59,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
         setContentView(R.layout.activity_class_manager_student)
         id = intent.getIntExtra("id", 0)
         role = intent.getStringExtra("role")?:""
+        name = intent.getStringExtra("name")?:""
 
         if (!role.isNullOrEmpty() && id > 0) {
             inflateClasses(role, id)
@@ -70,7 +79,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
 
         // 1. Main toolbar's profile icon/back button
         mainToolbar.setNavigationOnClickListener {
-            finish() // Closes the page
+            showFacultyMenu()
         }
 
         // 2. "Add Classes" button
@@ -102,6 +111,54 @@ class StudentClassManagerActivity : AppCompatActivity() {
 
     }
 
+    private fun showFacultyMenu() {
+        // 1. Create a standard Dialog (Not MaterialAlertDialogBuilder)
+        val dialog = Dialog(this)
+
+        // 2. Remove the default title bar
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+
+        // 3. Inflate layout
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_faculty_menu, null)
+        dialog.setContentView(dialogView)
+
+        val name = dialog.findViewById<TextView>(R.id.tvGreeting)
+        name.text = "Hi, ${this.name}!"
+
+        // --- Menu Click Listeners ---
+        dialogView.findViewById<View>(R.id.btnNotifications).visibility = View.GONE
+
+        dialogView.findViewById<View>(R.id.btnAccountSettings).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<View>(R.id.btnTerms).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<View>(R.id.btnPrivacy).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        // 4. Configure the Window to stretch properly
+        val window = dialog.window
+        if (window != null) {
+            // Make background transparent so we only see our layout
+            window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+            // Position at the Top-Left
+            val params = window.attributes
+            params.gravity = Gravity.START or Gravity.TOP
+
+            // Set Width to 85% of screen, Height to MATCH_PARENT (Full Screen Vertical)
+            params.width = (resources.displayMetrics.widthPixels * 0.85).toInt()
+            params.height = WindowManager.LayoutParams.MATCH_PARENT
+
+            window.attributes = params
+        }
+
+        dialog.show()
+    }
     fun inflateClasses(role: String, id: Int) {
         val apiService = ConnectURL.api
         val call = apiService.getClasses(id, role)
