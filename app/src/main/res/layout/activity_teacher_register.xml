@@ -7,73 +7,13 @@
     android:layout_height="match_parent"
     android:background="@color/colorLight">
 
-    <View
-        android:id="@+id/loadingLayout"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="#80000000"
-        android:elevation="8dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- White box for progress -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/loadingProgressBg"
-        android:layout_width="180dp"
-        android:layout_height="80dp"
-        android:alpha="1"
-        android:background="#ECF1F4"
-        android:elevation="8dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <!-- Circular progress indicator centered inside the box -->
-        <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:id="@+id/loadingSpinner"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="10dp"
-            android:indeterminate="true"
-            app:indicatorColor="#8C78F6"
-            app:indicatorInset="0dp"
-            app:indicatorSize="50dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:trackColor="#E2E5E6"
-            app:trackCornerRadius="3dp"
-            app:trackThickness="6dp" />
-
-
-        <TextView
-            android:id="@+id/loadingText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="25dp"
-            android:fontFamily="@font/lexend"
-            android:text="Loading"
-            android:typeface="normal"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/loadingSpinner"
-            app:layout_constraintTop_toTopOf="parent" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <!-- Top bar: back + bold centered title -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
         android:background="@android:color/transparent"
         app:navigationIcon="@drawable/ic_arrow_back_24"
-        app:title="@string/add_account_title"
+        app:title="Register"
         app:titleCentered="true"
         app:titleTextColor="@color/colorText"
         app:titleTextAppearance="@style/TextAppearance.Gr8.ToolbarTitle"
@@ -81,7 +21,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Scroll just the content area; card floats with margins like the mockup -->
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -96,128 +35,96 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Floating white card (same width as login: screen_side_login) -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/screen_side_login"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="12dp"
-                android:layout_marginEnd="@dimen/screen_side_login"
+                android:layout_marginEnd="16dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="6dp"
                 app:cardUseCompatPadding="true">
 
-                <!-- Card content -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="20dp">
 
-                    <!-- Subtitle with inter-word spacing like your design -->
                     <TextView
                         android:id="@+id/message"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:paddingTop="4dp"
                         android:paddingBottom="12dp"
-                        android:text="@string/register_subtitle"
+                        android:text="Please enter the needed details."
                         android:textAlignment="center"
                         android:textColor="@color/colorText"
                         android:textSize="15sp"
-                        android:textStyle="bold"
-                        tools:ignore="UnusedAttribute" />
+                        android:textStyle="bold" />
 
-                    <!-- Email -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilEmail"
                         style="@style/Gr8TextInputStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/hint_email"
-                        app:boxBackgroundColor="@color/white"
-                        app:boxBackgroundMode="outline"
-                        app:boxStrokeColor="@color/til_stroke"
-                        app:boxStrokeWidth="1dp"
-                        app:boxStrokeWidthFocused="2dp"
-                        app:hintTextColor="@color/til_hint">
-
+                        app:boxBackgroundColor="@color/white">
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/email"
                             android:layout_width="match_parent"
                             android:layout_height="52dp"
                             android:fontFamily="@font/lexend"
                             android:maxLines="1"
-                            android:paddingStart="14dp"
-                            android:paddingEnd="14dp"
                             android:textColor="@android:color/black" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- First Name -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilFirstName"
                         style="@style/Gr8TextInputStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/field_spacing"
+                        android:layout_marginTop="8dp"
                         android:hint="@string/hint_first_name"
-                        app:boxBackgroundColor="@color/white"
-                        app:boxBackgroundMode="outline"
-                        app:boxStrokeColor="@color/til_stroke"
-                        app:boxStrokeWidth="1dp"
-                        app:boxStrokeWidthFocused="2dp"
-                        app:hintTextColor="@color/til_hint">
-
+                        app:boxBackgroundColor="@color/white">
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/firstName"
                             android:layout_width="match_parent"
                             android:layout_height="52dp"
                             android:fontFamily="@font/lexend"
                             android:maxLines="1"
-                            android:paddingStart="14dp"
-                            android:paddingEnd="14dp"
                             android:textColor="@android:color/black" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Last Name -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilLastName"
                         style="@style/Gr8TextInputStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/field_spacing"
+                        android:layout_marginTop="8dp"
                         android:hint="@string/hint_last_name"
-                        app:boxBackgroundColor="@color/white"
-                        app:boxBackgroundMode="outline"
-                        app:boxStrokeColor="@color/til_stroke"
-                        app:boxStrokeWidth="1dp"
-                        app:boxStrokeWidthFocused="2dp"
-                        app:hintTextColor="@color/til_hint">
-
+                        app:boxBackgroundColor="@color/white">
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/lastName"
                             android:layout_width="match_parent"
                             android:layout_height="52dp"
                             android:fontFamily="@font/lexend"
                             android:maxLines="1"
-                            android:paddingStart="14dp"
-                            android:paddingEnd="14dp"
                             android:textColor="@android:color/black" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- LRN -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilTeachingPos"
                         style="@style/Gr8TextInputStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        app:boxBackgroundColor="@color/white"
                         app:boxBackgroundMode="outline"
                         app:boxStrokeColor="@color/til_stroke"
                         app:boxStrokeWidth="1dp"
                         app:boxStrokeWidthFocused="2dp"
+                        android:hint="Teaching Position"
+                        app:boxBackgroundColor="@color/white"
                         app:endIconMode="dropdown_menu"
                         app:hintTextColor="@color/til_hint">
 
@@ -228,14 +135,12 @@
                             android:contentDescription="@string/hint_teachingPos"
                             android:entries="@array/teaching_pos_options"
                             android:fontFamily="@font/lexend"
-                            android:hint="@string/hint_teachingPos"
                             android:importantForAccessibility="yes"
                             android:inputType="none"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
                             android:textColor="@android:color/black" />
                     </com.google.android.material.textfield.TextInputLayout>
-
 
                     <!-- Gender -->
                     <LinearLayout
@@ -337,23 +242,19 @@
                         </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
 
-
-                    <!-- Add Button -->
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnAdd"
+                        android:id="@+id/btnNext"
                         style="@style/Gr8ButtonStyle"
                         android:layout_width="match_parent"
                         android:layout_height="52dp"
-                        android:layout_marginTop="18dp"
-                        android:text="@string/add"
-                        app:backgroundTint="@color/btn_primary_state" />
+                        android:layout_marginTop="24dp"
+                        android:text="Next" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <Space
+            <android.widget.Space
                 android:layout_width="match_parent"
                 android:layout_height="16dp" />
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
-

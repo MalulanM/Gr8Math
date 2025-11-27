@@ -65,7 +65,7 @@ class AddAccountActivity : AppCompatActivity() {
 
     fun showRegisterInfo(){
         // UPDATED: Using your new layout file
-        setContentView(R.layout.add_account_activity)
+        setContentView(R.layout.activity_teacher_register)
         Init()
         findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
 
