@@ -40,9 +40,12 @@ class AppLoginActivity : AppCompatActivity() {
         }
 
         init()
-        findViewById<com.google.android.material.button.MaterialButton>(R.id.btnRegister).setOnClickListener {
-            startActivity(android.content.Intent(this, RegisterActivity::class.java))
+
+        // --- UPDATED: Navigate to Role Selection ---
+        findViewById<View>(R.id.btnRegister).setOnClickListener {
+            startActivity(Intent(this, RegisterRoleActivity::class.java))
         }
+        // -------------------------------------------
 
         // "Forgot Password?" -> open ForgotPasswordActivity (UI only)
         findViewById<View>(R.id.tvForgot).setOnClickListener {

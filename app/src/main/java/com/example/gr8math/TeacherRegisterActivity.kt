@@ -3,11 +3,9 @@ package com.example.gr8math
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gr8math.utils.UIUtils
 import com.google.android.material.appbar.MaterialToolbar
@@ -17,51 +15,72 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-class RegisterActivity : AppCompatActivity() {
+class TeacherRegisterActivity : AppCompatActivity() {
 
-    // UI Elements
-    lateinit var genderField: MaterialAutoCompleteTextView
-    lateinit var date: EditText
+    // Fields specifically for Teacher
+    lateinit var teachingPosField: MaterialAutoCompleteTextView
+    lateinit var tilTeachingPos: TextInputLayout
+
+    // Common fields
     lateinit var email: EditText
     lateinit var firstName: EditText
     lateinit var lastName: EditText
-    lateinit var LRN: EditText
+    lateinit var date: EditText
+    lateinit var genderField: MaterialAutoCompleteTextView
     lateinit var nextButton: Button
 
-    // Input Layouts (for error display)
+    // TILs for validation
     lateinit var tilEmail: TextInputLayout
     lateinit var tilFirstName: TextInputLayout
     lateinit var tilLastName: TextInputLayout
-    lateinit var tilLRN: TextInputLayout
     lateinit var tilGender: TextInputLayout
     lateinit var tilBirthDate: TextInputLayout
 
     var selectedGender: String = ""
+    var selectedTeachingPos: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.register_activity) // Uses the Student layout
+        // --- USE YOUR NEW LAYOUT ---
+        setContentView(R.layout.activity_teacher_register)
 
         initViews()
-        setupDropdown()
+        setupDropdowns()
         setupDatePicker()
 
-        // Back Button
         findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
 
-        // Next Button Click
         nextButton.setOnClickListener {
             if (validateForm()) {
-                goToPasswordCreation()
+                // Proceed to Password Creation
+                val intent = Intent(this, PasswordCreationActivity::class.java)
+
+                // Pass Teacher Data
+                intent.putExtra("EXTRA_EMAIL", email.text.toString().trim())
+                intent.putExtra("EXTRA_FIRST_NAME", firstName.text.toString().trim())
+                intent.putExtra("EXTRA_LAST_NAME", lastName.text.toString().trim())
+                intent.putExtra("EXTRA_TEACHING_POS", selectedTeachingPos) // Unique to Teacher
+                intent.putExtra("EXTRA_GENDER", selectedGender)
+                intent.putExtra("EXTRA_BIRTHDATE", date.text.toString().trim())
+
+                // Important: Identify this as a Teacher
+                intent.putExtra("EXTRA_ROLE", "Teacher")
+
+                startActivity(intent)
             }
         }
     }
 
     private fun initViews() {
+        // Initialize all views from activity_teacher_register.xml
         email = findViewById(R.id.email)
         firstName = findViewById(R.id.firstName)
         lastName = findViewById(R.id.lastName)
-        LRN = findViewById(R.id.LRN)
+
+        // Ensure your XML has these IDs
+        teachingPosField = findViewById(R.id.etTeachingPos)
+        tilTeachingPos = findViewById(R.id.tilTeachingPos)
+
         date = findViewById(R.id.etDob)
         genderField = findViewById(R.id.etGender)
         nextButton = findViewById(R.id.btnNext)
@@ -69,18 +88,25 @@ class RegisterActivity : AppCompatActivity() {
         tilEmail = findViewById(R.id.tilEmail)
         tilFirstName = findViewById(R.id.tilFirstName)
         tilLastName = findViewById(R.id.tilLastName)
-        tilLRN = findViewById(R.id.tilLRN)
         tilGender = findViewById(R.id.tilGender)
         tilBirthDate = findViewById(R.id.tilBirthdate)
     }
 
-    private fun setupDropdown() {
-        val items = listOf("Male", "Female")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, items)
-        genderField.setAdapter(adapter)
-
+    private fun setupDropdowns() {
+        // Gender Dropdown
+        val genderItems = listOf("Male", "Female")
+        val genderAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, genderItems)
+        genderField.setAdapter(genderAdapter)
         genderField.setOnItemClickListener { parent, _, position, _ ->
             selectedGender = parent.getItemAtPosition(position).toString()
+        }
+
+        // Teaching Position Dropdown
+        val posItems = listOf("Teacher I", "Teacher II", "Teacher III", "Teacher IV", "Teacher V", "Teacher VI", "Teacher VII", "Master Teacher I", "Master Teacher II", "Master Teacher III", "Master Teacher IV", "Master Teacher V")
+        val posAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, posItems)
+        teachingPosField.setAdapter(posAdapter)
+        teachingPosField.setOnItemClickListener { parent, _, position, _ ->
+            selectedTeachingPos = parent.getItemAtPosition(position).toString()
         }
     }
 
@@ -103,15 +129,14 @@ class RegisterActivity : AppCompatActivity() {
                 month,
                 day
             )
-            // Max date is today
-            datePicker.datePicker.maxDate = System.currentTimeMillis()
+            datePicker.datePicker.maxDate = System.currentTimeMillis() - 24 * 60 * 60 * 1000
             datePicker.show()
         }
     }
 
     private fun validateForm(): Boolean {
-        val fields = listOf(email, firstName, lastName, LRN, date, genderField)
-        val tils = listOf(tilEmail, tilFirstName, tilLastName, tilLRN, tilBirthDate, tilGender)
+        val fields = listOf(email, firstName, lastName, teachingPosField, date, genderField)
+        val tils = listOf(tilEmail, tilFirstName, tilLastName, tilTeachingPos, tilBirthDate, tilGender)
 
         var hasError = false
         for (i in fields.indices) {
@@ -123,23 +148,5 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
         return !hasError
-    }
-
-    private fun goToPasswordCreation() {
-        // Navigate to the shared Password Creation Activity
-        val intent = Intent(this, PasswordCreationActivity::class.java)
-
-        // Pass all the Student data
-        intent.putExtra("EXTRA_EMAIL", email.text.toString().trim())
-        intent.putExtra("EXTRA_FIRST_NAME", firstName.text.toString().trim())
-        intent.putExtra("EXTRA_LAST_NAME", lastName.text.toString().trim())
-        intent.putExtra("EXTRA_LRN", LRN.text.toString().trim()) // Specific to Student
-        intent.putExtra("EXTRA_GENDER", selectedGender)
-        intent.putExtra("EXTRA_BIRTHDATE", date.text.toString().trim())
-
-        // Important: Identify this as a Student
-        intent.putExtra("EXTRA_ROLE", "Student")
-
-        startActivity(intent)
     }
 }

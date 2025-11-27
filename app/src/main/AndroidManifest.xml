@@ -17,7 +17,10 @@
             android:name=".SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math">
-
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <!-- Login Activity -->
@@ -29,6 +32,21 @@
         <!-- Register Activity -->
         <activity
             android:name=".RegisterActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".RegisterRoleActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".TeacherRegisterActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".PasswordCreationActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
@@ -180,10 +198,7 @@
             android:name=".StudentBadgesActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
         </activity>
 
     </application>
