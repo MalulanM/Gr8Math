@@ -23,7 +23,10 @@ data class StudentNotification(
     val created_at: String,
     var is_read: Boolean,
     val type : String,
-    val id : Int
+    val id : Int,
+    val course_id: Int?,
+    val lesson_id: Int?,
+    val assessment_id: Int?
 )
 
 class StudentNotificationAdapter(
@@ -53,7 +56,7 @@ class StudentNotificationAdapter(
         holder.tvTime.text = formatTime(item.created_at)
 
         val iconRes = when (item.type) {
-            "class" -> if (item.is_read) {
+            "class_time" -> if (item.is_read) {
                 R.drawable.ic_read_class
             } else {
                 R.drawable.ic_unread_class
@@ -94,6 +97,7 @@ class StudentNotificationAdapter(
         return try {
             // Parse Supabase timestamp: yyyy-MM-dd HH:mm:ss.SSSS
             val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.getDefault())
+            inputFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
             val date = inputFormat.parse(raw) ?: return raw
 
             val now = System.currentTimeMillis()

@@ -344,7 +344,12 @@ class AppLoginActivity : AppCompatActivity() {
                     "teacher" -> Intent(this@AppLoginActivity, TeacherClassManagerActivity::class.java)
                     else -> Intent(this@AppLoginActivity, AccountManagementActivity::class.java)
                 }
-                nextIntent.putExtra("toast_msg", "Login Successful")
+                val msg = if (role == "teacher") {
+                    "Password saved"
+                } else {
+                    "Login Successful"
+                }
+                nextIntent.putExtra("toast_msg", msg)
                 nextIntent.putExtra("id", id)
                 nextIntent.putExtra("role", role)
 

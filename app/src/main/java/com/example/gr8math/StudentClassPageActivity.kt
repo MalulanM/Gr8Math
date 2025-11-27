@@ -29,17 +29,22 @@ class StudentClassPageActivity : AppCompatActivity() {
     private lateinit var sectionName: String
     private lateinit var parentLayout : LinearLayout
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_classpage_student)
 
-        // Get incoming values (if any)
+        val toastMsg = intent.getStringExtra("toast_msg")
+        if(!toastMsg.isNullOrEmpty()){
+            ShowToast.showMessage(this, toastMsg)
+        }
+
+
         val incomingCourseId = intent.getIntExtra("courseId", -1)
         val incomingSectionName = intent.getStringExtra("sectionName")
         val incomingRole = intent.getStringExtra("role")
         val incomingUserId = intent.getIntExtra("id", -1)
 
-// Update ONLY if a new class is selected
         if (incomingCourseId != -1 && incomingCourseId != CurrentCourse.courseId) {
 
             // Update global course data
@@ -48,12 +53,12 @@ class StudentClassPageActivity : AppCompatActivity() {
             CurrentCourse.currentRole = incomingRole ?: ""
             CurrentCourse.userId = incomingUserId
 
-            Log.d("TeacherClassPage", "Switched to NEW CLASS: ${CurrentCourse.sectionName}")
+//            Log.d("TeacherClassPage", "Switched to NEW CLASS: ${CurrentCourse.sectionName}")
         } else {
-            Log.d("TeacherClassPage", "Same class — keeping CurrentCourse data.")
+//            Log.d("TeacherClassPage", "Same class — keeping CurrentCourse data.")
         }
 
-// Now use CurrentCourse for the UI
+
         courseId = CurrentCourse.courseId
         sectionName = CurrentCourse.sectionName
         role = CurrentCourse.currentRole
@@ -62,6 +67,7 @@ class StudentClassPageActivity : AppCompatActivity() {
 
         // --- Setup Toolbar ---
         val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
+        toolbar.title = sectionName
         toolbar.setNavigationOnClickListener {
             finish() // Go back
         }
@@ -70,34 +76,28 @@ class StudentClassPageActivity : AppCompatActivity() {
         val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
         bottomNav.selectedItemId = R.id.nav_class
         bottomNav.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_class -> {
-                    startActivity(Intent(this, StudentClassPageActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
-                }
-                R.id.nav_badges -> {
-                    startActivity(Intent(this, StudentClassPageActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
-                }
-                R.id.nav_notifications -> {
-                    startActivity(Intent(this, StudentNotificationsActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
-                }
-                R.id.nav_grades -> {
-                    startActivity(Intent(this, StudentGradesActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
-                }
-                else -> false
+            if (item.itemId == bottomNav.selectedItemId) {
+                return@setOnItemSelectedListener true
             }
+
+            val intent = when (item.itemId) {
+                R.id.nav_class -> null // already in this Activity
+                R.id.nav_badges -> Intent(this, StudentBadgesActivity::class.java)
+                R.id.nav_notifications -> Intent(this, StudentNotificationsActivity::class.java)
+                R.id.nav_grades -> Intent(this, StudentGradesActivity::class.java)
+                else -> null
+            }
+
+            intent?.let {
+                // Prevent stacking
+                it.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                startActivity(it)
+            }
+
+            true
         }
+
+
         NotificationHelper.fetchUnreadCount(bottomNav)
         // --- Customize the Cards ---
 
@@ -107,12 +107,53 @@ class StudentClassPageActivity : AppCompatActivity() {
         gameCard.findViewById<TextView>(R.id.tvTitle).text = getString(R.string.play_a_game)
         inflateAssessmentAndLesson(courseId)
 
+        handleNotificationIntent(intent)
+
+    }
+
+    private fun handleNotificationIntent(intent: Intent?) {
+        intent?.let {
+            val lessonIdFromNotif = it.getIntExtra("lessonId", -1)
+            val assessmentIdFromNotif = it.getIntExtra("assessmentId", -1)
+
+            if (lessonIdFromNotif != -1) {
+                // Open lesson detail immediately
+                val lessonIntent = Intent(this, LessonDetailActivity::class.java)
+                lessonIntent.putExtra("lesson_id", lessonIdFromNotif)
+                startActivity(lessonIntent)
+            } else if (assessmentIdFromNotif != -1) {
+                // Wait for API check before opening activity to avoid brief flash
+                withRecord(assessmentIdFromNotif, object : RecordCallback {
+                    override fun onResult(hasRecord: Boolean) {
+                        val targetIntent = if (hasRecord) {
+                            // Go directly to results if record exists or deadline passed
+                            Intent(this@StudentClassPageActivity, AssessmentResultActivity::class.java)
+                        } else {
+                            // Otherwise, go to detail
+                            Intent(this@StudentClassPageActivity, AssessmentDetailActivity::class.java)
+                        }
+                        targetIntent.putExtra("assessment_id", assessmentIdFromNotif)
+                        targetIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        startActivity(targetIntent)
+                    }
+                })
+            }
+        }
+    }
+
+
+    // --- OVERRIDE onNewIntent at class level ---
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent) // update activity intent
+        handleNotificationIntent(intent)
     }
     interface RecordCallback {
         fun onResult(hasRecord: Boolean)
     }
 
     fun inflateAssessmentAndLesson(courseId: Int) {
+
         val apiService = ConnectURL.api
         val call = apiService.getClassContent(courseId)
 
@@ -170,28 +211,25 @@ class StudentClassPageActivity : AppCompatActivity() {
                                 assessmentTitle.text = "Assessment ${item.optInt("assessment_number")}"
                                 val assessmentId = item.optInt("id")
                                 arrowView.setOnClickListener {
+                                    // Open AssessmentDetailActivity immediately
+                                    val intent = Intent(this@StudentClassPageActivity, AssessmentDetailActivity::class.java)
+                                    intent.putExtra("assessment_id", assessmentId)
                                     withRecord(assessmentId, object : RecordCallback {
                                         override fun onResult(hasRecordOrDeadline: Boolean) {
+
                                             if (hasRecordOrDeadline) {
-                                                val intent = Intent(
-                                                    this@StudentClassPageActivity,
-                                                    AssessmentResultActivity::class.java
-                                                )
-                                                intent.putExtra("assessment_id", assessmentId)
-                                                startActivity(intent)
+                                                val resultIntent = Intent(this@StudentClassPageActivity, AssessmentResultActivity::class.java)
+                                                resultIntent.putExtra("assessment_id", assessmentId)
+                                                startActivity(resultIntent)
                                             } else {
-                                                val intent = Intent(
-                                                    this@StudentClassPageActivity,
-                                                    AssessmentDetailActivity::class.java
-                                                )
-                                                intent.putExtra("assessment_id", assessmentId)
-                                                startActivity(intent)
+                                                val detailIntent = Intent(this@StudentClassPageActivity, AssessmentDetailActivity::class.java)
+                                                detailIntent.putExtra("assessment_id", assessmentId)
+                                                startActivity(detailIntent)
                                             }
                                         }
                                     })
+
                                 }
-
-
 
                             }
                         }

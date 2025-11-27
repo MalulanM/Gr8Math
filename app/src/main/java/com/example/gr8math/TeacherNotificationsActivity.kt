@@ -73,19 +73,13 @@ class TeacherNotificationsActivity : AppCompatActivity() {
                 })
 
 
-
-            when (item.type) {
-
-                "assessment_submission" -> {
-                    val intent = Intent(this, TeacherParticipantsActivity::class.java)
-                    startActivity(intent)
-                }
-
-                "class_time" -> {
-                    val intent = Intent(this, TeacherClassPageActivity::class.java)
-                    startActivity(intent)
-                }
+            val intent = Intent(this, StudentScoresActivity::class.java).apply {
+                putExtra("EXTRA_STUDENT_ID", item.student_id)
+                putExtra("EXTRA_STUDENT_NAME", item.name)
+                putExtra("AUTO_ASSESSMENT_ID", item.assessment_id)   // <-- IMPORTANT
             }
+            startActivity(intent)
+
         }
 
         rvNotifications.adapter = adapter
@@ -171,7 +165,7 @@ class TeacherNotificationsActivity : AppCompatActivity() {
                 response: Response<TeacherNotificationResponse>
             ) {
                 if (response.isSuccessful && response.body() != null) {
-
+                    Log.e("isjewhdubr", response.body().toString())
                     notifications.clear()
                     notifications.addAll(response.body()!!.notifications)
                     adapter.notifyDataSetChanged()

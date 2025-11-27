@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageButton
@@ -26,6 +27,7 @@ class StudentBadgesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_student_badges)
 
+        Log.d("DEBUG", "StudentBadgesActivity started")
         // --- Toolbar ---
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
@@ -35,22 +37,25 @@ class StudentBadgesActivity : AppCompatActivity() {
         bottomNav.selectedItemId = R.id.nav_badges
 
         bottomNav.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_class -> {
-                    finish()
-                    true
-                }
-                R.id.nav_grades -> {
-                    startActivity(Intent(this, StudentGradesActivity::class.java))
-                    true
-                }
-                R.id.nav_notifications -> {
-                    startActivity(Intent(this, StudentNotificationsActivity::class.java))
-                    false
-                }
-                R.id.nav_badges -> true
-                else -> false
+            if (item.itemId == bottomNav.selectedItemId) {
+                return@setOnItemSelectedListener true
             }
+
+            val intent = when (item.itemId) {
+                R.id.nav_class -> Intent(this, StudentClassPageActivity::class.java)
+                R.id.nav_badges -> null
+                R.id.nav_notifications -> Intent(this, StudentNotificationsActivity::class.java)
+                R.id.nav_grades -> Intent(this, StudentGradesActivity::class.java)
+                else -> null
+            }
+
+            intent?.let {
+                // Prevent stacking
+                it.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                startActivity(it)
+            }
+
+            true
         }
 
         // --- Badge List Data ---

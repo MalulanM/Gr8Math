@@ -33,6 +33,10 @@ interface ApiService {
     @POST("api/register")
     fun registerUser(@Body user: User): Call<ResponseBody>
 
+    @POST("api/check-email/{email}/{lrn}")
+    fun checkEmail(@Path("email") email: String,
+                   @Path("lrn") lrn: String): Call<ResponseBody>
+
     @POST("api/login")
     fun loginUser(@Body userLogin: LoginUser): Call<ResponseBody>
 
@@ -198,6 +202,7 @@ interface ApiService {
     fun markAllNotificationsRead(
         @Body request: MarkAllReadRequest
     ): Call<Void>
+
 
 
 

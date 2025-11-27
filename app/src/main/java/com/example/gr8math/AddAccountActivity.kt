@@ -138,7 +138,7 @@ class AddAccountActivity : AppCompatActivity() {
         date = findViewById<EditText>(R.id.etDob)
         genderField = findViewById<MaterialAutoCompleteTextView>(R.id.etGender)
         val items = listOf("Male", "Female")
-        val itemsTeachingPosition = listOf("Teacher I", "Teacher II","Teacher III", "Teacher IV", "Teacher V", "Teacher VI", "Teacher VII")
+        val itemsTeachingPosition = listOf("Teacher I", "Teacher II","Teacher III", "Teacher IV", "Teacher V", "Teacher VI", "Teacher VII","Master I", "Master II","Master III", "Master IV", "Master V")
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, items)
         val adapterTeachingPosition = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, itemsTeachingPosition)
         genderField.setAdapter(adapter)

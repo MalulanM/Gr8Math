@@ -29,7 +29,11 @@ data class TeacherNotification(
     val created_at: String,
     var is_read: Boolean,
     val type: String,
-    val id : Int
+    val id : Int,
+    val course_id : Int,
+    val student_id :Int,
+    val assessment_id : Int,
+    val name : String
 )
 
 class TeacherNotificationAdapter(
@@ -75,6 +79,7 @@ class TeacherNotificationAdapter(
     private fun formatTime(raw: String): String {
         return try {
             val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.getDefault())
+            inputFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
             val date = inputFormat.parse(raw) ?: return raw
 
             val now = System.currentTimeMillis()

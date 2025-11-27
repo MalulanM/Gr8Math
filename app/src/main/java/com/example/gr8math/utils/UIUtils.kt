@@ -66,10 +66,12 @@ object UIUtils {
         til: TextInputLayout,
         field: TextView,
         showIcon: Boolean,
-        errorText: String = "Please input valid credentials"
+        errorText: String = "Please input valid credentials",
+        forceError: Boolean = false
     ) {
         val textValue = field.text?.toString()?.trim() ?: ""
-        if (textValue.isEmpty()) {
+
+        if (forceError || textValue.isEmpty()) {
             til.isErrorEnabled = true
             til.error = errorText
             if (showIcon) {
@@ -87,4 +89,5 @@ object UIUtils {
             )
         }
     }
+
 }

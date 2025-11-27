@@ -89,6 +89,7 @@ class AssessmentResultActivity : AppCompatActivity() {
 
                                     val dateOnly = rawDate.substring(0, 10)
                                     val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+                                    inputFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
                                     val outputFormat = java.text.SimpleDateFormat("MMM. dd, yyyy", java.util.Locale.US)
 
                                     val date = inputFormat.parse(dateOnly)

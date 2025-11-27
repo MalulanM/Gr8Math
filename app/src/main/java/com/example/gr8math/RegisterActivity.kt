@@ -53,7 +53,12 @@ class RegisterActivity : AppCompatActivity() {
     lateinit var tilGender : TextInputLayout
     lateinit var tilBirthDate : TextInputLayout
 
-
+    var firstNameText = ""
+    var lastNameText = ""
+    var emailText = ""
+    var LRNText = ""
+    var birthDateText = ""
+    var genderText = ""
 
     var selectedGender: String = ""
 
@@ -100,7 +105,9 @@ class RegisterActivity : AppCompatActivity() {
             datePicker.show()
         }
 
+
         nextButton.setOnClickListener {
+
             val fields = listOf(email, firstName, lastName, LRN, date, genderField)
             val tils = listOf(tilEmail, tilFirstName, tilLastName, tilLRN, tilBirthDate, tilGender)
 
@@ -114,13 +121,97 @@ class RegisterActivity : AppCompatActivity() {
                 }
             }
 
-            if (!hasError) {
-                showPasswordRegistration()
+            if (hasError) return@setOnClickListener
+
+
+            firstNameText = firstName.text.toString().trim()
+            lastNameText = lastName.text.toString().trim()
+            emailText = email.text.toString().trim()
+            LRNText = LRN.text.toString().trim()
+            birthDateText = date.text.toString().trim()
+            genderText = selectedGender.trim()
+
+            if (!LRNText.matches(Regex("^\\d{12}$"))) {
+                UIUtils.errorDisplay(
+                    this@RegisterActivity,
+                    tilLRN,
+                    LRN,
+                    true,
+                    "LRN requires at least 12 digits",
+                    true
+                )
+                return@setOnClickListener
             }
+
+
+            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+            ConnectURL.api.checkEmail(emailText, LRNText).enqueue(object : retrofit2.Callback<ResponseBody> {
+                override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+
+                    val responseString = response.body()?.string() ?: response.errorBody()?.string()
+                    Log.e("OWSQJEWR", responseString.toString())
+                    if (responseString == null || !responseString.trim().startsWith("{")) {
+                        ShowToast.showMessage(
+                            this@RegisterActivity,
+                            "Server returned invalid response. Check API route."
+                        )
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                        return
+                    }
+
+                    val jsonObj = org.json.JSONObject(responseString)
+
+                    val success = jsonObj.optBoolean("success")
+                    val msg = jsonObj.optString("msg")
+
+                    if (success) {
+
+                        when {
+                            msg.contains("Email", ignoreCase = true) -> {
+                                UIUtils.errorDisplay(
+                                    this@RegisterActivity,
+                                    tilEmail,
+                                    email,
+                                    true,
+                                    msg,
+                                    true
+                                )
+                            }
+
+                            msg.contains("LRN", ignoreCase = true) -> {
+                                UIUtils.errorDisplay(
+                                    this@RegisterActivity,
+                                    tilLRN,
+                                    LRN,
+                                    true,
+                                    msg,
+                                    true
+                                )
+                            }
+                        }
+
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                        return
+                    }
+
+
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                    showPasswordRegistration()
+                }
+
+                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                    Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
+                    ShowToast.showMessage(this@RegisterActivity, "Failed to connect to server. Check your internet connection.")
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                }
+            })
 
         }
 
+
     }
+
+
 
     fun showPasswordRegistration(){
         setContentView(R.layout.change_password_activity)
@@ -131,13 +222,15 @@ class RegisterActivity : AppCompatActivity() {
             registerButton.isEnabled = password.text.toString().isNotEmpty() && confirmPassword.text.toString().isNotEmpty()
         }
 
-        val keyListener = { _: Any, _:Any, _:Any ->
+        password.setOnKeyListener { _, _, _ ->
             enableBtn()
             false
         }
 
-        password.setOnKeyListener(keyListener)
-        confirmPassword.setOnKeyListener(keyListener)
+        confirmPassword.setOnKeyListener { _, _, _ ->
+            enableBtn()
+            false
+        }
 
         registerButton.setOnClickListener {
             UserRegister()
@@ -163,6 +256,9 @@ class RegisterActivity : AppCompatActivity() {
         tilLRN = findViewById(R.id.tilLRN)
         tilGender = findViewById(R.id.tilGender)
         tilBirthDate = findViewById(R.id.tilBirthdate)
+        loadingLayout =  findViewById<View>(R.id.loadingLayout)
+        loadingProgress = findViewById<View>(R.id.loadingProgressBg)
+        loadingText = findViewById<TextView>(R.id.loadingText)
     }
 
     fun Init2(){

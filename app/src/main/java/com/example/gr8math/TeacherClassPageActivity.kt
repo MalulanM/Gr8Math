@@ -36,6 +36,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import com.example.gr8math.utils.NotificationHelper
+import com.example.gr8math.utils.UIUtils
 
 class TeacherClassPageActivity : AppCompatActivity() {
 
@@ -63,6 +64,16 @@ class TeacherClassPageActivity : AppCompatActivity() {
             inflateAssessmentAndLesson(courseId)  // refresh the list
         }
     }
+
+    private val createAssessmentLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            // Refresh the lesson/assessment list
+            inflateAssessmentAndLesson(courseId)
+        }
+    }
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -315,33 +326,39 @@ class TeacherClassPageActivity : AppCompatActivity() {
             val weekNumber = etWeekNumber.text.toString().trim()
             val lessonTitle = etLessonTitle.text.toString().trim()
 
-            tilWeekNumber.error = null
-            tilLessonTitle.error = null
             var isValid = true
             val errorMsg = getString(R.string.error_blank_field)
 
+            // Clear previous errors first
+            UIUtils.errorDisplay(this, tilWeekNumber, etWeekNumber, false, "")
+            UIUtils.errorDisplay(this, tilLessonTitle, etLessonTitle, false, "")
+
+            // Validate Week Number
             if (weekNumber.isEmpty()) {
-                tilWeekNumber.error = errorMsg
+                UIUtils.errorDisplay(this, tilWeekNumber, etWeekNumber, true, errorMsg)
                 isValid = false
-            }
-            if (lessonTitle.isEmpty()) {
-                tilLessonTitle.error = errorMsg
-                isValid = false
-            }
-            if (!isValid) {
-                return@setOnClickListener
             }
 
+            // Validate Lesson Title
+            if (lessonTitle.isEmpty()) {
+                UIUtils.errorDisplay(this, tilLessonTitle, etLessonTitle, true, errorMsg)
+                isValid = false
+            }
+
+            if (!isValid) return@setOnClickListener
+
+            // If valid → proceed
             val intent = Intent(this, LessonContentActivity::class.java).apply {
                 putExtra("EXTRA_WEEK_NUMBER", weekNumber)
                 putExtra("EXTRA_LESSON_TITLE", lessonTitle)
-
             }
             lessonContentLauncher.launch(intent)
             dialog.dismiss()
         }
+
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
+
     }
 
     /**
@@ -437,15 +454,20 @@ class TeacherClassPageActivity : AppCompatActivity() {
 
         val myCalendar = Calendar.getInstance()
 
+        var availableFromTimestamp: Long = System.currentTimeMillis()
+
         // 12-hour format with AM/PM
         val dateTimeFormat = SimpleDateFormat("MM/dd/yy - hh:mm a", Locale.US)
 
+        // --- "Available From" Listeners ---
         // --- "Available From" Listeners ---
         val fromTimeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
             myCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             myCalendar.set(Calendar.MINUTE, minute)
             etAvailableFrom.setText(dateTimeFormat.format(myCalendar.time))
             tilAvailableFrom.error = null
+
+            availableFromTimestamp = myCalendar.timeInMillis
         }
 
         val fromDateSetListener = DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
@@ -456,20 +478,35 @@ class TeacherClassPageActivity : AppCompatActivity() {
                 fromTimeSetListener,
                 myCalendar.get(Calendar.HOUR_OF_DAY),
                 myCalendar.get(Calendar.MINUTE),
-                false // false = Use 12-hour format (AM/PM)
+                false
             ).show()
         }
 
         etAvailableFrom.setOnClickListener {
-            DatePickerDialog(this,
+            val datePicker = DatePickerDialog(
+                this,
                 fromDateSetListener,
                 myCalendar.get(Calendar.YEAR),
                 myCalendar.get(Calendar.MONTH),
-                myCalendar.get(Calendar.DAY_OF_MONTH)).show()
+                myCalendar.get(Calendar.DAY_OF_MONTH)
+            )
+            datePicker.datePicker.minDate = System.currentTimeMillis() - 1000
+            datePicker.show()
         }
 
         // --- "Available Until" Listeners ---
         val untilTimeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
+            // If the same day as "Available From", ensure the time is not earlier
+            val tempCalendar = Calendar.getInstance().apply {
+                timeInMillis = myCalendar.timeInMillis
+                set(Calendar.HOUR_OF_DAY, hourOfDay)
+                set(Calendar.MINUTE, minute)
+            }
+            if (tempCalendar.timeInMillis < availableFromTimestamp) {
+                ShowToast.showMessage(this@TeacherClassPageActivity,"Cannot select time before 'Available From'" )
+                return@OnTimeSetListener
+            }
+
             myCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             myCalendar.set(Calendar.MINUTE, minute)
             etAvailableUntil.setText(dateTimeFormat.format(myCalendar.time))
@@ -484,17 +521,25 @@ class TeacherClassPageActivity : AppCompatActivity() {
                 untilTimeSetListener,
                 myCalendar.get(Calendar.HOUR_OF_DAY),
                 myCalendar.get(Calendar.MINUTE),
-                false // false = Use 12-hour format (AM/PM)
+                false
             ).show()
         }
 
         etAvailableUntil.setOnClickListener {
-            DatePickerDialog(this,
+            val datePicker = DatePickerDialog(
+                this,
                 untilDateSetListener,
                 myCalendar.get(Calendar.YEAR),
                 myCalendar.get(Calendar.MONTH),
-                myCalendar.get(Calendar.DAY_OF_MONTH)).show()
+                myCalendar.get(Calendar.DAY_OF_MONTH)
+            )
+            // Prevent selecting a date before "Available From"
+            datePicker.datePicker.minDate = availableFromTimestamp
+            datePicker.show()
         }
+
+
+
         // --- End of Date & Time Picker Logic ---
 
         btnNext.setOnClickListener {
@@ -504,56 +549,59 @@ class TeacherClassPageActivity : AppCompatActivity() {
             val availableUntil = etAvailableUntil.text.toString().trim()
             val assessmentQuarter = etQuarterNumber.text.toString().trim()
 
-            // Validation
-            tilAssessmentNumber.error = null
-            tilAssessmentTitle.error = null
-            tilAvailableFrom.error = null
-            tilAvailableUntil.error = null
-            tilQuarterNumber.error = null
-
             var isValid = true
             val errorMsg = getString(R.string.error_blank_field)
 
+            // Clear previous errors
+            UIUtils.errorDisplay(this, tilAssessmentNumber, etAssessmentNumber, false, "")
+            UIUtils.errorDisplay(this, tilAssessmentTitle, etAssessmentTitle, false, "")
+            UIUtils.errorDisplay(this, tilAvailableFrom, etAvailableFrom, false, "")
+            UIUtils.errorDisplay(this, tilAvailableUntil, etAvailableUntil, false, "")
+            UIUtils.errorDisplay(this, tilQuarterNumber, etQuarterNumber, false, "")
+
+            // Validate each field
             if (assessmentNumber.isEmpty()) {
-                tilAssessmentNumber.error = errorMsg
+                UIUtils.errorDisplay(this, tilAssessmentNumber, etAssessmentNumber, true, errorMsg)
                 isValid = false
-            }
-            if (assessmentTitle.isEmpty()) {
-                tilAssessmentTitle.error = errorMsg
-                isValid = false
-            }
-            if (availableFrom.isEmpty()) {
-                tilAvailableFrom.error = errorMsg
-                isValid = false
-            }
-            if (availableUntil.isEmpty()) {
-                tilAvailableUntil.error = errorMsg
-                isValid = false
-            }
-            if(assessmentQuarter.isEmpty()){
-                tilQuarterNumber.error = errorMsg
-                isValid = false
-            }
-            if (!isValid) {
-                return@setOnClickListener
             }
 
-            // If validation passes, launch the AssessmentCreatorActivity
+            if (assessmentTitle.isEmpty()) {
+                UIUtils.errorDisplay(this, tilAssessmentTitle, etAssessmentTitle, true, errorMsg)
+                isValid = false
+            }
+
+            if (availableFrom.isEmpty()) {
+                UIUtils.errorDisplay(this, tilAvailableFrom, etAvailableFrom, true, errorMsg)
+                isValid = false
+            }
+
+            if (availableUntil.isEmpty()) {
+                UIUtils.errorDisplay(this, tilAvailableUntil, etAvailableUntil, true, errorMsg)
+                isValid = false
+            }
+
+            if (assessmentQuarter.isEmpty()) {
+                UIUtils.errorDisplay(this, tilQuarterNumber, etQuarterNumber, true, errorMsg)
+                isValid = false
+            }
+
+            if (!isValid) return@setOnClickListener
+
+
             val intent = Intent(this, AssessmentCreatorActivity::class.java).apply {
-                // Pass all the details to the new activity
                 putExtra("EXTRA_ASSESSMENT_NUMBER", assessmentNumber)
                 putExtra("EXTRA_ASSESSMENT_TITLE", assessmentTitle)
                 putExtra("EXTRA_AVAILABLE_FROM", availableFrom)
                 putExtra("EXTRA_AVAILABLE_UNTIL", availableUntil)
                 putExtra("EXTRA_AVAILABLE_QUARTER", assessmentQuarter)
             }
-            startActivity(intent)
-
-            dialog.dismiss() // Close this dialog
+            createAssessmentLauncher.launch(intent)
+            dialog.dismiss()
         }
 
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
+
     }
 
 

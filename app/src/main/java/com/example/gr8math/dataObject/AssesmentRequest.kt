@@ -30,7 +30,8 @@ data class AnswerItem(
 data class AnswerPayload(
     val student_id: Int,
     val assessment_id: Int,
-    val answers: List<AnswerItem>
+    val answers: List<AnswerItem>,
+    val course_id: Int
 )
 
 

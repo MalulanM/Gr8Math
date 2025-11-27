@@ -131,7 +131,6 @@
             android:background="@android:color/transparent"
             android:fontFamily="@font/lexend"
             android:gravity="top|start"
-            android:hint="@string/lesson_content_hint"
             android:inputType="textMultiLine|textCapSentences"
             android:padding="16dp"
             android:textColor="@color/colorText"

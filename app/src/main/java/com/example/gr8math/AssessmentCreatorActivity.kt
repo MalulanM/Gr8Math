@@ -184,11 +184,10 @@ class QuestionCardManager(
             val selectedIndex = checkboxes.indexOfFirst { it.isChecked }
             if (selectedIndex != -1) {
                 question.correctAnswerIndex = selectedIndex
-                // --- REMOVED: updateAnswerKeyText() ---
                 onQuestionChanged()
                 dialog.dismiss()
             } else {
-                Toast.makeText(context, "Please select an answer key.", Toast.LENGTH_SHORT).show()
+
             }
         }
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -198,31 +197,34 @@ class QuestionCardManager(
     fun isValid(): Boolean {
         var valid = true
 
+        // --- Validate Question Text ---
         if (etQuestion.text.isNullOrBlank()) {
-            UIUtils.errorDisplay(context, tilQuestion, etQuestion, true, context.getString(R.string.error_blank_field))
+            UIUtils.errorDisplay(context, tilQuestion, etQuestion, true, "Please enter the needed details.")
             valid = false
         }
 
+        // --- Validate Choices ---
         if (question.choices.isEmpty()) {
-            UIUtils.errorDisplay(context, tilQuestion, etQuestion, true, context.getString(R.string.error_blank_field))
+            UIUtils.errorDisplay(context, tilQuestion, etQuestion, true, "Please enter the needed details.")
             valid = false
-        } else {
-            // Validate each choice
-            choiceManagers.forEach { choiceManager ->
-                if (!choiceManager.isValid()) {
-                    valid = false
-                }
-            }
+            return valid
+        }
 
-            // Validate answer key
-            if (question.correctAnswerIndex == -1) {
-                ShowToast.showMessage(context, "Please select an answer key for this question.")
+        // Validate each choice’s text
+        choiceManagers.forEach { choiceManager ->
+            if (!choiceManager.isValid()) {
                 valid = false
             }
         }
 
+        // --- Validate Answer Key ---
+        if (question.correctAnswerIndex == -1) {
+            valid = false
+        }
+
         return valid
     }
+
 
 }
 
@@ -252,13 +254,14 @@ class ChoiceItemManager(
     // Validation method for the choice item
     fun isValid(): Boolean {
         return if (etAnswerChoice.text.isNullOrBlank()) {
-            tilAnswerChoice.error = context.getString(R.string.error_blank_field)
+            UIUtils.errorDisplay(context, tilAnswerChoice, etAnswerChoice, true, "Please enter the needed details.")
             false
         } else {
-            tilAnswerChoice.error = null
+            UIUtils.errorDisplay(context, tilAnswerChoice, etAnswerChoice, false, "")
             true
         }
     }
+
 }
 
 
@@ -336,8 +339,8 @@ class AssessmentCreatorActivity : AppCompatActivity() {
             if (validateAllQuestions()) {
                 showSaveConfirmationDialog(isPublishing = true)
             } else {
-                ShowToast.showMessage(this, "Please fix errors before publishing.")
-                 }
+                ShowToast.showMessage(this, "Please select an answer key")
+            }
         }
 
         // Add the first question automatically on start
@@ -363,7 +366,7 @@ class AssessmentCreatorActivity : AppCompatActivity() {
                 updatePublishButtonState()
             },
             onRemove = {
-                // Callback for when the delete icon is clicked
+
                 questionsContainer.removeView(questionManager.cardView) // Remove from UI
                 questionManagers.remove(questionManager) // Remove from data list
                 hasUnsavedChanges = true // Deleting is a change
@@ -423,17 +426,28 @@ class AssessmentCreatorActivity : AppCompatActivity() {
     }
 
     private fun validateAllQuestions(): Boolean {
-        var allValid = true
-        if (questionManagers.isEmpty()) {
-            return false
-        }
+        var hasErrors = false
+
+        if (questionManagers.isEmpty()) return false
+
         questionManagers.forEach { manager ->
             if (!manager.isValid()) {
-                allValid = false
+                hasErrors = true
             }
         }
-        return allValid
+
+        // ❗ RULE: If ANY error exists → do NOT show any toast
+        if (hasErrors) {
+            return false
+        }
+
+        // ❗ Only if EVERYTHING is valid → true
+        return true
     }
+
+
+
+
 
     private fun saveAssessment(publish: Boolean) {
 
@@ -483,13 +497,11 @@ class AssessmentCreatorActivity : AppCompatActivity() {
 
                     if(success) {
                         UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                        val intent = Intent(
-                            this@AssessmentCreatorActivity,
-                            TeacherClassPageActivity::class.java
-                        ).apply {
-                            intent.putExtra("toast_msg", message)
+                        val resultIntent = Intent().apply {
+                            putExtra("toast_msg", message)
                         }
-                        startActivity(intent)
+                        setResult(Activity.RESULT_OK, resultIntent)
+                        finish()
                     }
                 }  catch (e: Exception) {
                 Log.e("API_ERROR", "Failed to parse response: ${e.localizedMessage}", e)

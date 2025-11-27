@@ -70,23 +70,15 @@ class StudentNotificationsActivity : AppCompatActivity() {
                 })
 
 
+            val intent = Intent(this, StudentClassPageActivity::class.java).apply {
+                putExtra("courseId", item.course_id ?: CurrentCourse.courseId)
+                putExtra("lessonId", item.lesson_id)
+                putExtra("assessmentId", item.assessment_id)
+                putExtra("fromNotification", true)
 
-            when (item.type) {
-
-                "class" -> {
-                    val intent = Intent(this, StudentClassPageActivity::class.java)
-                    startActivity(intent)
-                }
-
-                "lesson" -> {
-                    val intent = Intent(this, StudentClassPageActivity::class.java)
-                    startActivity(intent)
-                }
-                "assessment" -> {
-                    val intent = Intent(this, StudentClassPageActivity::class.java)
-                    startActivity(intent)
-                }
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
+            startActivity(intent)
         }
 
         rvNotifications.adapter = adapter
@@ -128,36 +120,28 @@ class StudentNotificationsActivity : AppCompatActivity() {
             ShowToast.showMessage(this, "All notifications marked as read")
         }
 
-
         bottomNav.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_class -> {
-                    startActivity(Intent(this, StudentClassPageActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
-                }
-                R.id.nav_badges -> {
-                    startActivity(Intent(this, StudentClassPageActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
-                }
-                R.id.nav_notifications -> {
-                    startActivity(Intent(this, StudentNotificationsActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
-                }
-                R.id.nav_grades -> {
-                    startActivity(Intent(this, StudentGradesActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
-                }
-                else -> false
+            if (item.itemId == bottomNav.selectedItemId) {
+                return@setOnItemSelectedListener true
             }
+
+            val intent = when (item.itemId) {
+                R.id.nav_class -> Intent(this, StudentClassPageActivity::class.java)
+                R.id.nav_badges -> Intent(this, StudentBadgesActivity::class.java)
+                R.id.nav_notifications -> null
+                R.id.nav_grades -> Intent(this, StudentGradesActivity::class.java)
+                else -> null
+            }
+
+            intent?.let {
+                // Prevent stacking
+                it.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                startActivity(it)
+            }
+
+            true
         }
+
     }
 
     private fun fetchNotifications() {
@@ -173,6 +157,7 @@ class StudentNotificationsActivity : AppCompatActivity() {
                 response: Response<StudentNotificationResponse>
             ) {
                 if (response.isSuccessful && response.body() != null) {
+                    Log.e("KDJ2BUHDCE", response.body().toString())
                     notifications.clear()
                     notifications.addAll(response.body()!!.notifications) // <-- extract list
                     adapter.notifyDataSetChanged()

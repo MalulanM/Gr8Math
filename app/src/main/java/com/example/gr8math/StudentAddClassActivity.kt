@@ -6,6 +6,7 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.utils.ShowToast
 import com.example.gr8math.utils.UIUtils
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.textfield.TextInputEditText
@@ -71,16 +72,32 @@ class StudentAddClassActivity : AppCompatActivity() {
                 val responseString = response.body()?.string() ?: response.errorBody()?.string() ?: ""
                 val jsonObject = org.json.JSONObject(responseString)
                 val message = jsonObject.getString("message")
+                val classId = jsonObject.getInt("class_id")
+                val className = jsonObject.getString("class_name")
+                val role = jsonObject.getString("role")
+                val success = jsonObject.getBoolean("success")
+
                 if (response.isSuccessful) {
-                    val intent =
-                        Intent(
-                        this@StudentAddClassActivity,
-                        StudentClassManagerActivity::class.java
-                    )
-                    intent.putExtra("id", id)
-                    intent.putExtra("toast_msg", message)
-                    setResult(RESULT_OK)
-                    finish()
+                    if(success) {
+                        val intent =
+                            Intent(
+                                this@StudentAddClassActivity,
+                                StudentClassPageActivity::class.java
+                            )
+                        intent.putExtra("courseId", classId)
+                        intent.putExtra("sectionName", className)
+                        intent.putExtra("role", role)
+                        intent.putExtra("id", id)
+                        intent.putExtra("toast_msg", message)
+                        intent.flags =
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                        startActivity(intent)
+                        setResult(RESULT_OK)
+                        finish()
+                    }
+                    else{
+                        ShowToast.showMessage(this@StudentAddClassActivity, message)
+                    }
                 }
             }
             override fun onFailure(call: retrofit2.Call<ResponseBody>, t: Throwable) {

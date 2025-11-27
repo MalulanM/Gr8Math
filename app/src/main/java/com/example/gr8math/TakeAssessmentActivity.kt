@@ -45,6 +45,12 @@ class TakeAssessmentActivity : AppCompatActivity() {
 
     private var assessmentId: Int = 0
 
+    lateinit var loadingLayout : View
+
+    lateinit var loadingProgress : View
+
+    lateinit var loadingText : TextView
+
     private val selectedAnswers = mutableMapOf<Int, Int>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,7 +68,9 @@ class TakeAssessmentActivity : AppCompatActivity() {
         rgChoices = findViewById(R.id.rgChoices)
         btnPrevious = findViewById(R.id.btnPrevious)
         btnNext = findViewById(R.id.btnNext)
-
+        loadingLayout =  findViewById<View>(R.id.loadingLayout)
+        loadingProgress = findViewById<View>(R.id.loadingProgressBg)
+        loadingText = findViewById<TextView>(R.id.loadingText)
         assessmentId = assessment.id
 
         toolbar.setNavigationOnClickListener {
@@ -114,6 +122,8 @@ class TakeAssessmentActivity : AppCompatActivity() {
 
             if (selectedAnswers[q.id] == choice.id) {
                 rb.isChecked = true
+
+
             }
 
 
@@ -166,6 +176,7 @@ class TakeAssessmentActivity : AppCompatActivity() {
     }
 
     private fun finishAssessment() {
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
         countDownTimer?.cancel()
 
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
@@ -182,31 +193,35 @@ class TakeAssessmentActivity : AppCompatActivity() {
         val payload = AnswerPayload(
             student_id = CurrentCourse.userId,
             assessment_id = assessmentId,
-            answers = answersList
+            answers = answersList,
+            course_id = CurrentCourse.courseId
         )
 
         ConnectURL.api.answerAssessment(payload).enqueue(object : Callback<Map<String, Any>> {
             override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
                 try {
                     if (!response.isSuccessful || response.body() == null) {
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                         ShowToast.showMessage(this@TakeAssessmentActivity, "Error submitting")
                         return
                     }
 
                     val res = response.body()!!
                     val assessmentId = (res["assessment_id"] as Double).toInt()
-
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     val intent = Intent(this@TakeAssessmentActivity, AssessmentResultActivity::class.java)
                     intent.putExtra("assessment_id", assessmentId)
                     startActivity(intent)
                     finish()
                 } catch (e: Exception) {
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     Log.e("TakeAssessmentActivity", "Error parsing response", e)
                     ShowToast.showMessage(this@TakeAssessmentActivity, "Unexpected error occurred")
                 }
             }
 
             override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                 ShowToast.showMessage(this@TakeAssessmentActivity, "Network error")
             }
         })

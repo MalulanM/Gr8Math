@@ -164,13 +164,12 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:ellipsize="end"
                         android:fontFamily="@font/lexend"
-                        android:text="Name"
-                        android:textColor="@color/colorText"
-                        android:textStyle="bold"
-                        android:textSize="@dimen/podium_name_text_size"
                         android:maxLines="3"
-                        android:ellipsize="end"/>
+                        android:textColor="@color/colorText"
+                        android:textSize="@dimen/podium_name_text_size"
+                        android:textStyle="bold" />
 
                     <ImageView
                         android:layout_width="12dp"
@@ -223,13 +222,12 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:ellipsize="end"
                         android:fontFamily="@font/lexend"
-                        android:text="Name"
-                        android:textColor="@color/colorText"
-                        android:textStyle="bold"
-                        android:textSize="@dimen/podium_1st_name_text_size"
                         android:maxLines="3"
-                        android:ellipsize="end"/>
+                        android:textColor="@color/colorText"
+                        android:textSize="@dimen/podium_1st_name_text_size"
+                        android:textStyle="bold" />
 
                     <ImageView
                         android:layout_width="20dp"
@@ -282,13 +280,12 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:ellipsize="end"
                         android:fontFamily="@font/lexend"
-                        android:text="Name"
-                        android:textColor="@color/colorText"
-                        android:textStyle="bold"
-                        android:textSize="@dimen/podium_name_text_size"
                         android:maxLines="3"
-                        android:ellipsize="end" />
+                        android:textColor="@color/colorText"
+                        android:textSize="@dimen/podium_name_text_size"
+                        android:textStyle="bold" />
 
                     <ImageView
                         android:layout_width="12dp"

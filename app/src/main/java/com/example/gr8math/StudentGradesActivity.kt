@@ -28,6 +28,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.TimeZone
 
 class StudentGradesActivity : AppCompatActivity() {
 
@@ -53,11 +54,7 @@ class StudentGradesActivity : AppCompatActivity() {
         setupBottomNav()
 
         // Quarterly report button
-        findViewById<Button>(R.id.btnQuarterlyReport).setOnClickListener {
-            val intent = Intent(this, QuarterlyReportActivity::class.java)
-            intent.putExtra("EXTRA_STUDENT_ID", studentId)
-            startActivity(intent)
-        }
+        findViewById<Button>(R.id.btnQuarterlyReport).visibility = View.GONE
 
         // RecyclerView
         rvGrades = findViewById(R.id.rvGrades)
@@ -71,36 +68,25 @@ class StudentGradesActivity : AppCompatActivity() {
 
     private fun setupBottomNav() {
         bottomNav.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-
-                R.id.nav_class -> {
-                    startActivity(Intent(this, StudentClassPageActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
-                }
-
-                R.id.nav_badges -> {
-                    startActivity(Intent(this, StudentClassPageActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
-                }
-
-                R.id.nav_notifications -> {
-                    startActivity(Intent(this, StudentNotificationsActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
-                }
-
-                R.id.nav_grades -> {
-                    // Prevent crash by NOT reloading instantly
-                    true
-                }
-
-                else -> false
+            if (item.itemId == bottomNav.selectedItemId) {
+                return@setOnItemSelectedListener true
             }
+
+            val intent = when (item.itemId) {
+                R.id.nav_class -> Intent(this, StudentClassPageActivity::class.java)
+                R.id.nav_badges -> Intent(this, StudentBadgesActivity::class.java)
+                R.id.nav_notifications -> Intent(this, StudentNotificationsActivity::class.java)
+                R.id.nav_grades -> null
+                else -> null
+            }
+
+            intent?.let {
+                // Prevent stacking
+                it.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                startActivity(it)
+            }
+
+            true
         }
     }
 
@@ -228,6 +214,7 @@ class StudentGradesActivity : AppCompatActivity() {
     private fun formatDate(timestamp: String): String {
         return try {
             val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.getDefault())
+            inputFormat.timeZone = TimeZone.getTimeZone("UTC")
             val date = inputFormat.parse(timestamp) ?: return timestamp
 
             val output = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
@@ -240,6 +227,7 @@ class StudentGradesActivity : AppCompatActivity() {
     private fun formatTime(timestamp: String): String {
         return try {
             val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.getDefault())
+            inputFormat.timeZone = TimeZone.getTimeZone("UTC")
             val date = inputFormat.parse(timestamp) ?: return timestamp
 
             val output = SimpleDateFormat("h:mm a", Locale.getDefault())

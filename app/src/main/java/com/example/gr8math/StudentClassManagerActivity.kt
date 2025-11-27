@@ -53,10 +53,14 @@ class StudentClassManagerActivity : AppCompatActivity() {
     private lateinit var name:String
 
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // This line connects your layout file
         setContentView(R.layout.activity_class_manager_student)
+        loadingLayout =  findViewById<View>(R.id.loadingLayout)
+        loadingProgress = findViewById<View>(R.id.loadingProgressBg)
+        loadingText = findViewById<TextView>(R.id.loadingText)
         id = intent.getIntExtra("id", 0)
         role = intent.getStringExtra("role")?:""
         name = intent.getStringExtra("name")?:""
@@ -72,9 +76,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
         mainToolbar = findViewById(R.id.toolbar)
         addClassesButton = findViewById(R.id.btnAddClasses)
         parentLayout = findViewById(R.id.class_list_container)
-        loadingLayout =  findViewById<View>(R.id.loadingLayout)
-        loadingProgress = findViewById<View>(R.id.loadingProgressBg)
-        loadingText = findViewById<TextView>(R.id.loadingText)
+
         // --- Set up Click Listeners ---
 
         // 1. Main toolbar's profile icon/back button
@@ -160,6 +162,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
         dialog.show()
     }
     fun inflateClasses(role: String, id: Int) {
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
         val apiService = ConnectURL.api
         val call = apiService.getClasses(id, role)
 
@@ -168,11 +171,13 @@ class StudentClassManagerActivity : AppCompatActivity() {
                 val responseString = response.body()?.string() ?: response.errorBody()?.string()
 
                 if (responseString.isNullOrEmpty()) {
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     Log.e("API_ERROR", "Empty response")
                     return
                 }
 
                 try {
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     val jsonObj = org.json.JSONObject(responseString)
                     val success = jsonObj.optBoolean("success", false)
                     val message = jsonObj.optString("message", "No message")
@@ -227,11 +232,13 @@ class StudentClassManagerActivity : AppCompatActivity() {
 
 
                 } catch (e: Exception) {
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     Log.e("API_ERROR", "Failed to parse response: ${e.localizedMessage}", e)
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                 Log.e("API_ERROR", "Request failed: ${t.localizedMessage}", t)
                 UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
             }

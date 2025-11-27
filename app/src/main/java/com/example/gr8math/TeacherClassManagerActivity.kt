@@ -34,6 +34,7 @@ import com.example.gr8math.adapter.ClassAdapter
 import com.example.gr8math.api.ConnectURL
 import com.example.gr8math.dataObject.TeacherClass
 import com.example.gr8math.utils.ShowToast
+import com.example.gr8math.utils.UIUtils
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.CoroutineScope
@@ -79,9 +80,17 @@ class TeacherClassManagerActivity : AppCompatActivity() {
 
     private lateinit var name:String
 
+    lateinit var loadingLayout : View
+    lateinit var loadingProgress : View
+    lateinit var loadingText : TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_class_manager_teacher)
+
+        loadingLayout =  findViewById<View>(R.id.loadingLayout)
+        loadingProgress = findViewById<View>(R.id.loadingProgressBg)
+        loadingText = findViewById<TextView>(R.id.loadingText)
 
         id = intent.getIntExtra("id", 0)
             role = intent.getStringExtra("role")?:""
@@ -110,6 +119,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         llPastSearches = findViewById(R.id.llPastSearches)
         // Setup RecyclerView and Adapter
         searchLayout = findViewById(R.id.rvSearchResults)
+
         classAdapter = ClassAdapter(mutableListOf()) { selectedClass ->
 
             val intent = Intent(this, TeacherClassPageActivity::class.java)
@@ -466,6 +476,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
     }
 
     fun inflateClasses(role: String, id: Int, searchTerm: String? = null) {
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
         val apiService = ConnectURL.api
         val call = apiService.getClasses(id, role)
 
@@ -479,6 +490,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                 }
 
                 try {
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     val jsonObj = org.json.JSONObject(responseString)
                     val success = jsonObj.optBoolean("success", false)
                     val message = jsonObj.optString("message", "No message")
@@ -539,11 +551,13 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                     tvNoResults.visibility = if (!anyMatch) View.VISIBLE else View.GONE
 
                 } catch (e: Exception) {
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     Log.e("API_ERROR", "Failed to parse response: ${e.localizedMessage}", e)
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                 Log.e("API_ERROR", "Request failed: ${t.localizedMessage}", t)
             }
         })

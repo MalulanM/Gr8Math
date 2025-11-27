@@ -33,7 +33,9 @@
         <activity
             android:name=".RegisterActivity"
             android:exported="false"
-            android:theme="@style/Theme.Gr8Math" />
+            android:theme="@style/Theme.Gr8Math"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            />
 
         <!-- Forgot Password Activity -->
         <activity
@@ -180,6 +182,18 @@
             android:name=".StudentGradesActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
+
+        <!-- (NEW) Badges PAGES -->
+        <activity
+            android:name=".StudentBadgesActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Gr8Math" >
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+        </activity>
+
 
         <service
             android:name=".services.MyFirebaseService"

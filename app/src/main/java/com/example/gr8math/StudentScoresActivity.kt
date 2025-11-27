@@ -23,6 +23,7 @@ import org.json.JSONObject
 import retrofit2.Call
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.TimeZone
 
 // Data class that matches Laravel response
 data class StudentScore(
@@ -40,6 +41,9 @@ class StudentScoresActivity : AppCompatActivity() {
     private var studentId = 0
     private lateinit var rvScores: RecyclerView
     private val assessmentList = ArrayList<StudentScore>()
+
+    private var autoOpenAssessmentId: Int? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +71,10 @@ class StudentScoresActivity : AppCompatActivity() {
         rvScores.layoutManager = LinearLayoutManager(this)
 
         displayAllAssessments()
+
+        autoOpenAssessmentId = intent.getIntExtra("AUTO_ASSESSMENT_ID", -1)
+        if (autoOpenAssessmentId == -1) autoOpenAssessmentId = null
+
     }
 
     private fun showAssessmentDetailsDialog(scoreItem: StudentScore) {
@@ -176,6 +184,16 @@ class StudentScoresActivity : AppCompatActivity() {
                         showAssessmentDetailsDialog(scoreItem)
                     }
 
+                    // AUTO OPEN TARGET ASSESSMENT FROM NOTIF
+                    autoOpenAssessmentId?.let { idToOpen ->
+                        val match = assessmentList.firstOrNull { it.id == idToOpen }
+                        if (match != null) {
+                            showAssessmentDetailsDialog(match)
+                            autoOpenAssessmentId = null
+                        }
+                    }
+
+
                 } catch (e: Exception) {
                     Log.e("displayAssessments", e.message ?: "Error")
                 }
@@ -191,6 +209,7 @@ class StudentScoresActivity : AppCompatActivity() {
     private fun formatDate(timestamp: String): String {
         return try {
             val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.getDefault())
+            inputFormat.timeZone = TimeZone.getTimeZone("UTC")
             val date = inputFormat.parse(timestamp) ?: return timestamp
 
             val output = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
@@ -203,6 +222,7 @@ class StudentScoresActivity : AppCompatActivity() {
     private fun formatTime(timestamp: String): String {
         return try {
             val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.getDefault())
+            inputFormat.timeZone = TimeZone.getTimeZone("UTC")
             val date = inputFormat.parse(timestamp) ?: return timestamp
 
             val output = SimpleDateFormat("h:mm a", Locale.getDefault())
