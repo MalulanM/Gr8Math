@@ -31,9 +31,6 @@ class AccountManagementActivity : AppCompatActivity() {
     lateinit var noRequest : TextView
     lateinit var seeMoreReq : TextView
     lateinit var seeMoreActive : TextView
-    private lateinit var role: String
-    private var id: Int = 0
-    private lateinit var name:String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,10 +41,6 @@ class AccountManagementActivity : AppCompatActivity() {
         toolbar.setNavigationOnClickListener {
             showFacultyMenu()
         }
-
-        id = intent.getIntExtra("id", 0)
-        role = intent.getStringExtra("role")?:""
-        name = intent.getStringExtra("name")?:""
 
         val toastMsg = intent.getStringExtra("toast_msg")
         if(!toastMsg.isNullOrEmpty()){
@@ -72,7 +65,6 @@ class AccountManagementActivity : AppCompatActivity() {
         }
     }
 
-
     // --- FIX: Use standard Dialog to force full-height sidebar ---
     private fun showFacultyMenu() {
         // 1. Create a standard Dialog (Not MaterialAlertDialogBuilder)
@@ -84,17 +76,6 @@ class AccountManagementActivity : AppCompatActivity() {
         // 3. Inflate layout
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_faculty_menu, null)
         dialog.setContentView(dialogView)
-
-        val name = dialog.findViewById<TextView>(R.id.tvGreeting)
-        name.text = "Hi, ${this.name}!"
-
-        // --- Menu Click Listeners ---
-        dialogView.findViewById<View>(R.id.btnNotifications).setOnClickListener {
-           val intent = Intent(this, FacultyNotificationsActivity::class.java)
-            intent.putExtra("id", id)
-            dialog.dismiss()
-            startActivity(intent)
-        }
 
         dialogView.findViewById<View>(R.id.btnAccountSettings).setOnClickListener {
             dialog.dismiss()

@@ -74,13 +74,11 @@ class StudentClassPageActivity : AppCompatActivity() {
         }
 
         // --- NEW: Participants Button Click ---
-        val btnParticipants = findViewById<View>(R.id.btnParticipants) // It's a LinearLayout
+        val btnParticipants = findViewById<View>(R.id.btnParticipants)
         btnParticipants.setOnClickListener {
-            // Open Participants Activity
-            // Note: You might need a StudentParticipantsActivity if the view is different from Teacher's
-            // For now, let's assume we reuse the same one or placeholder
-            // startActivity(Intent(this, TeacherParticipantsActivity::class.java))
-            Toast.makeText(this, "Participants clicked", Toast.LENGTH_SHORT).show()
+            // Updated to open the new Activity
+            val intent = Intent(this, StudentParticipantsActivity::class.java)
+            startActivity(intent)
         }
 
         // --- Setup Bottom Navigation ---

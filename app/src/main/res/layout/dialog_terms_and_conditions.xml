@@ -30,7 +30,7 @@
             android:text="@string/terms_and_conditions_checkbox"
             android:textColor="@color/colorText"
             android:textSize="14sp"
-            app:buttonTint="@color/saffron" />
+            app:buttonTint="@color/colorMatisse" />
 
         <!-- Proceed Button -->
         <com.google.android.material.button.MaterialButton

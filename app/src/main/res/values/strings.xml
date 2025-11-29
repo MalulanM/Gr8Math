@@ -190,6 +190,7 @@
     <string name="notifications_and_reminders">Notifications and Reminders</string>
     <string name="terms_and_conditions">Terms and Conditions</string>
     <string name="privacy_policy">Privacy Policy</string>
+    <string name="logout">Logout</string>
 
     <string name="enable_account_approval">Enable Account Approval Request Notifications</string>
 
@@ -254,4 +255,13 @@
 
     <string name="badge_date_placeholder">Acquired: 1/1/2026</string>
     <string name="badge_date_locked">Acquired: -</string>
+
+    <!-- Profile Page -->
+    <string name="profile_title">Profile</string>
+    <string name="change_password">Change Password</string>
+    <string name="badges_label">Badges</string>
+    <string name="no_badges_displayed">No current badges displayed</string>
+
+    <string name="select_badges_title">Select badges to display</string>
+    <string name="select_badges_subtitle">(Maximum of 3)</string>
 </resources>

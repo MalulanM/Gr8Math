@@ -5,9 +5,9 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_gr8_logo"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/ic_gr8_logo"
         android:supportsRtl="true"
         android:theme="@style/Theme.Gr8Math"
         android:usesCleartextTraffic="true">
@@ -17,10 +17,7 @@
             android:name=".SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
         </activity>
 
         <!-- Login Activity -->
@@ -163,6 +160,34 @@
             android:theme="@style/Theme.Gr8Math" />
 
         <!-- (NEW) GRADES AND PARTICIPANTS PAGES -->
+
+        <activity
+            android:name=".ParticipantProfileActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Gr8Math" >
+
+        </activity>
+
+        <activity
+            android:name=".TeacherProfileActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Gr8Math"  >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".StudentParticipantsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
         <activity
             android:name=".TeacherParticipantsActivity"
             android:exported="false"

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Teaching Achievements"
+                android:fontFamily="@font/lexend"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:textColor="@color/colorText"
+                android:layout_centerVertical="true"/>
+
+            <ImageView
+                android:id="@+id/btnCloseDialog"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_close"
+                app:tint="@color/colorDarkCyan"
+                android:layout_alignParentEnd="true"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+        </RelativeLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilAchievementName"
+            style="@style/Gr8TextInputStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Achievement Name"
+            app:boxBackgroundColor="@color/white"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/til_stroke"
+            app:hintTextColor="@color/til_hint"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="2dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etAchievementName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/lexend"
+                android:textColor="@color/colorText"
+                android:inputType="textCapSentences"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Year Received:"
+                android:fontFamily="@font/lexend"
+                android:textStyle="bold"
+                android:textColor="@color/colorText"
+                android:layout_marginEnd="8dp"/>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Gr8TextInputStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:boxBackgroundColor="@color/white"
+                app:boxBackgroundMode="outline"
+                app:boxStrokeColor="@color/til_stroke"
+                app:hintTextColor="@color/til_hint"
+                app:boxStrokeWidth="1dp"
+                app:boxStrokeWidthFocused="2dp"
+                app:endIconDrawable="@drawable/ic_calendar_24"
+                app:endIconMode="custom">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etYearReceived"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="2025"
+                    android:textColor="@color/colorText"
+                    android:fontFamily="@font/lexend"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:gravity="center"/>
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnUploadCertificate"
+            style="@style/Gr8ButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="24dp"
+            android:text="Upload Certificate"
+            app:backgroundTint="@color/colorMatisse"/>
+
+        <TextView
+            android:id="@+id/btnSaveAchievement"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:fontFamily="@font/lexend"
+            android:textStyle="bold"
+            android:textColor="@color/colorMatisse"
+            android:layout_gravity="end"
+            android:layout_marginTop="16dp"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"/>
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
