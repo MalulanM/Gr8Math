@@ -7,6 +7,7 @@
     android:background="@color/colorLight"
     android:orientation="vertical">
 
+    <!-- Header Section -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -21,6 +22,7 @@
             android:layout_height="80dp"
             android:src="@drawable/ic_profile_default"
             app:tint="@color/colorMatisse" />
+
         <TextView
             android:id="@+id/tvGreeting"
             android:layout_width="wrap_content"
@@ -33,12 +35,14 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+    <!-- Menu Items -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="24dp">
 
+        <!-- Account Settings -->
         <LinearLayout
             android:id="@+id/btnAccountSettings"
             android:layout_width="match_parent"
@@ -68,33 +72,7 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/btnNotifications"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingTop="12dp"
-            android:paddingBottom="12dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginEnd="16dp"
-                android:src="@drawable/ic_notifications_green" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/lexend"
-                android:text="@string/notifications_and_reminders"
-                android:textColor="@color/colorText"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
+        <!-- Terms and Conditions -->
         <LinearLayout
             android:id="@+id/btnTerms"
             android:layout_width="match_parent"
@@ -124,6 +102,7 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
+        <!-- Privacy Policy -->
         <LinearLayout
             android:id="@+id/btnPrivacy"
             android:layout_width="match_parent"
@@ -148,6 +127,36 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/lexend"
                 android:text="@string/privacy_policy"
+                android:textColor="@color/colorText"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Logout (New Item) -->
+        <LinearLayout
+            android:id="@+id/btnLogout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="16dp"
+                android:src="@drawable/ic_logout"
+                app:tint="@color/colorDarkCyan" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/lexend"
+                android:text="@string/logout"
                 android:textColor="@color/colorText"
                 android:textSize="16sp"
                 android:textStyle="bold" />

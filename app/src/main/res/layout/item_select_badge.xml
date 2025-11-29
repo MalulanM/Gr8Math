@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="8dp"
+    android:background="?attr/selectableItemBackground">
+
+    <!--
+         Using RadioButton for visual style, but we will toggle it like a CheckBox
+         clickable="false" allows the parent row to handle the click
+    -->
+    <RadioButton
+        android:id="@+id/rbSelect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:layout_marginEnd="12dp"/>
+
+    <ImageView
+        android:id="@+id/ivBadgeIcon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/badge_firstace"
+        android:layout_marginEnd="12dp"/>
+
+    <TextView
+        android:id="@+id/tvBadgeTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="First Ace!"
+        android:textSize="14sp"
+        android:textColor="@color/colorText"
+        android:fontFamily="@font/lexend"
+        android:textStyle="bold"/>
+
+</LinearLayout>

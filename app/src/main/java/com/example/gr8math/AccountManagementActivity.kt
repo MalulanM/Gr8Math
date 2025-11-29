@@ -77,12 +77,6 @@ class AccountManagementActivity : AppCompatActivity() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_faculty_menu, null)
         dialog.setContentView(dialogView)
 
-        // --- Menu Click Listeners ---
-        dialogView.findViewById<View>(R.id.btnNotifications).setOnClickListener {
-            startActivity(Intent(this, FacultyNotificationsActivity::class.java))
-            dialog.dismiss()
-        }
-
         dialogView.findViewById<View>(R.id.btnAccountSettings).setOnClickListener {
             dialog.dismiss()
         }
