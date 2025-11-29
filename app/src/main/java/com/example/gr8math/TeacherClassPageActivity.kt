@@ -214,12 +214,6 @@ class TeacherClassPageActivity : AppCompatActivity() {
                                 val assessmentTitle = itemView.findViewById<TextView>(R.id.tvTitle)
                                 val arrowView = itemView.findViewById<ImageView>(R.id.ivArrow)
                                 assessmentTitle.text = "Assessment ${item.optInt("assessment_number")}"
-
-                                arrowView.setOnClickListener {
-                                    val intent = Intent(this@TeacherClassPageActivity, AssessmentDetailActivity::class.java)
-                                    intent.putExtra("AssessmentId", id)
-                                    startActivity(intent)
-                                }
                             }
                         }
 

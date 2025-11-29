@@ -63,18 +63,11 @@ class RegisterRoleActivity : AppCompatActivity() {
 
         btnNext.setOnClickListener {
             if (selectedRole == "Student") {
-                // Go to the existing RegisterActivity (Student Form)
                 val intent = Intent(this, RegisterActivity::class.java)
-                // Optional: Pass the role if needed
-                intent.putExtra("EXTRA_ROLE", "Student")
                 startActivity(intent)
 
-            // In RegisterRoleActivity.kt inside btnNext.setOnClickListener:
-
             } else if (selectedRole == "Teacher") {
-                // --- UPDATED: Navigate to Teacher Registration ---
-                val intent = Intent(this, TeacherRegisterActivity::class.java)
-                intent.putExtra("EXTRA_ROLE", "Teacher")
+                val intent = Intent(this, AddAccountActivity::class.java)
                 startActivity(intent)
             }
         }

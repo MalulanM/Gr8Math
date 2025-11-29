@@ -33,6 +33,10 @@ interface ApiService {
     @POST("api/register")
     fun registerUser(@Body user: User): Call<ResponseBody>
 
+    @POST("api/check-email/{email}")
+    fun checkEmail(
+        @Path("email") email: String
+    ): Call<ResponseBody>
     @POST("api/check-email/{email}/{lrn}")
     fun checkEmail(@Path("email") email: String,
                    @Path("lrn") lrn: String): Call<ResponseBody>

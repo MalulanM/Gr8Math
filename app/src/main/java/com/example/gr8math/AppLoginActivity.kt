@@ -63,7 +63,7 @@ class AppLoginActivity : AppCompatActivity() {
 
         init()
         findViewById<com.google.android.material.button.MaterialButton>(R.id.btnRegister).setOnClickListener {
-            startActivity(android.content.Intent(this, RegisterActivity::class.java))
+            startActivity(android.content.Intent(this, RegisterRoleActivity::class.java))
         }
 
         // "Forgot Password?" -> open ForgotPasswordActivity (UI only)
@@ -147,17 +147,10 @@ class AppLoginActivity : AppCompatActivity() {
                         val role = data.optString("role")
                         val id = user.optInt("id")
                         val firstName = user.optString("first_name")
-                        val isfirstLogin = user.optBoolean("first_login")
+
                         val pref = getSharedPreferences("user_session", MODE_PRIVATE)
 //                        pref.edit().putString("auth_token", token).apply()
                         ConnectURL.init(this@AppLoginActivity)
-
-                        Log.e("isFirst", firstName)
-                        if(isfirstLogin == true && role == "student"){
-                            showUserAgreement(role, id)
-                        } else if (isfirstLogin == true && role == "teacher"){
-                            showForgotPasswordActivity(etEmail.text.toString(), id, role)
-                        } else {
 
                             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                                 val nextIntent = when (role) {
@@ -173,7 +166,7 @@ class AppLoginActivity : AppCompatActivity() {
 
                                     else -> Intent(
                                         this@AppLoginActivity,
-                                        AccountManagementActivity::class.java
+                                        AppLoginActivity::class.java
                                     )
                                 }
                                 nextIntent.putExtra("toast_msg", msg)
@@ -190,7 +183,7 @@ class AppLoginActivity : AppCompatActivity() {
                                 startActivity(nextIntent)
                                 finish()
                             }, 3000)
-                        }
+
 
                     } else {
                         btnLogin.isEnabled = true
@@ -344,12 +337,8 @@ class AppLoginActivity : AppCompatActivity() {
                     "teacher" -> Intent(this@AppLoginActivity, TeacherClassManagerActivity::class.java)
                     else -> Intent(this@AppLoginActivity, AccountManagementActivity::class.java)
                 }
-                val msg = if (role == "teacher") {
-                    "Password saved"
-                } else {
-                    "Login Successful"
-                }
-                nextIntent.putExtra("toast_msg", msg)
+
+                nextIntent.putExtra("toast_msg", "Y")
                 nextIntent.putExtra("id", id)
                 nextIntent.putExtra("role", role)
 

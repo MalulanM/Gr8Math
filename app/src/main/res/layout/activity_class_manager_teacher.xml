@@ -155,7 +155,6 @@
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
-            android:hint="@string/search_hint"
             app:boxBackgroundColor="@color/colorLight"
             app:boxStrokeColor="@color/saffron"
             app:endIconDrawable="@drawable/ic_search"

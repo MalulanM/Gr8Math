@@ -1,4 +1,4 @@
-package com.example.gr8math  // <-- Make sure this matches your actual package
+package com.example.gr8math
 
 import android.os.Bundle
 import android.widget.EditText
@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -15,93 +17,97 @@ import retrofit2.Call
 import java.text.SimpleDateFormat
 import java.util.*
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
-import com.example.gr8math.utils.UIUtils // Make sure this import path is correct
+import android.widget.CheckBox
+import com.example.gr8math.utils.UIUtils
 import com.google.android.material.textfield.TextInputLayout
-// Make sure you have these classes (or remove the lines if you don't use them)
 import com.example.gr8math.api.ConnectURL
 import com.example.gr8math.utils.ShowToast
 import com.example.gr8math.dataObject.User
-
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import retrofit2.Response
+import android.os.Handler
 
 class AddAccountActivity : AppCompatActivity() {
-    lateinit  var genderField: MaterialAutoCompleteTextView
-    lateinit  var date: EditText
 
+    // ORIGINAL UI
+    lateinit var genderField: MaterialAutoCompleteTextView
+    lateinit var date: EditText
     lateinit var email: EditText
     lateinit var firstName: EditText
     lateinit var lastName: EditText
+    lateinit var teachingPos: MaterialAutoCompleteTextView
+    lateinit var MessageBox: TextView
+    lateinit var addButton: Button
 
-    lateinit var teachingPos : MaterialAutoCompleteTextView
+    lateinit var loadingLayout: View
+    lateinit var loadingProgress: View
+    lateinit var loadingText: TextView
 
-    lateinit var MessageBox : TextView
+    lateinit var tilEmail: TextInputLayout
+    lateinit var tilFirstName: TextInputLayout
+    lateinit var tilLastName: TextInputLayout
+    lateinit var tilTeachingPos: TextInputLayout
+    lateinit var tilGender: TextInputLayout
+    lateinit var tilBirthDate: TextInputLayout
 
-    lateinit var addButton :Button;
+    // PASSWORD SCREEN UI
+    lateinit var password: EditText
+    lateinit var confirmPassword: EditText
+    lateinit var registerButton: Button
 
-    lateinit var loadingLayout : View
+    // Temp store user info
+    var selectedGender = ""
+    var selectedTeachingPos = ""
 
-    lateinit var loadingProgress : View
+    var firstNameTemp = ""
+    var lastNameTemp = ""
+    var emailTemp = ""
+    var birthDateTemp = ""
 
-    lateinit var loadingText : TextView
-
-    lateinit var tilEmail : TextInputLayout
-    lateinit var tilFirstName : TextInputLayout
-    lateinit var tilLastName : TextInputLayout
-    lateinit var tilTeachingPos : TextInputLayout
-    lateinit var tilGender : TextInputLayout
-    lateinit var tilBirthDate : TextInputLayout
-
-
-
-    var selectedGender: String = ""
-    var selectedTeachingPos: String = ""
-
+    private var newUserId: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         showRegisterInfo()
     }
 
-    fun showRegisterInfo(){
-        // UPDATED: Using your new layout file
+    // ----------------------------------------------------------
+    // FIRST SCREEN
+    // ----------------------------------------------------------
+    fun showRegisterInfo() {
         setContentView(R.layout.activity_teacher_register)
         Init()
+
         findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
 
-        genderField.setOnItemClickListener { parent, view, position, id ->
+        genderField.setOnItemClickListener { parent, _, position, _ ->
             selectedGender = parent.getItemAtPosition(position).toString()
         }
 
-        teachingPos.setOnItemClickListener { parent, view, position, id ->
+        teachingPos.setOnItemClickListener { parent, _, position, _ ->
             selectedTeachingPos = parent.getItemAtPosition(position).toString()
         }
 
         date.setOnClickListener {
             val calendar = Calendar.getInstance()
-            val year = calendar.get(Calendar.YEAR)
-            val month = calendar.get(Calendar.MONTH)
-            val day = calendar.get(Calendar.DAY_OF_MONTH)
 
             val datePicker = DatePickerDialog(
                 this,
-                { _, selectedYear, selectedMonth, selectedDay ->
-
+                { _, y, m, d ->
                     val selectedDate = Calendar.getInstance()
-                    selectedDate.set(selectedYear, selectedMonth, selectedDay)
+                    selectedDate.set(y, m, d)
 
-
-                    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-                    val formattedDate = formatter.format(selectedDate.time)
-
-
-                    date.setText(formattedDate)
+                    val formatted = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+                    date.setText(formatted.format(selectedDate.time))
                 },
-                year,
-                month,
-                day
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
             )
-            datePicker.datePicker.maxDate = System.currentTimeMillis() -  24 * 60 * 60 * 1000
+
+            datePicker.datePicker.maxDate = System.currentTimeMillis() - 86400000
             datePicker.show()
         }
 
@@ -111,116 +117,265 @@ class AddAccountActivity : AppCompatActivity() {
             val tils = listOf(tilEmail, tilFirstName, tilLastName, tilTeachingPos, tilBirthDate, tilGender)
 
             var hasError = false
+
             for (i in fields.indices) {
-                val field = fields[i]
-                val til = tils[i]
-                // Assuming UIUtils is available
-                UIUtils.errorDisplay(this@AddAccountActivity,til, field, true, "Please enter the needed details")
-                if (field.text.toString().trim().isEmpty()) {
-                    hasError = true
+                UIUtils.errorDisplay(
+                    this,
+                    tils[i],
+                    fields[i],
+                    true,
+                    "Please enter the needed details"
+                )
+                if (fields[i].text.toString().trim().isEmpty()) hasError = true
+            }
+
+            if (hasError) return@setOnClickListener
+
+            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+
+            val emailText = email.text.toString().trim()
+
+            ConnectURL.api.checkEmail(emailText).enqueue(object : retrofit2.Callback<ResponseBody> {
+
+                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                    val responseString = response.body()?.string()
+                        ?: response.errorBody()?.string()
+
+                    if (responseString == null || !responseString.trim().startsWith("{")) {
+                        ShowToast.showMessage(this@AddAccountActivity, "Server returned invalid response.")
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                        return
+                    }
+
+                    val jsonObj = org.json.JSONObject(responseString)
+                    val success = jsonObj.optBoolean("success")
+                    val msg = jsonObj.optString("msg")
+
+                    if (success && msg.contains("Email", ignoreCase = true)) {
+
+                        UIUtils.errorDisplay(
+                            this@AddAccountActivity,
+                            tilEmail,
+                            email,
+                            true,
+                            msg,
+                            true
+                        )
+
+                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                        return
+                    }
+
+                    // Save temp
+                    firstNameTemp = firstName.text.toString().trim()
+                    lastNameTemp = lastName.text.toString().trim()
+                    emailTemp = email.text.toString().trim()
+                    birthDateTemp = date.text.toString().trim()
+
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                    showPasswordRegistration()
                 }
-            }
 
-            if (!hasError) {
-                UserRegister()
-            }
-
+                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                    ShowToast.showMessage(this@AddAccountActivity, "Failed to connect to server.")
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                }
+            })
         }
-
     }
 
-
     fun Init() {
-        email = findViewById<EditText>(R.id.email)
-        firstName = findViewById<EditText>(R.id.firstName)
-        lastName = findViewById<EditText>(R.id.lastName)
-        teachingPos = findViewById<MaterialAutoCompleteTextView>(R.id.etTeachingPos)
-        date = findViewById<EditText>(R.id.etDob)
-        genderField = findViewById<MaterialAutoCompleteTextView>(R.id.etGender)
-        val items = listOf("Male", "Female")
-        val itemsTeachingPosition = listOf("Teacher I", "Teacher II","Teacher III", "Teacher IV", "Teacher V", "Teacher VI", "Teacher VII","Master I", "Master II","Master III", "Master IV", "Master V")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, items)
-        val adapterTeachingPosition = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, itemsTeachingPosition)
-        genderField.setAdapter(adapter)
-        teachingPos.setAdapter(adapterTeachingPosition)
-        MessageBox = findViewById<TextView>(R.id.message)
-        addButton = findViewById(R.id.btnAdd)
+        email = findViewById(R.id.email)
+        firstName = findViewById(R.id.firstName)
+        lastName = findViewById(R.id.lastName)
+        teachingPos = findViewById(R.id.etTeachingPos)
+        date = findViewById(R.id.etDob)
+        genderField = findViewById(R.id.etGender)
+
+        genderField.setAdapter(
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, listOf("Male", "Female"))
+        )
+
+        teachingPos.setAdapter(
+            ArrayAdapter(
+                this,
+                android.R.layout.simple_list_item_1,
+                listOf(
+                    "Teacher I", "Teacher II", "Teacher III", "Teacher IV",
+                    "Teacher V", "Teacher VI", "Teacher VII",
+                    "Master I", "Master II", "Master III", "Master IV", "Master V"
+                )
+            )
+        )
+
+        MessageBox = findViewById(R.id.message)
+        addButton = findViewById(R.id.btnNext)
+
         tilEmail = findViewById(R.id.tilEmail)
         tilFirstName = findViewById(R.id.tilFirstName)
         tilLastName = findViewById(R.id.tilLastName)
         tilTeachingPos = findViewById(R.id.tilTeachingPos)
         tilGender = findViewById(R.id.tilGender)
         tilBirthDate = findViewById(R.id.tilBirthdate)
+
         loadingLayout = findViewById(R.id.loadingLayout)
         loadingProgress = findViewById(R.id.loadingProgressBg)
         loadingText = findViewById(R.id.loadingText)
-
     }
 
+    // ----------------------------------------------------------
+    // PASSWORD SCREEN
+    // ----------------------------------------------------------
+    fun showPasswordRegistration() {
+        setContentView(R.layout.change_password_activity)
+        Init2()
 
-    fun UserRegister() {
-        val emailText = email.text.toString().trim()
-        val firstNameText = firstName.text.toString().trim()
-        val lastNameText = lastName.text.toString().trim()
-        val teacherPosition = selectedTeachingPos.trim()
-        val birthDateText = date.text.toString().trim()
-        val genderText = selectedGender.trim()
+        findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
 
-        val apiService = ConnectURL.api
-        // API call
+        registerButton.isEnabled = false
+
+        val enableBtn = {
+            registerButton.isEnabled =
+                password.text.toString().isNotEmpty() &&
+                        confirmPassword.text.toString().isNotEmpty()
+        }
+
+        password.setOnKeyListener { _, _, _ -> enableBtn(); false }
+        confirmPassword.setOnKeyListener { _, _, _ -> enableBtn(); false }
+
+        registerButton.setOnClickListener { registerFinal() }
+    }
+
+    fun Init2() {
+        password = findViewById(R.id.etNewPass)
+        confirmPassword = findViewById(R.id.etRePass)
+        registerButton = findViewById(R.id.btnSave)
+
+        loadingLayout = findViewById(R.id.loadingLayout)
+        loadingProgress = findViewById(R.id.loadingProgressBg)
+        loadingText = findViewById(R.id.loadingText)
+    }
+
+    fun isValidPassword(password: String): Boolean {
+        val pattern = Regex("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^A-Za-z\\d]).{8,16}$")
+        return pattern.matches(password)
+    }
+
+    // ----------------------------------------------------------
+    // FINAL SUBMISSION
+    // ----------------------------------------------------------
+    fun registerFinal() {
+
+        if (password.text.toString() != confirmPassword.text.toString()) {
+            ShowToast.showMessage(this, "Passwords do not match")
+            return
+        }
+
+        if (!isValidPassword(password.text.toString())) {
+            ShowToast.showMessage(this, "Password Invalid")
+            return
+        }
+
         val user = User(
-            firstName = firstNameText,
-            lastName = lastNameText,
-            emailAdd = emailText,
-            gender = genderText,
-            birthdate = birthDateText,
-            teacherPosition = teacherPosition
+            firstName = firstNameTemp,
+            lastName = lastNameTemp,
+            emailAdd = emailTemp,
+            passwordHash = password.text.toString().trim(),
+            passwordHashConfirmation = confirmPassword.text.toString().trim(),
+            gender = selectedGender,
+            birthdate = birthDateTemp,
+            teacherPosition = selectedTeachingPos
         )
 
-       addButton.isEnabled =  false
+        registerButton.isEnabled = false
         UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
-        val call = apiService.registerAdmin(user) // Assuming you use the same API endpoint
-        call.enqueue(object : retrofit2.Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
-                val responseString = response.body()?.string()?:response.errorBody()?.string()
-                val jsonObj = org.json.JSONObject(responseString)
-                val message = jsonObj.getString("message")
-                try {
-                    Log.e(
-                        "AddAccountResponse", // Changed log tag
-                        "Code: ${response.code()} | Body: ${
-                            response.body()?.string()
-                        } | ErrorBody: ${response.errorBody()?.string()}"
-                    )
-                    if (response.isSuccessful) {
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            val intent = Intent(this@AddAccountActivity, AccountManagementActivity::class.java)
-                            intent.putExtra("toast_msg", message)
-                            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                            startActivity(intent)
-                            finish() // Closes this page and returns to Account Management
-                        }, 800)
-                    } else {
-                        ShowToast.showMessage(this@AddAccountActivity, "${message}")
-                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                        addButton.isEnabled = true
-                    }
-                } catch (e: Exception) {
-                    Log.e("addAccount", "Exception: ${e.message}", e)
-                    ShowToast.showMessage(this@AddAccountActivity, "An error occurred while handling the response.")
-                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                   addButton.isEnabled = true
-                }
+
+        ConnectURL.api.registerAdmin(user).enqueue(object : retrofit2.Callback<ResponseBody> {
+
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                val body = response.body()?.string() ?: response.errorBody()?.string()
+                val json = org.json.JSONObject(body)
+                val id = json.optInt("id", -1)
+                val isFirst = json.optBoolean("is_first", false)
+
+                newUserId = id
+
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                showUserAgreement(isFirst)
             }
 
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                ShowToast.showMessage(this@AddAccountActivity, "Failed to connect to server.")
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                registerButton.isEnabled = true
+            }
+        })
+    }
+
+    // ----------------------------------------------------------
+    // TERMS & CONDITIONS
+    // ----------------------------------------------------------
+    private fun showUserAgreement(isFirstTime: Boolean) {
+
+        val dialogView = LayoutInflater.from(this)
+            .inflate(R.layout.dialog_terms_and_conditions, null)
+
+        val chkBoxAgree = dialogView.findViewById<CheckBox>(R.id.cbTerms)
+        val btnProceed = dialogView.findViewById<Button>(R.id.btnProceed)
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        btnProceed.isEnabled = false
+
+        chkBoxAgree.setOnCheckedChangeListener { _, checked ->
+            btnProceed.isEnabled = checked
+        }
+
+        btnProceed.setOnClickListener {
+
+            dialog.dismiss()
+            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+
+            updateStatus(newUserId)
+
+            Handler(mainLooper).postDelayed({
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+
+                val nextIntent = Intent(
+                    this@AddAccountActivity,
+                    AppLoginActivity::class.java
+                )
+                nextIntent.putExtra("toast_msg", "Registered successfully")
+                startActivity(nextIntent)
+                setResult(RESULT_OK)
+                finish()
+
+            }, 1000)
+        }
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+    }
+
+    // ----------------------------------------------------------
+    // UPDATE STATUS API
+    // ----------------------------------------------------------
+    private fun updateStatus(id: Int) {
+        ConnectURL.api.updateStatus(id).enqueue(object : retrofit2.Callback<ResponseBody> {
+
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                val body = response.body()?.string()
+                val error = response.errorBody()?.string()
+                val result = body ?: error
+                Log.e("updateStat", "Code: ${response.code()} | Body: $result")
+            }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
-                ShowToast.showMessage(this@AddAccountActivity, "Failed to connect to server. Check your internet connection.")
-                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-               addButton.isEnabled = true
+                Log.e("updateStat", "Failed: ${t.message}")
             }
         })
     }
 }
-

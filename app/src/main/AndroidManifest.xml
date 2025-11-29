@@ -194,6 +194,10 @@
 <!--            </intent-filter>-->
         </activity>
 
+        <activity
+            android:name=".RegisterRoleActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Gr8Math" />
 
         <service
             android:name=".services.MyFirebaseService"

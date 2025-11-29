@@ -7,6 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.os.Handler
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -15,12 +18,16 @@ import retrofit2.Call
 import java.text.SimpleDateFormat
 import java.util.*
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.CheckBox
 import com.example.gr8math.api.ConnectURL
 import com.example.gr8math.dataObject.User
 import com.example.gr8math.utils.ShowToast
 import com.example.gr8math.utils.UIUtils
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
+import retrofit2.Response
 
 
 class RegisterActivity : AppCompatActivity() {
@@ -60,6 +67,7 @@ class RegisterActivity : AppCompatActivity() {
     var birthDateText = ""
     var genderText = ""
 
+    private var newUserId: Int = -1
     var selectedGender: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -316,30 +324,33 @@ class RegisterActivity : AppCompatActivity() {
         call.enqueue(object : retrofit2.Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
                 try {
+
+                    val rawBody = response.body()?.string()
+                    val rawError = response.errorBody()?.string()
+
                     Log.e(
                         "RegisterResponse",
-                        "Code: ${response.code()} | Body: ${
-                            response.body()?.string()
-                        } | ErrorBody: ${response.errorBody()?.string()}"
+                        "Code: ${response.code()} | Body: $rawBody | ErrorBody: $rawError"
                     )
-                    if (response.isSuccessful) {
-                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            val intent = Intent(this@RegisterActivity, AppLoginActivity::class.java)
-                                intent.putExtra("toast_msg", "You have successfully created an account, please wait for it to be approved.")
-                                startActivity(intent)
-                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
 
-                            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                            finish()
-                        }, 800)
-                    } else {
-                        ShowToast.showMessage(this@RegisterActivity, "An error occurred while handling the response.")
+                    // Use what was read above
+                    val body = rawBody ?: rawError
+                    val json = org.json.JSONObject(body)
 
-                        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                    }
+                    val id = json.optInt("id", -1)
+                    val isFirst = json.optBoolean("is_first", false)
+
+                    newUserId = id
+
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                    showUserAgreement(isFirst)
+
                 } catch (e: Exception) {
                     Log.e("registerAcc", "Exception: ${e.message}", e)
-                    ShowToast.showMessage(this@RegisterActivity, "An error occurred while handling the response.")
+                    ShowToast.showMessage(
+                        this@RegisterActivity,
+                        "An error occurred while handling the response."
+                    )
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                 }
             }
@@ -349,6 +360,74 @@ class RegisterActivity : AppCompatActivity() {
                 Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
                 ShowToast.showMessage(this@RegisterActivity, "Failed to connect to server. Check your internet connection.")
                 UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+            }
+        })
+    }
+
+
+    // ----------------------------------------------------------
+    // TERMS & CONDITIONS
+    // ----------------------------------------------------------
+    private fun showUserAgreement(isFirstTime: Boolean) {
+
+        val dialogView = LayoutInflater.from(this)
+            .inflate(R.layout.dialog_terms_and_conditions, null)
+
+        val chkBoxAgree = dialogView.findViewById<CheckBox>(R.id.cbTerms)
+        val btnProceed = dialogView.findViewById<Button>(R.id.btnProceed)
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        btnProceed.isEnabled = false
+
+        chkBoxAgree.setOnCheckedChangeListener { _, checked ->
+            btnProceed.isEnabled = checked
+        }
+
+        btnProceed.setOnClickListener {
+
+            dialog.dismiss()
+            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+
+            updateStatus(newUserId)
+
+            Handler(mainLooper).postDelayed({
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+
+                val nextIntent = Intent(
+                    this@RegisterActivity,
+                    AppLoginActivity::class.java
+                )
+                nextIntent.putExtra("toast_msg", "Registered successfully")
+                startActivity(nextIntent)
+                setResult(RESULT_OK)
+                finish()
+
+            }, 1000)
+        }
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+    }
+
+    // ----------------------------------------------------------
+    // UPDATE STATUS API
+    // ----------------------------------------------------------
+    private fun updateStatus(id: Int) {
+        ConnectURL.api.updateStatus(id).enqueue(object : retrofit2.Callback<ResponseBody> {
+
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                val body = response.body()?.string()
+                val error = response.errorBody()?.string()
+                val result = body ?: error
+                Log.e("updateStat", "Code: ${response.code()} | Body: $result")
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.e("updateStat", "Failed: ${t.message}")
             }
         })
     }
