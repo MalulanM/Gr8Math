@@ -2,9 +2,11 @@ package com.example.gr8math // Make sure this matches your package name
 
 import android.app.Dialog
 import android.content.Intent // <-- IMPORT ADDED
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -21,8 +23,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.gr8math.adapter.ClassAdapter
 import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.CurrentCourse
 import com.example.gr8math.utils.ShowToast
 import com.example.gr8math.utils.UIUtils
 import com.google.android.material.appbar.MaterialToolbar // <-- IMPORT ADDED
@@ -50,6 +54,8 @@ class StudentClassManagerActivity : AppCompatActivity() {
     lateinit var loadingText : TextView
     private lateinit var role: String
     private var id: Int = 0
+
+    private var profilePic: String? = null
     private lateinit var name:String
 
 
@@ -64,6 +70,8 @@ class StudentClassManagerActivity : AppCompatActivity() {
         id = intent.getIntExtra("id", 0)
         role = intent.getStringExtra("role")?:""
         name = intent.getStringExtra("name")?:""
+        profilePic = intent.getStringExtra("profilePic")
+            ?.takeIf { it.isNotBlank() }
 
         if (!role.isNullOrEmpty() && id > 0) {
             inflateClasses(role, id)
@@ -72,6 +80,8 @@ class StudentClassManagerActivity : AppCompatActivity() {
         if(!toastMsg.isNullOrEmpty()){
             ShowToast.showMessage(this, toastMsg)
         }
+
+        CurrentCourse.userId = id
         // Find all the views from the XML
         mainToolbar = findViewById(R.id.toolbar)
         addClassesButton = findViewById(R.id.btnAddClasses)
@@ -124,13 +134,34 @@ class StudentClassManagerActivity : AppCompatActivity() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_faculty_menu, null)
         dialog.setContentView(dialogView)
 
+        val ivProfile = dialog.findViewById<ImageView>(R.id.ivProfile)
+
+        if (profilePic.isNullOrEmpty()) {
+            ivProfile.setImageResource(R.drawable.ic_profile_default)
+        } else if (profilePic!!.startsWith("http")) {
+            Glide.with(this)
+                .load(profilePic)
+                .placeholder(R.drawable.ic_profile_default)
+                .error(R.drawable.ic_profile_default)
+                .circleCrop()
+                .into(ivProfile)
+        } else {
+            try {
+                val decodedBytes = Base64.decode(profilePic, Base64.DEFAULT)
+                val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                ivProfile.setImageBitmap(bitmap)
+            } catch (e: Exception) {
+                ivProfile.setImageResource(R.drawable.ic_profile_default)
+            }
+        }
+
+
         val name = dialog.findViewById<TextView>(R.id.tvGreeting)
         name.text = "Hi, ${this.name}!"
 
-        // --- Menu Click Listeners ---
-        dialogView.findViewById<View>(R.id.btnNotifications).visibility = View.GONE
 
         dialogView.findViewById<View>(R.id.btnAccountSettings).setOnClickListener {
+            startActivity(Intent(this@StudentClassManagerActivity, ProfileActivity::class.java))
             dialog.dismiss()
         }
 

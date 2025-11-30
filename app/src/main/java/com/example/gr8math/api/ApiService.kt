@@ -12,6 +12,11 @@ import com.example.gr8math.dataObject.AssessmentRequest
 import com.example.gr8math.dataObject.AssessmentResponse
 import com.example.gr8math.dataObject.ClassData
 import com.example.gr8math.dataObject.LoginUser
+import com.example.gr8math.dataObject.ParticipantResponse
+import com.example.gr8math.dataObject.ProfileResponse
+import com.example.gr8math.dataObject.StudentProfileResponse
+import com.example.gr8math.dataObject.UpdateProfileRequest
+import com.example.gr8math.dataObject.UpdateStudentProfileRequest
 import com.example.gr8math.dataObject.User
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -207,8 +212,20 @@ interface ApiService {
         @Body request: MarkAllReadRequest
     ): Call<Void>
 
+    @GET("api/teacher/display-profile")
+    fun getProfile(@Query("user_id") userId: Int): Call<ProfileResponse>
 
+    @POST("api/teacher/update-profile")
+    fun updateProfile(@Body request: UpdateProfileRequest): Call<ProfileResponse>
 
+    @GET("api/student/display-profile")
+    fun getStudentProfile(@Query("user_id") userId: Int): Call<StudentProfileResponse>
+
+    @POST("api/student/update-profile")
+    fun updateStudentProfile(@Body request: UpdateStudentProfileRequest): Call<StudentProfileResponse>
+
+    @GET("api/student/display-participants")
+    fun getParticipants(@Query("course_id") courseId: Int): Call<ParticipantResponse>
 
 }
 

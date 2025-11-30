@@ -27,11 +27,13 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.textfield.TextInputLayout
 import com.example.gr8math.TeacherAddClassActivity // <-- NEW IMPORT
 import com.example.gr8math.adapter.ClassAdapter
 import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.CurrentCourse
 import com.example.gr8math.dataObject.TeacherClass
 import com.example.gr8math.utils.ShowToast
 import com.example.gr8math.utils.UIUtils
@@ -75,6 +77,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
 
     private lateinit var role: String
     private var id: Int = 0
+    private lateinit var profilePic: String
     private lateinit var addClassLauncher: ActivityResultLauncher<Intent>
     private lateinit var parentLayout : LinearLayout
 
@@ -88,6 +91,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_class_manager_teacher)
 
+
         loadingLayout =  findViewById<View>(R.id.loadingLayout)
         loadingProgress = findViewById<View>(R.id.loadingProgressBg)
         loadingText = findViewById<TextView>(R.id.loadingText)
@@ -95,6 +99,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         id = intent.getIntExtra("id", 0)
             role = intent.getStringExtra("role")?:""
         name = intent.getStringExtra("name")?:""
+        profilePic = intent.getStringExtra("profilePic")?:""
 
         if (!role.isNullOrEmpty() && id > 0) {
             inflateClasses(role, id)
@@ -104,6 +109,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
             ShowToast.showMessage(this, toastMsg)
         }
 
+        CurrentCourse.userId = id
 
         parentLayout = findViewById(R.id.class_list_container)
         defaultView = findViewById(R.id.default_view)
@@ -248,14 +254,47 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_faculty_menu, null)
         dialog.setContentView(dialogView)
 
+        val ivProfile = dialog.findViewById<ImageView>(R.id.ivProfile)
+        // DISPLAY PROFILE PIC IF EXISTS
+        if (!profilePic.isNullOrEmpty()) {
+
+            // Check if it's a URL
+            if (profilePic.startsWith("http")) {
+
+                Glide.with(this)
+                    .load(profilePic)
+                    .placeholder(R.drawable.ic_profile_default)
+                    .circleCrop()// your default image
+                    .error(R.drawable.ic_profile_default)
+                    .into(ivProfile)
+
+            } else {
+                // Assume Base64 string
+                try {
+                    val decodedBytes = android.util.Base64.decode(profilePic, android.util.Base64.DEFAULT)
+                    val bitmap = android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                    ivProfile.setImageBitmap(bitmap)
+                } catch (e: Exception) {
+                    ivProfile.setImageResource(R.drawable.ic_profile_default)
+                    Log.e("PROFILE_ERROR", "Failed to decode Base64 image: ${e.message}")
+                }
+            }
+
+        } else {
+            // No profile pic → show default
+            ivProfile.setImageResource(R.drawable.ic_profile_default)
+        }
+
+
         val name = dialog.findViewById<TextView>(R.id.tvGreeting)
         name.text = "Hi, ${this.name}!"
 
         // --- Menu Click Listeners ---
-        dialogView.findViewById<View>(R.id.btnNotifications).visibility = View.GONE
 
         dialogView.findViewById<View>(R.id.btnAccountSettings).setOnClickListener {
+            startActivity(Intent(this@TeacherClassManagerActivity, TeacherProfileActivity::class.java))
             dialog.dismiss()
+
         }
 
         dialogView.findViewById<View>(R.id.btnTerms).setOnClickListener {
@@ -263,6 +302,10 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         }
 
         dialogView.findViewById<View>(R.id.btnPrivacy).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<View>(R.id.btnLogout).setOnClickListener {
             dialog.dismiss()
         }
 

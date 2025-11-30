@@ -3,10 +3,14 @@ package com.example.gr8math
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -16,23 +20,54 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.gr8math.adapter.Badge
 import com.example.gr8math.adapter.BadgeSelectionAdapter
+import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.CurrentCourse
+import com.example.gr8math.dataObject.ProfileResponse
+import com.example.gr8math.dataObject.StudentProfileResponse
+import com.example.gr8math.dataObject.UpdateProfileRequest
+import com.example.gr8math.dataObject.UpdateStudentProfileRequest
+import com.example.gr8math.utils.ShowToast
+import com.example.gr8math.utils.UIUtils
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 class ProfileActivity : AppCompatActivity() {
+    private var cameraUri: Uri? = null
+
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { handleImageResult(it) }
+    }
+
+    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success && cameraUri != null) {
+            handleImageResult(cameraUri!!)
+        }
+    }
+
+    lateinit var loadingLayout : View
+    lateinit var loadingProgress : View
+    lateinit var loadingText : TextView
+
 
     // UI Elements
     private lateinit var etFirstName: TextInputEditText
@@ -47,7 +82,10 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var etDob: TextInputEditText
     private lateinit var etGender: MaterialAutoCompleteTextView
     private lateinit var ivProfile: ImageView
+
+    private lateinit var editPfp : ImageView
     private lateinit var tvChangePassword: TextView
+
 
     // Badge Edit Icon
     private lateinit var ivEditBadges: ImageView
@@ -56,6 +94,11 @@ class ProfileActivity : AppCompatActivity() {
     private var isEditingFirstName = false
     private var isEditingLastName = false
     private var isEditingLRN = false
+
+    private var id = CurrentCourse.userId
+    private var selectedImageBase64: String? = null
+    private lateinit var genderAdapter: ArrayAdapter<String>
+
 
     // FIX 1: Use 'by lazy' to prevent crash on startup (getString requires Context)
     private val allBadges by lazy {
@@ -87,11 +130,12 @@ class ProfileActivity : AppCompatActivity() {
 
         etLRN = findViewById(R.id.etLRN)
         ivEditLRN = findViewById(R.id.ivEditLRN)
-
+        editPfp = findViewById(R.id.editPfp)
         etDob = findViewById(R.id.etDob)
         etGender = findViewById(R.id.etGender)
         ivProfile = findViewById(R.id.ivProfile)
         tvChangePassword = findViewById(R.id.tvChangePassword)
+
 
         // IMPORTANT: Ensure this ID exists in your XML layout inside the Badges card
         ivEditBadges = findViewById(R.id.ivEditBadges)
@@ -145,13 +189,14 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         tvChangePassword.setOnClickListener {
-            val intent = Intent(this, PasswordCreationActivity::class.java)
+            val intent = Intent(this, ForgotPasswordActivity::class.java)
+            intent.putExtra("EXTRA_ROLE", "Teacher")
             startActivity(intent)
         }
 
         val genderItems = listOf("Male", "Female")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, genderItems)
-        etGender.setAdapter(adapter)
+        genderAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, genderItems)
+        etGender.setAdapter(genderAdapter)
 
         etDob.setOnClickListener {
             val calendar = Calendar.getInstance()
@@ -161,16 +206,219 @@ class ProfileActivity : AppCompatActivity() {
                     val selectedDate = Calendar.getInstance()
                     selectedDate.set(year, month, day)
                     val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.US)
-                    etDob.setText(formatter.format(selectedDate.time))
+                    val formattedDate = formatter.format(selectedDate.time)
+                    etDob.setText(formattedDate)
+                    saveData("Birthdate", formattedDate)
+
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
+
             )
             datePicker.show()
         }
+
+        editPfp.setOnClickListener {
+            val sheetView = LayoutInflater.from(this).inflate(R.layout.dialog_upload_certificate_source, null)
+            val bottomSheetDialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
+            bottomSheetDialog.setContentView(sheetView)
+            (sheetView.parent as? View)?.setBackgroundColor(Color.TRANSPARENT)
+
+            sheetView.findViewById<View>(R.id.btnPhotoAlbum).setOnClickListener {
+                galleryLauncher.launch("image/*")
+                bottomSheetDialog.dismiss()
+            }
+
+            sheetView.findViewById<View>(R.id.btnCamera).setOnClickListener {
+                cameraUri = androidx.core.content.FileProvider.getUriForFile(
+                    this,
+                    "${applicationContext.packageName}.provider",
+                    createImageFile()
+                )
+                cameraUri?.let { cameraLauncher.launch(it) }
+                bottomSheetDialog.dismiss()
+            }
+
+
+            sheetView.findViewById<View>(R.id.btnCancelUpload).setOnClickListener {
+                bottomSheetDialog.dismiss()
+            }
+
+            bottomSheetDialog.show()
+        }
+
+        displayProfile()
     }
 
+
+    private fun handleImageResult(uri: Uri) {
+        try {
+            // Display immediately in ImageView
+            Glide.with(this)
+                .load(uri)
+                .placeholder(R.drawable.ic_profile_default)
+                .circleCrop()
+                .error(R.drawable.ic_profile_default)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
+                .skipMemoryCache(true)
+                .into(ivProfile)
+
+            // Convert to Base64 for server upload
+            selectedImageBase64 = contentUriToBase64(uri)
+            selectedImageBase64?.let { saveData("Profile Picture", it) }
+                ?: ShowToast.showMessage(this, "Failed to read image")
+        } catch (e: Exception) {
+            Log.e("ImageError", "Failed to handle image result", e)
+            ivProfile.setImageResource(R.drawable.ic_profile_default)
+        }
+    }
+
+    private fun createImageFile(): java.io.File {
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val storageDir = getExternalFilesDir("images") // persistent for this app
+        return java.io.File.createTempFile("JPEG_${timestamp}_", ".jpg", storageDir)
+
+    }
+
+
+    private val selectImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            // 1. Display the selected image immediately
+            Glide.with(this).load(it).placeholder(R.drawable.ic_profile_default).into(ivProfile)
+
+            // 2. Convert to Base64 (This should be done on a background thread in a real app)
+            selectedImageBase64 = contentUriToBase64(it)
+
+            // 3. Save the picture
+            if (selectedImageBase64 != null) {
+                saveData("Profile Picture", selectedImageBase64!!)
+            } else {
+                ShowToast.showMessage(this, "Failed to encode image.")
+            }
+        }
+    }
+
+    private fun contentUriToBase64(uri: Uri): String? {
+        return try {
+            val inputStream = contentResolver.openInputStream(uri)
+            val bytes = inputStream?.readBytes()
+            inputStream?.close()
+
+            bytes?.let {
+                val mimeType = contentResolver.getType(uri) ?: "image/jpeg"
+                val base64String = android.util.Base64.encodeToString(it, android.util.Base64.NO_WRAP)
+                "data:$mimeType;base64,$base64String"
+            }
+        } catch (e: Exception) {
+            Log.e("Base64Convert", "Error converting image to Base64", e)
+            null
+        }
+    }
+
+
+    private fun displayProfile() {
+
+        ConnectURL.api.getStudentProfile(id).enqueue(object : Callback<StudentProfileResponse> {
+            override fun onResponse(call: Call<StudentProfileResponse>, response: Response<StudentProfileResponse>) {
+                if (!response.isSuccessful) return
+
+                val data = response.body()?.data ?: return
+                val profile = data.profile
+
+                val pic = profile.profilePic
+
+                // --- PROFILE PIC LOADING ---
+                if (!pic.isNullOrEmpty()) {
+                    if (pic.startsWith("data:image")) {
+                        try {
+                            val pureBase64 = pic.substringAfter("base64,")
+                            val decodedBytes = Base64.decode(pureBase64, Base64.DEFAULT)
+                            val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                            ivProfile.setImageBitmap(bitmap)
+                        }
+                        catch (e: Exception) {
+                            Log.e("Base64Load", "Failed to decode Base64", e)
+                            ivProfile.setImageResource(R.drawable.ic_profile_default)
+                        }
+                    } else {
+                        Glide.with(this@ProfileActivity)
+                            .load(pic)
+                            .circleCrop()
+                            .placeholder(R.drawable.ic_profile_default)
+                            .error(R.drawable.ic_profile_default)
+                            .into(ivProfile)
+                    }
+                }
+                else {
+                    ivProfile.setImageResource(R.drawable.ic_profile_default)
+                }
+
+                // --- STUDENT INFO ---
+                etFirstName.setText(profile.firstName ?: "")
+                etLastName.setText(profile.lastName ?: "")
+                etGender.setText(profile.gender ?: "", false)
+                etDob.setText(formatDate(profile.birthdate) ?: "")
+                etLRN.setText(data.lrn ?: "")
+            }
+
+            override fun onFailure(call: Call<StudentProfileResponse>, t: Throwable) {
+                ShowToast.showMessage(this@ProfileActivity, "Failed to load profile")
+            }
+        })
+    }
+
+
+
+    private fun updateField(fieldName: String, value: String) {
+
+        val request = UpdateStudentProfileRequest(
+            userId = id,
+            firstName = if (fieldName == "first_name") value else null,
+            lastName = if (fieldName == "last_name") value else null,
+            gender = if (fieldName == "gender") value else null,
+            birthdate = if (fieldName == "birthdate") value else null,
+            lrn = if (fieldName == "LRN") value else null,
+            profilePic = if (fieldName == "profile_pic") value else null,
+        )
+
+        ConnectURL.api.updateStudentProfile(request).enqueue(object : Callback<StudentProfileResponse> {
+            override fun onResponse(call: Call<StudentProfileResponse>, response: Response<StudentProfileResponse>) {
+                if (response.isSuccessful && response.body()?.status == "success") {
+                    ShowToast.showMessage(this@ProfileActivity, "Change successfully saved!")
+                }
+            }
+
+            override fun onFailure(call: Call<StudentProfileResponse>, t: Throwable) {
+                ShowToast.showMessage(this@ProfileActivity, "Server error")
+            }
+        })
+    }
+
+
+    private fun formatDate(timestamp: String?): String? {
+        if (timestamp.isNullOrEmpty()) return null
+
+        // This is the input format we expect from the backend (DATE converted to DateTime string)
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.US)
+
+        // The timestamp usually comes in UTC/ZULU time from the server/Supabase
+        // Setting the input timezone to UTC helps interpret the date correctly.
+        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+
+        return try {
+            val date: Date? = inputFormat.parse(timestamp)
+            date?.let {
+                // This is your desired output format (e.g., 01/01/2025)
+                val outputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.US)
+                outputFormat.format(it)
+            }
+        } catch (e: Exception) {
+            Log.e("DateFormatter", "Failed to parse date: $timestamp", e)
+            // Fallback: return the original unformatted string if parsing fails
+            timestamp
+        }
+    }
     // --- Show Badge Selection Dialog with Confirmation ---
     private fun showBadgeSelectionDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_select_badges, null)
@@ -261,8 +509,16 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun saveData(field: String, value: String) {
-        Toast.makeText(this, "$field updated to: $value", Toast.LENGTH_SHORT).show()
+        when (field) {
+            "First Name" -> updateField("first_name", value)
+            "Last Name" -> updateField("last_name", value)
+            "Gender" -> updateField("gender", value)
+            "Birthdate" -> updateField("birthdate", value)
+            "LRN" -> updateField("LRN", value)
+            "Profile Picture" -> updateField("profile_pic", value)
+        }
     }
+
 
     private fun showKeyboard(view: View) {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager

@@ -147,6 +147,7 @@ class AppLoginActivity : AppCompatActivity() {
                         val role = data.optString("role")
                         val id = user.optInt("id")
                         val firstName = user.optString("first_name")
+                        val profilePic = user.optString("profile_pic")
 
                         val pref = getSharedPreferences("user_session", MODE_PRIVATE)
 //                        pref.edit().putString("auth_token", token).apply()
@@ -173,6 +174,7 @@ class AppLoginActivity : AppCompatActivity() {
                                 nextIntent.putExtra("id", id)
                                 nextIntent.putExtra("role", role)
                                 nextIntent.putExtra("name", firstName)
+                                nextIntent.putExtra("profilePic", profilePic)
 
                                 UIUtils.showLoading(
                                     loadingLayout,

@@ -18,10 +18,11 @@
         android:paddingBottom="32dp">
 
         <ImageView
+            android:id="@+id/ivProfile"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:src="@drawable/ic_profile_default"
-            app:tint="@color/colorMatisse" />
+            />
 
         <TextView
             android:id="@+id/tvGreeting"

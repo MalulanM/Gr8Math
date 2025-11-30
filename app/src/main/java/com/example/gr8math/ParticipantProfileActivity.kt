@@ -1,9 +1,13 @@
 package com.example.gr8math
 
 import android.os.Bundle
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
+import com.example.gr8math.dataObject.BadgeModel
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.gson.Gson
 
 class ParticipantProfileActivity : AppCompatActivity() {
 
@@ -14,29 +18,61 @@ class ParticipantProfileActivity : AppCompatActivity() {
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
 
-        // 1. Get Data from Intent
-        val name = intent.getStringExtra("EXTRA_NAME") ?: "Dela Cruz, Juan"
-        val role = intent.getStringExtra("EXTRA_ROLE") ?: "Student" // Default to Student
+        // -------------------------------
+        // INTENT DATA
+        // -------------------------------
+        val name = intent.getStringExtra("EXTRA_NAME") ?: ""
+        val role = intent.getStringExtra("EXTRA_ROLE") ?: "Student"
+        val profilePic = intent.getStringExtra("EXTRA_PROFILE_PIC") ?: ""
 
-        // 2. Find Views
+        // Student
+        val lrn = intent.getStringExtra("EXTRA_LRN") ?: "Unknown"
+        val gradeLevel = intent.getStringExtra("EXTRA_GRADE_LEVEL") ?: "Unknown"
+        val badgeHeader = intent.getStringExtra("EXTRA_BADGE_HEADER") ?: "Badges"
+        val birthdate = intent.getStringExtra("EXTRA_BIRTHDATE")?:"1/1/2025"
+        // Teacher
+        val teachingPosition = intent.getStringExtra("EXTRA_TEACHING_POSITION") ?: "Teacher I"
+        val achievementsHeader = intent.getStringExtra("EXTRA_ACHIEVEMENTS_HEADER") ?: "Teaching Achievements"
+
+        // Parse badge list if available
+        val badgeJson = intent.getStringExtra("EXTRA_BADGE_LIST")
+        val badges: List<BadgeModel> =
+            if (badgeJson != null) Gson().fromJson(badgeJson, Array<BadgeModel>::class.java).toList()
+            else emptyList()
+
+        // -------------------------------
+        // VIEW BINDINGS
+        // -------------------------------
+        val ivProfilePic = findViewById<ImageView>(R.id.ivProfile)
         val tvName = findViewById<TextView>(R.id.tvName)
         val tvRole = findViewById<TextView>(R.id.tvRole)
-        val tvLRN = findViewById<TextView>(R.id.tvLRN) // Reused for Teaching Position
-        val tvBadgesHeader = findViewById<TextView>(R.id.tvBadgesHeader) // Reused for Achievements
+        val tvLRN = findViewById<TextView>(R.id.tvLRN)
+        val tvBadgesHeader = findViewById<TextView>(R.id.tvBadgesHeader)
+        val tvBirthdate = findViewById<TextView>(R.id.tvBirthdate)
 
-        // 3. Set Data
+        // -------------------------------
+        // SET DATA
+        // -------------------------------
         tvName.text = name
         tvRole.text = "Role: $role"
+        tvBirthdate.text = birthdate
 
-        // 4. Role-Specific Logic
+        Glide.with(this)
+            .load(profilePic)
+            .placeholder(R.drawable.ic_profile_default)
+            .circleCrop()
+            .into(ivProfilePic)
+
+        // -------------------------------
+        // ROLE-BASED UI
+        // -------------------------------
         if (role == "Teacher") {
-            // --- TEACHER VIEW ---
-            tvLRN.text = "Teaching Position: Teacher I"
-            tvBadgesHeader.text = "Teaching Achievements"
+            tvLRN.text = "Teaching Position: $teachingPosition"
+            tvBadgesHeader.text = achievementsHeader
+
         } else {
-            // --- STUDENT VIEW ---
-            tvLRN.text = "LRN: 123456123456"
-            tvBadgesHeader.text = "Badges"
+            tvLRN.text = "LRN: $lrn"
+            tvBadgesHeader.text = "$badgeHeader (${badges.size})"
         }
     }
 }

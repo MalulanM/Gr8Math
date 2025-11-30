@@ -3,10 +3,14 @@ package com.example.gr8math
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -16,22 +20,54 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.gr8math.adapter.Badge
 import com.example.gr8math.adapter.BadgeSelectionAdapter
+import com.example.gr8math.adapter.TeacherNotificationResponse
+import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.CurrentCourse
+import com.example.gr8math.dataObject.ProfileResponse
+import com.example.gr8math.dataObject.TeacherAchievement
+import com.example.gr8math.dataObject.UpdateProfileRequest
+import com.example.gr8math.utils.ShowToast
+import com.example.gr8math.utils.UIUtils
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
+
 
 class TeacherProfileActivity : AppCompatActivity() {
+    private var cameraUri: Uri? = null
+
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { handleImageResult(it) }
+    }
+
+    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success && cameraUri != null) {
+            handleImageResult(cameraUri!!)
+        }
+    }
+
+    lateinit var loadingLayout : View
+    lateinit var loadingProgress : View
+    lateinit var loadingText : TextView
+
 
     // UI Elements
     private lateinit var etFirstName: TextInputEditText
@@ -45,6 +81,10 @@ class TeacherProfileActivity : AppCompatActivity() {
     private lateinit var etGender: MaterialAutoCompleteTextView
     private lateinit var tvChangePassword: TextView
 
+    private lateinit var editPfp : ImageView
+    private lateinit var ivProfile : ImageView
+    private var selectedImageBase64: String? = null
+
     // Achievement Edit Icon
     private lateinit var ivEditAchievements: ImageView
 
@@ -52,28 +92,36 @@ class TeacherProfileActivity : AppCompatActivity() {
     private var isEditingFirstName = false
     private var isEditingLastName = false
 
-    // Reuse Badge system for Achievements
-    private val allAchievements by lazy {
-        listOf(
-            Badge(1, getString(R.string.badge_first_ace_list_title), getString(R.string.badge_first_ace_dialog_title), "", "", R.drawable.badge_firstace, true),
-            Badge(2, getString(R.string.badge_first_timer_list_title), getString(R.string.badge_first_timer_dialog_title), "", "", R.drawable.badge_firsttimer, true),
-            Badge(3, getString(R.string.badge_triple_ace_list_title), getString(R.string.badge_triple_ace_dialog_title), "", "", R.drawable.badge_tripleace, true)
-        )
-    }
+    private var id = CurrentCourse.userId
+    private lateinit var tvAchievementsList: TextView
+    private lateinit var ivCertificatePreview: ImageView
+
+    private lateinit var genderAdapter: ArrayAdapter<String>
+    private lateinit var posAdapter: ArrayAdapter<String>
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_profile)
-
+        Log.e("KEN2BDWBRE", id.toString())
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
 
+        loadingLayout =  findViewById<View>(R.id.loadingLayout)
+        loadingProgress = findViewById<View>(R.id.loadingProgressBg)
+        loadingText = findViewById<TextView>(R.id.loadingText)
         // --- Find Views ---
         etFirstName = findViewById(R.id.etFirstName)
         ivEditFirstName = findViewById(R.id.ivEditFirstName)
 
         etLastName = findViewById(R.id.etLastName)
         ivEditLastName = findViewById(R.id.ivEditLastName)
+        editPfp = findViewById(R.id.editPfp)
+        ivProfile = findViewById(R.id.ivProfile)
+        tvAchievementsList = findViewById(R.id.tvAchievementsList)
+        ivCertificatePreview = findViewById(R.id.ivCertificatePreview)
+
 
         etTeachingPos = findViewById(R.id.etTeachingPos)
         etDob = findViewById(R.id.etDob)
@@ -87,11 +135,12 @@ class TeacherProfileActivity : AppCompatActivity() {
 
         // --- Setup Dropdowns ---
         val genderItems = listOf("Male", "Female")
-        val genderAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, genderItems)
+        genderAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, genderItems)
         etGender.setAdapter(genderAdapter)
 
+
         val posItems = listOf("Teacher I", "Teacher II", "Teacher III", "Teacher IV", "Teacher V", "Teacher VI", "Teacher VII", "Master Teacher I", "Master Teacher II", "Master Teacher III", "Master Teacher IV", "Master Teacher V")
-        val posAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, posItems)
+        posAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, posItems)
         etTeachingPos.setAdapter(posAdapter)
 
         // --- Setup Click Listeners ---
@@ -137,7 +186,7 @@ class TeacherProfileActivity : AppCompatActivity() {
 
         tvChangePassword.setOnClickListener {
             // Reusing Password Creation Activity with Teacher context
-            val intent = Intent(this, PasswordCreationActivity::class.java)
+            val intent = Intent(this, ForgotPasswordActivity::class.java)
             intent.putExtra("EXTRA_ROLE", "Teacher")
             startActivity(intent)
         }
@@ -160,9 +209,252 @@ class TeacherProfileActivity : AppCompatActivity() {
             )
             datePicker.show()
         }
+
+        editPfp.setOnClickListener {
+            val sheetView = LayoutInflater.from(this).inflate(R.layout.dialog_upload_certificate_source, null)
+            val bottomSheetDialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
+            bottomSheetDialog.setContentView(sheetView)
+            (sheetView.parent as? View)?.setBackgroundColor(Color.TRANSPARENT)
+
+            sheetView.findViewById<View>(R.id.btnPhotoAlbum).setOnClickListener {
+                galleryLauncher.launch("image/*")
+                bottomSheetDialog.dismiss()
+            }
+
+            sheetView.findViewById<View>(R.id.btnCamera).setOnClickListener {
+                cameraUri = androidx.core.content.FileProvider.getUriForFile(
+                    this,
+                    "${applicationContext.packageName}.provider",
+                    createImageFile()
+                )
+                cameraUri?.let { cameraLauncher.launch(it) }
+                bottomSheetDialog.dismiss()
+            }
+
+
+            sheetView.findViewById<View>(R.id.btnCancelUpload).setOnClickListener {
+                bottomSheetDialog.dismiss()
+            }
+
+            bottomSheetDialog.show()
+        }
+
+
+        displayProfile()
     }
 
-    // --- NEW LOGIC: Achievement Dialog Flow ---
+
+    private fun createImageFile(): java.io.File {
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val storageDir = getExternalFilesDir("images") // persistent for this app
+        return java.io.File.createTempFile("JPEG_${timestamp}_", ".jpg", storageDir)
+
+    }
+
+
+    private val selectImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            // 1. Display the selected image immediately
+            Glide.with(this).load(it).placeholder(R.drawable.ic_profile_default).into(ivProfile)
+
+            // 2. Convert to Base64 (This should be done on a background thread in a real app)
+            selectedImageBase64 = contentUriToBase64(it)
+
+            // 3. Save the picture
+            if (selectedImageBase64 != null) {
+                saveData("Profile Picture", selectedImageBase64!!)
+            } else {
+                ShowToast.showMessage(this, "Failed to encode image.")
+            }
+        }
+    }
+
+    private fun contentUriToBase64(uri: Uri): String? {
+        return try {
+            val inputStream = contentResolver.openInputStream(uri)
+            val bytes = inputStream?.readBytes()
+            inputStream?.close()
+
+            bytes?.let {
+                val mimeType = contentResolver.getType(uri) ?: "image/jpeg"
+                val base64String = android.util.Base64.encodeToString(it, android.util.Base64.NO_WRAP)
+                "data:$mimeType;base64,$base64String"
+            }
+        } catch (e: Exception) {
+            Log.e("Base64Convert", "Error converting image to Base64", e)
+            null
+        }
+    }
+
+
+    private fun handleImageResult(uri: Uri) {
+        try {
+            // Display immediately in ImageView
+            Glide.with(this)
+                .load(uri)
+                .placeholder(R.drawable.ic_profile_default)
+                .error(R.drawable.ic_profile_default)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
+                .skipMemoryCache(true)
+                .into(ivProfile)
+
+            // Convert to Base64 for server upload
+            selectedImageBase64 = contentUriToBase64(uri)
+            selectedImageBase64?.let { saveData("Profile Picture", it) }
+                ?: ShowToast.showMessage(this, "Failed to read image")
+        } catch (e: Exception) {
+            Log.e("ImageError", "Failed to handle image result", e)
+            ivProfile.setImageResource(R.drawable.ic_profile_default)
+        }
+    }
+
+    private fun displayProfile() {
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+        ConnectURL.api.getProfile(id).enqueue(object : Callback<ProfileResponse> {
+            override fun onResponse(call: Call<ProfileResponse>, response: Response<ProfileResponse>) {
+                if (!response.isSuccessful) return
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                val body = response.body() ?: return
+                if (body.status != "success") return
+
+                val profile = body.data.profile
+                val pic = profile.profilePic
+
+                if (!pic.isNullOrEmpty()) {
+                    if (pic.startsWith("data:image")) {
+                        // Decode Base64
+                        try {
+                            val pureBase64 = pic.substringAfter("base64,")
+                            val decodedBytes = Base64.decode(pureBase64, Base64.DEFAULT)
+                            val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                            ivProfile.setImageBitmap(bitmap)
+                        } catch (e: Exception) {
+                            Log.e("Base64Load", "Failed to decode Base64", e)
+                            ivProfile.setImageResource(R.drawable.ic_profile_default)
+                        }
+                    } else {
+
+                        Glide.with(this@TeacherProfileActivity)
+                            .load(pic)
+                            .placeholder(R.drawable.ic_profile_default)
+                            .circleCrop()
+                            .error(R.drawable.ic_profile_default)
+                            .into(ivProfile)
+                    }
+                } else {
+                    ivProfile.setImageResource(R.drawable.ic_profile_default)
+                }
+
+                // Update other fields
+                etFirstName.setText(profile.firstName ?: "")
+                etLastName.setText(profile.lastName ?: "")
+                val formattedBirthdate = formatDate(profile.birthdate)
+                etDob.setText(formattedBirthdate ?: "")
+                etTeachingPos.setText(body.data.teachingPosition ?: "", false)
+                etGender.setText(profile.gender ?: "", false)
+            }
+
+            override fun onFailure(call: Call<ProfileResponse>, t: Throwable) {
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                Log.e("ProfileError", t.localizedMessage ?: "")
+                ShowToast.showMessage(this@TeacherProfileActivity, "Failed to load profile")
+            }
+        })
+    }
+
+    private fun updateField(fieldName: String, newValue: String) {
+        val request = UpdateProfileRequest(
+            userId = id,
+            firstName = if (fieldName == "first_name") newValue else null,
+            lastName = if (fieldName == "last_name") newValue else null,
+            gender = if (fieldName == "gender") newValue else null,
+            birthdate = if (fieldName == "birthdate") newValue else null,
+            teachingPosition = if (fieldName == "teaching_position") newValue else null,
+            profilePic = if (fieldName == "profile_pic") newValue else null
+        )
+
+        ConnectURL.api.updateProfile(request).enqueue(object : Callback<ProfileResponse> {
+            override fun onResponse(call: Call<ProfileResponse>, response: Response<ProfileResponse>) {
+                if (response.isSuccessful && response.body()?.status == "success") {
+                    ShowToast.showMessage(this@TeacherProfileActivity, "Change successfully saved!")
+                    selectedImageBase64 = null
+
+                    // Only refresh profile if NOT updating profile picture
+                    if (fieldName != "profile_pic") {
+                        displayProfile()
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("UpdateProfileError", "code:${response.code()} body:$errorBody")
+                    ShowToast.showMessage(this@TeacherProfileActivity, "Update failed: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<ProfileResponse>, t: Throwable) {
+                ShowToast.showMessage(this@TeacherProfileActivity, "Server error")
+            }
+        })
+    }
+
+
+    private fun displayAchievements(list: List<TeacherAchievement>) {
+
+        if (list.isEmpty()) {
+            tvAchievementsList.text = "No achievements yet"
+            tvAchievementsList.gravity = Gravity.CENTER
+            ivCertificatePreview.visibility = View.GONE
+            return
+        }
+
+        val builder = StringBuilder()
+
+        list.forEach { ach ->
+            builder.append("• ${ach.description}\n")
+            builder.append("   Year: ${ach.dateAcquired}\n\n")
+        }
+
+        tvAchievementsList.text = builder.toString().trim()
+        tvAchievementsList.gravity = Gravity.START
+
+        // DISPLAY THE FIRST CERTIFICATE IMAGE (or last)
+        val first = list.firstOrNull()
+
+        if (!first?.certificate.isNullOrEmpty()) {
+            ivCertificatePreview.visibility = View.VISIBLE
+
+            Glide.with(this)
+                .load(first!!.certificate)
+                .into(ivCertificatePreview)
+
+        } else {
+            ivCertificatePreview.visibility = View.GONE
+        }
+    }
+
+    private fun formatDate(timestamp: String?): String? {
+        if (timestamp.isNullOrEmpty()) return null
+
+        // This is the input format we expect from the backend (DATE converted to DateTime string)
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.US)
+
+        // The timestamp usually comes in UTC/ZULU time from the server/Supabase
+        // Setting the input timezone to UTC helps interpret the date correctly.
+        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+
+        return try {
+            val date: Date? = inputFormat.parse(timestamp)
+            date?.let {
+                // This is your desired output format (e.g., 01/01/2025)
+                val outputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.US)
+                outputFormat.format(it)
+            }
+        } catch (e: Exception) {
+            Log.e("DateFormatter", "Failed to parse date: $timestamp", e)
+            // Fallback: return the original unformatted string if parsing fails
+            timestamp
+        }
+    }
+
     private fun showAddAchievementDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_achievement, null)
         val dialog = MaterialAlertDialogBuilder(this)
@@ -311,6 +603,7 @@ class TeacherProfileActivity : AppCompatActivity() {
             // "Yes" is now the Negative Button (Left Side)
             .setNegativeButton("Yes") { dialogInterface, _ ->
                 // Actual Saving Logic
+
                 Toast.makeText(this, "Achievement Saved!", Toast.LENGTH_SHORT).show()
                 dialogInterface.dismiss() // Close confirmation
                 parentDialog.dismiss()    // Close main dialog
@@ -339,11 +632,60 @@ class TeacherProfileActivity : AppCompatActivity() {
     }
 
     private fun saveData(field: String, value: String) {
-        Toast.makeText(this, "$field updated to: $value", Toast.LENGTH_SHORT).show()
+        when (field) {
+            "First Name" -> updateField("first_name", value)
+            "Last Name" -> updateField("last_name", value)
+            "Gender" -> updateField("gender", value)
+            "Birthdate" -> updateField("birthdate", value)
+            "LRN" -> updateField("LRN", value)
+            "Profile Picture" -> updateField("profilePic", value) // FIXED
+        }
     }
+
+
 
     private fun showKeyboard(view: View) {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
     }
+
+    private fun updateAchievement(
+        achievementName: String,
+        yearAcquired: String,
+        certificateFile: String?,
+        onSuccess: () -> Unit
+    ) {
+        val achievement = TeacherAchievement(
+            id = 0,
+            description = achievementName,
+            dateAcquired = yearAcquired,
+            certificate = certificateFile
+        )
+        val request = UpdateProfileRequest(
+            userId = CurrentCourse.userId,
+            achievements = listOf(achievement)
+        )
+
+        ConnectURL.api.updateProfile(request).enqueue(object : retrofit2.Callback<ProfileResponse> {
+            override fun onResponse(
+                call: retrofit2.Call<ProfileResponse>,
+                response: retrofit2.Response<ProfileResponse>
+            ) {
+                if (response.isSuccessful && response.body()?.status == "success") {
+                    onSuccess()
+                } else {
+                    Toast.makeText(this@TeacherProfileActivity, "Failed to save achievement", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: retrofit2.Call<ProfileResponse>, t: Throwable) {
+                Toast.makeText(this@TeacherProfileActivity, "Server error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+
+
+    }
+
+
+
 }
