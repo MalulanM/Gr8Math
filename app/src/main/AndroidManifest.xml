@@ -227,6 +227,39 @@
             android:exported="true"
             android:theme="@style/Theme.Gr8Math" />
 
+        <!-- (NEW) DLL PAGES -->
+        <activity
+            android:name=".DailyLessonLogActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".DLLStep2Activity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".DLLStep3Activity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".DLLStep4Activity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".DLLViewActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".DLLEditActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math"
+            android:windowSoftInputMode="adjustResize"/>
+
+
         <service
             android:name=".services.MyFirebaseService"
             android:exported="false">
