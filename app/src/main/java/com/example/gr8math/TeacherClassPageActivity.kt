@@ -1,4 +1,4 @@
-package com.example.gr8math // Make sure this matches your package name
+package com.example.gr8math
 
 import android.app.Activity
 import android.app.DatePickerDialog
@@ -18,6 +18,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.example.gr8math.utils.UIUtils // Ensure this import exists
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -72,27 +73,19 @@ class TeacherClassPageActivity : AppCompatActivity() {
         // --- Handle Bottom Navigation Item Clicks ---
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_class -> {
-                    // Already on the Class page
-                    true
-                }
+                R.id.nav_class -> true
                 R.id.nav_participants -> {
-                    // UPDATED: Open the Participants Page
                     startActivity(Intent(this, TeacherParticipantsActivity::class.java))
-                    false // Return false so the highlighting happens in the new activity
+                    false
                 }
                 R.id.nav_notifications -> {
-                    // Navigate to Notifications Activity
                     startActivity(Intent(this, TeacherNotificationsActivity::class.java))
-                    // We return false here so the icon doesn't stay highlighted on this page
-                    // while the new activity opens on top of it.
                     false
                 }
                 R.id.nav_dll -> {
-                    // Navigate to DLL (Daily Lesson Log) Activity
-                    Toast.makeText(this, "DLL clicked", Toast.LENGTH_SHORT).show()
-                    // startActivity(Intent(this, DLLActivity::class.java))
-                    true
+                    // UPDATED: Navigate to the DLL Viewer Activity
+                    startActivity(Intent(this, DLLViewActivity::class.java))
+                    false
                 }
                 else -> false
             }
@@ -148,7 +141,6 @@ class TeacherClassPageActivity : AppCompatActivity() {
         }
     }
 
-    // --- FIX: Reset the navigation item when returning to this page ---
     override fun onResume() {
         super.onResume()
         if (::bottomNav.isInitialized) {
@@ -180,15 +172,9 @@ class TeacherClassPageActivity : AppCompatActivity() {
             } else {
                 dialog.dismiss()
                 when (selectedOptionId) {
-                    R.id.rbWriteLesson -> {
-                        showWriteALessonDialog()
-                    }
-                    R.id.rbCreateAssessment -> {
-                        showCreateAssessmentDialog()
-                    }
-                    R.id.rbLessonLog -> {
-                        Toast.makeText(this, "Opening Lesson Log...", Toast.LENGTH_SHORT).show()
-                    }
+                    R.id.rbWriteLesson -> showWriteALessonDialog()
+                    R.id.rbCreateAssessment -> showCreateAssessmentDialog()
+                    R.id.rbLessonLog -> showCreateDLLDialog()
                 }
             }
         }
@@ -197,7 +183,94 @@ class TeacherClassPageActivity : AppCompatActivity() {
     }
 
     /**
-     * Shows the "Write a Lesson" (Step 1) dialog.
+     * Shows the "Create Daily Lesson Log" dialog.
+     */
+    private fun showCreateDLLDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_create_dll, null)
+
+        val btnBack = dialogView.findViewById<ImageButton>(R.id.btnBack)
+        val btnNext = dialogView.findViewById<Button>(R.id.btnNext)
+
+        val etQuarter = dialogView.findViewById<TextInputEditText>(R.id.etQuarterNumber)
+        val tilQuarter = dialogView.findViewById<TextInputLayout>(R.id.tilQuarterNumber)
+        val etWeek = dialogView.findViewById<TextInputEditText>(R.id.etWeekNumber)
+        val tilWeek = dialogView.findViewById<TextInputLayout>(R.id.tilWeekNumber)
+        val etFrom = dialogView.findViewById<TextInputEditText>(R.id.etAvailableFrom)
+        val tilFrom = dialogView.findViewById<TextInputLayout>(R.id.tilAvailableFrom)
+        val etUntil = dialogView.findViewById<TextInputEditText>(R.id.etAvailableUntil)
+        val tilUntil = dialogView.findViewById<TextInputLayout>(R.id.tilAvailableUntil)
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        btnBack.setOnClickListener {
+            dialog.dismiss()
+            showAddOptionsDialog()
+        }
+
+        // Date Pickers
+        val myCalendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("MM/dd/yy", Locale.US)
+
+        val fromDateListener = DatePickerDialog.OnDateSetListener { _, year, month, day ->
+            myCalendar.set(Calendar.YEAR, year)
+            myCalendar.set(Calendar.MONTH, month)
+            myCalendar.set(Calendar.DAY_OF_MONTH, day)
+            etFrom.setText(dateFormat.format(myCalendar.time))
+        }
+
+        val untilDateListener = DatePickerDialog.OnDateSetListener { _, year, month, day ->
+            myCalendar.set(Calendar.YEAR, year)
+            myCalendar.set(Calendar.MONTH, month)
+            myCalendar.set(Calendar.DAY_OF_MONTH, day)
+            etUntil.setText(dateFormat.format(myCalendar.time))
+        }
+
+        etFrom.setOnClickListener {
+            DatePickerDialog(this, fromDateListener,
+                myCalendar.get(Calendar.YEAR), myCalendar.get(Calendar.MONTH),
+                myCalendar.get(Calendar.DAY_OF_MONTH)).show()
+        }
+
+        etUntil.setOnClickListener {
+            DatePickerDialog(this, untilDateListener,
+                myCalendar.get(Calendar.YEAR), myCalendar.get(Calendar.MONTH),
+                myCalendar.get(Calendar.DAY_OF_MONTH)).show()
+        }
+
+        btnNext.setOnClickListener {
+            val errorMsg = getString(R.string.error_blank_field)
+
+            UIUtils.errorDisplay(this, tilQuarter, etQuarter, true, errorMsg)
+            UIUtils.errorDisplay(this, tilWeek, etWeek, true, errorMsg)
+            UIUtils.errorDisplay(this, tilFrom, etFrom, true, errorMsg)
+            UIUtils.errorDisplay(this, tilUntil, etUntil, true, errorMsg)
+
+            val isValid = etQuarter.text.toString().trim().isNotEmpty() &&
+                    etWeek.text.toString().trim().isNotEmpty() &&
+                    etFrom.text.toString().trim().isNotEmpty() &&
+                    etUntil.text.toString().trim().isNotEmpty()
+
+            if (isValid) {
+                val intent = Intent(this, DailyLessonLogActivity::class.java).apply {
+                    putExtra("EXTRA_QUARTER", etQuarter.text.toString().trim())
+                    putExtra("EXTRA_WEEK", etWeek.text.toString().trim())
+                    putExtra("EXTRA_FROM", etFrom.text.toString().trim())
+                    putExtra("EXTRA_UNTIL", etUntil.text.toString().trim())
+                }
+                startActivity(intent)
+                dialog.dismiss()
+            }
+        }
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+    }
+
+    /**
+     * Shows the "Write a Lesson" dialog.
      */
     private fun showWriteALessonDialog(weekToPreload: String = "", titleToPreload: String = "") {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_write_a_lesson, null)
@@ -222,32 +295,22 @@ class TeacherClassPageActivity : AppCompatActivity() {
         }
 
         btnNext.setOnClickListener {
-            val weekNumber = etWeekNumber.text.toString().trim()
-            val lessonTitle = etLessonTitle.text.toString().trim()
-
-            tilWeekNumber.error = null
-            tilLessonTitle.error = null
-            var isValid = true
             val errorMsg = getString(R.string.error_blank_field)
 
-            if (weekNumber.isEmpty()) {
-                tilWeekNumber.error = errorMsg
-                isValid = false
-            }
-            if (lessonTitle.isEmpty()) {
-                tilLessonTitle.error = errorMsg
-                isValid = false
-            }
-            if (!isValid) {
-                return@setOnClickListener
-            }
+            UIUtils.errorDisplay(this, tilWeekNumber, etWeekNumber, true, errorMsg)
+            UIUtils.errorDisplay(this, tilLessonTitle, etLessonTitle, true, errorMsg)
 
-            val intent = Intent(this, LessonContentActivity::class.java).apply {
-                putExtra("EXTRA_WEEK_NUMBER", weekNumber)
-                putExtra("EXTRA_LESSON_TITLE", lessonTitle)
+            val isValid = etWeekNumber.text.toString().trim().isNotEmpty() &&
+                    etLessonTitle.text.toString().trim().isNotEmpty()
+
+            if (isValid) {
+                val intent = Intent(this, LessonContentActivity::class.java).apply {
+                    putExtra("EXTRA_WEEK_NUMBER", etWeekNumber.text.toString().trim())
+                    putExtra("EXTRA_LESSON_TITLE", etLessonTitle.text.toString().trim())
+                }
+                lessonContentLauncher.launch(intent)
+                dialog.dismiss()
             }
-            lessonContentLauncher.launch(intent)
-            dialog.dismiss()
         }
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
@@ -278,48 +341,35 @@ class TeacherClassPageActivity : AppCompatActivity() {
         }
 
         btnNext.setOnClickListener {
-            val weekNumber = etWeekNumber.text.toString().trim()
-            val lessonTitle = etLessonTitle.text.toString().trim()
-
-            tilWeekNumber.error = null
-            tilLessonTitle.error = null
-            var isValid = true
             val errorMsg = getString(R.string.error_blank_field)
 
-            if (weekNumber.isEmpty()) {
-                tilWeekNumber.error = errorMsg
-                isValid = false
-            }
-            if (lessonTitle.isEmpty()) {
-                tilLessonTitle.error = errorMsg
-                isValid = false
-            }
-            if (!isValid) {
-                return@setOnClickListener
-            }
+            UIUtils.errorDisplay(this, tilWeekNumber, etWeekNumber, true, errorMsg)
+            UIUtils.errorDisplay(this, tilLessonTitle, etLessonTitle, true, errorMsg)
 
-            val lessonContent = getString(R.string.lesson_full_desc_placeholder)
+            val isValid = etWeekNumber.text.toString().trim().isNotEmpty() &&
+                    etLessonTitle.text.toString().trim().isNotEmpty()
 
-            val intent = Intent(this, LessonContentActivity::class.java).apply {
-                putExtra("EXTRA_WEEK_NUMBER", weekNumber)
-                putExtra("EXTRA_LESSON_TITLE", lessonTitle)
-                putExtra("EXTRA_LESSON_CONTENT", lessonContent)
+            if (isValid) {
+                val lessonContent = getString(R.string.lesson_full_desc_placeholder)
+                val intent = Intent(this, LessonContentActivity::class.java).apply {
+                    putExtra("EXTRA_WEEK_NUMBER", etWeekNumber.text.toString().trim())
+                    putExtra("EXTRA_LESSON_TITLE", etLessonTitle.text.toString().trim())
+                    putExtra("EXTRA_LESSON_CONTENT", lessonContent)
+                }
+                editLessonLauncher.launch(intent)
+                dialog.dismiss()
             }
-
-            editLessonLauncher.launch(intent)
-            dialog.dismiss()
         }
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
     }
 
     /**
-     * Shows the "Create Assessment" dialog, with 12-hour (AM/PM) time pickers.
+     * Shows the "Create Assessment" dialog.
      */
     private fun showCreateAssessmentDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_create_assessment, null)
 
-        // Find views
         val toolbar = dialogView.findViewById<MaterialToolbar>(R.id.toolbar)
         val btnNext = dialogView.findViewById<Button>(R.id.btnNext)
         val etAssessmentNumber = dialogView.findViewById<TextInputEditText>(R.id.etAssessmentNumber)
@@ -341,19 +391,14 @@ class TeacherClassPageActivity : AppCompatActivity() {
             showAddOptionsDialog()
         }
 
-        // --- Date & Time Picker Logic (AM/PM Version) ---
-
+        // --- Date & Time Picker Logic ---
         val myCalendar = Calendar.getInstance()
-
-        // 12-hour format with AM/PM
         val dateTimeFormat = SimpleDateFormat("MM/dd/yy - hh:mm a", Locale.US)
 
-        // --- "Available From" Listeners ---
         val fromTimeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
             myCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             myCalendar.set(Calendar.MINUTE, minute)
             etAvailableFrom.setText(dateTimeFormat.format(myCalendar.time))
-            tilAvailableFrom.error = null
         }
 
         val fromDateSetListener = DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
@@ -364,7 +409,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
                 fromTimeSetListener,
                 myCalendar.get(Calendar.HOUR_OF_DAY),
                 myCalendar.get(Calendar.MINUTE),
-                false // false = Use 12-hour format (AM/PM)
+                false
             ).show()
         }
 
@@ -376,12 +421,10 @@ class TeacherClassPageActivity : AppCompatActivity() {
                 myCalendar.get(Calendar.DAY_OF_MONTH)).show()
         }
 
-        // --- "Available Until" Listeners ---
         val untilTimeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
             myCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             myCalendar.set(Calendar.MINUTE, minute)
             etAvailableUntil.setText(dateTimeFormat.format(myCalendar.time))
-            tilAvailableUntil.error = null
         }
 
         val untilDateSetListener = DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
@@ -392,7 +435,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
                 untilTimeSetListener,
                 myCalendar.get(Calendar.HOUR_OF_DAY),
                 myCalendar.get(Calendar.MINUTE),
-                false // false = Use 12-hour format (AM/PM)
+                false
             ).show()
         }
 
@@ -403,55 +446,30 @@ class TeacherClassPageActivity : AppCompatActivity() {
                 myCalendar.get(Calendar.MONTH),
                 myCalendar.get(Calendar.DAY_OF_MONTH)).show()
         }
-        // --- End of Date & Time Picker Logic ---
 
         btnNext.setOnClickListener {
-            val assessmentNumber = etAssessmentNumber.text.toString().trim()
-            val assessmentTitle = etAssessmentTitle.text.toString().trim()
-            val availableFrom = etAvailableFrom.text.toString().trim()
-            val availableUntil = etAvailableUntil.text.toString().trim()
-
-            // Validation
-            tilAssessmentNumber.error = null
-            tilAssessmentTitle.error = null
-            tilAvailableFrom.error = null
-            tilAvailableUntil.error = null
-
-            var isValid = true
             val errorMsg = getString(R.string.error_blank_field)
 
-            if (assessmentNumber.isEmpty()) {
-                tilAssessmentNumber.error = errorMsg
-                isValid = false
-            }
-            if (assessmentTitle.isEmpty()) {
-                tilAssessmentTitle.error = errorMsg
-                isValid = false
-            }
-            if (availableFrom.isEmpty()) {
-                tilAvailableFrom.error = errorMsg
-                isValid = false
-            }
-            if (availableUntil.isEmpty()) {
-                tilAvailableUntil.error = errorMsg
-                isValid = false
-            }
+            UIUtils.errorDisplay(this, tilAssessmentNumber, etAssessmentNumber, true, errorMsg)
+            UIUtils.errorDisplay(this, tilAssessmentTitle, etAssessmentTitle, true, errorMsg)
+            UIUtils.errorDisplay(this, tilAvailableFrom, etAvailableFrom, true, errorMsg)
+            UIUtils.errorDisplay(this, tilAvailableUntil, etAvailableUntil, true, errorMsg)
 
-            if (!isValid) {
-                return@setOnClickListener
-            }
+            val isValid = etAssessmentNumber.text.toString().trim().isNotEmpty() &&
+                    etAssessmentTitle.text.toString().trim().isNotEmpty() &&
+                    etAvailableFrom.text.toString().trim().isNotEmpty() &&
+                    etAvailableUntil.text.toString().trim().isNotEmpty()
 
-            // If validation passes, launch the AssessmentCreatorActivity
-            val intent = Intent(this, AssessmentCreatorActivity::class.java).apply {
-                // Pass all the details to the new activity
-                putExtra("EXTRA_ASSESSMENT_NUMBER", assessmentNumber)
-                putExtra("EXTRA_ASSESSMENT_TITLE", assessmentTitle)
-                putExtra("EXTRA_AVAILABLE_FROM", availableFrom)
-                putExtra("EXTRA_AVAILABLE_UNTIL", availableUntil)
+            if (isValid) {
+                val intent = Intent(this, AssessmentCreatorActivity::class.java).apply {
+                    putExtra("EXTRA_ASSESSMENT_NUMBER", etAssessmentNumber.text.toString().trim())
+                    putExtra("EXTRA_ASSESSMENT_TITLE", etAssessmentTitle.text.toString().trim())
+                    putExtra("EXTRA_AVAILABLE_FROM", etAvailableFrom.text.toString().trim())
+                    putExtra("EXTRA_AVAILABLE_UNTIL", etAvailableUntil.text.toString().trim())
+                }
+                startActivity(intent)
+                dialog.dismiss()
             }
-            startActivity(intent)
-
-            dialog.dismiss() // Close this dialog
         }
 
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
