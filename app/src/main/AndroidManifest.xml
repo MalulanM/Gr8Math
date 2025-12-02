@@ -58,7 +58,10 @@
             android:name=".AccountManagementActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math">
-
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <!-- "SEE MORE" PAGE 1: ACTIVE ACCOUNTS -->
@@ -120,10 +123,7 @@
             android:name=".TeacherClassPageActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
         </activity>
 
         <activity
@@ -258,7 +258,15 @@
             android:theme="@style/Theme.Gr8Math"
             android:windowSoftInputMode="adjustResize"/>
 
+        <activity
+            android:name=".TermsAndConditionsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
 
+        <activity
+            android:name=".PrivacyPolicyActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
     </application>
 </manifest>
 

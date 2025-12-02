@@ -66,44 +66,57 @@ class AccountManagementActivity : AppCompatActivity() {
     }
 
     // --- FIX: Use standard Dialog to force full-height sidebar ---
-    private fun showFacultyMenu() {
-        // 1. Create a standard Dialog (Not MaterialAlertDialogBuilder)
-        val dialog = Dialog(this)
+    // Inside AccountManagementActivity.kt
 
-        // 2. Remove the default title bar
+    private fun showFacultyMenu() {
+        // 1. Use a standard Dialog
+        val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
 
-        // 3. Inflate layout
+        // 2. Inflate your existing layout
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_faculty_menu, null)
         dialog.setContentView(dialogView)
 
+        // --- (Your existing click listeners go here) ---
         dialogView.findViewById<View>(R.id.btnAccountSettings).setOnClickListener {
             dialog.dismiss()
+            startActivity(Intent(this, TeacherProfileActivity::class.java))
         }
-
         dialogView.findViewById<View>(R.id.btnTerms).setOnClickListener {
             dialog.dismiss()
+            startActivity(Intent(this, TermsAndConditionsActivity::class.java))
         }
-
         dialogView.findViewById<View>(R.id.btnPrivacy).setOnClickListener {
             dialog.dismiss()
+            // Navigate to Privacy Policy
+            startActivity(Intent(this, PrivacyPolicyActivity::class.java))
+        }
+        dialogView.findViewById<View>(R.id.btnLogout).setOnClickListener {
+            dialog.dismiss()
+            finish()
         }
 
-        // 4. Configure the Window to stretch properly
+        // 3. Configure Window Parameters for Sidebar Effect
         val window = dialog.window
         if (window != null) {
-            // Make background transparent so we only see our layout
+            // Make background transparent
             window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
-            // Position at the Top-Left
             val params = window.attributes
-            params.gravity = Gravity.START or Gravity.TOP
 
-            // Set Width to 85% of screen, Height to MATCH_PARENT (Full Screen Vertical)
+            // GRAVITY: START = Left Side
+            params.gravity = Gravity.START
+
+            // WIDTH: 85% of the screen width (standard drawer size)
             params.width = (resources.displayMetrics.widthPixels * 0.85).toInt()
+
+            // HEIGHT: Full Screen
             params.height = WindowManager.LayoutParams.MATCH_PARENT
 
             window.attributes = params
+
+            // Optional: Add slide animation if you defined one, or default fade
+            // window.setWindowAnimations(R.style.DialogAnimation)
         }
 
         dialog.show()
