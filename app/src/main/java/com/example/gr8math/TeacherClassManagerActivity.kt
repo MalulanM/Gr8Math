@@ -243,6 +243,19 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         }
     }
 
+    // Inside TeacherClassManagerActivity class
+
+    private fun logout() {
+        val preferences = getSharedPreferences("user_session", MODE_PRIVATE)
+        preferences.edit().clear().apply() // Clears all session data (user ID, token, role, etc.)
+        CurrentCourse.userId = 0
+        val intent = Intent(this, AppLoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+
+        startActivity(intent)
+        finish()
+    }
+
     private fun showFacultyMenu() {
         // 1. Create a standard Dialog (Not MaterialAlertDialogBuilder)
         val dialog = Dialog(this)
@@ -307,6 +320,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
 
         dialogView.findViewById<View>(R.id.btnLogout).setOnClickListener {
             dialog.dismiss()
+            logout()
         }
 
         // 4. Configure the Window to stretch properly

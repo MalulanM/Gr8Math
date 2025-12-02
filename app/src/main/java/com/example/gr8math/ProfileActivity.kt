@@ -100,6 +100,8 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var genderAdapter: ArrayAdapter<String>
 
 
+
+
     // FIX 1: Use 'by lazy' to prevent crash on startup (getString requires Context)
     private val allBadges by lazy {
         listOf(
@@ -135,6 +137,9 @@ class ProfileActivity : AppCompatActivity() {
         etGender = findViewById(R.id.etGender)
         ivProfile = findViewById(R.id.ivProfile)
         tvChangePassword = findViewById(R.id.tvChangePassword)
+        loadingLayout =  findViewById<View>(R.id.loadingLayout)
+        loadingProgress = findViewById<View>(R.id.loadingProgressBg)
+        loadingText = findViewById<TextView>(R.id.loadingText)
 
 
         // IMPORTANT: Ensure this ID exists in your XML layout inside the Badges card
@@ -318,11 +323,11 @@ class ProfileActivity : AppCompatActivity() {
 
 
     private fun displayProfile() {
-
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
         ConnectURL.api.getStudentProfile(id).enqueue(object : Callback<StudentProfileResponse> {
             override fun onResponse(call: Call<StudentProfileResponse>, response: Response<StudentProfileResponse>) {
                 if (!response.isSuccessful) return
-
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                 val data = response.body()?.data ?: return
                 val profile = data.profile
 
@@ -364,6 +369,7 @@ class ProfileActivity : AppCompatActivity() {
 
             override fun onFailure(call: Call<StudentProfileResponse>, t: Throwable) {
                 ShowToast.showMessage(this@ProfileActivity, "Failed to load profile")
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
             }
         })
     }
@@ -396,27 +402,37 @@ class ProfileActivity : AppCompatActivity() {
     }
 
 
+    // In ProfileActivity.kt
+
     private fun formatDate(timestamp: String?): String? {
         if (timestamp.isNullOrEmpty()) return null
 
-        // This is the input format we expect from the backend (DATE converted to DateTime string)
+        // This input pattern should match yyyy-MM-dd HH:mm:ss.SSSS
+        // If your server returns 'T' and 'Z', use: yyyy-MM-dd'T'HH:mm:ss.SSSS'Z'
+        // Since you didn't show the exact input here, let's keep it close to your original logic:
         val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.US)
-
-        // The timestamp usually comes in UTC/ZULU time from the server/Supabase
-        // Setting the input timezone to UTC helps interpret the date correctly.
-        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+        inputFormat.timeZone = TimeZone.getTimeZone("UTC") // Input is typically UTC
 
         return try {
             val date: Date? = inputFormat.parse(timestamp)
             date?.let {
-                // This is your desired output format (e.g., 01/01/2025)
-                val outputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.US)
+                // --- FIX: Ensure the final output is simple date-only ---
+                val outputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.US) // Simple Date
                 outputFormat.format(it)
             }
         } catch (e: Exception) {
-            Log.e("DateFormatter", "Failed to parse date: $timestamp", e)
-            // Fallback: return the original unformatted string if parsing fails
-            timestamp
+            // If the S.SSSS format fails, try the date-only format (yyyy-MM-dd)
+            try {
+                val simpleInputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                val simpleDate: Date? = simpleInputFormat.parse(timestamp)
+                simpleDate?.let {
+                    val outputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.US)
+                    outputFormat.format(it)
+                }
+            } catch (e2: Exception) {
+                Log.e("DateFormatter", "Failed to parse date: $timestamp", e2)
+                timestamp // Return unformatted as fallback
+            }
         }
     }
     // --- Show Badge Selection Dialog with Confirmation ---

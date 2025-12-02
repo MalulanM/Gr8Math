@@ -88,14 +88,14 @@
             android:layout_marginBottom="16dp"
             app:boxBackgroundColor="@color/colorAccent"
             app:hintEnabled="false">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etReview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Lorem Ipsum"
-                android:minLines="3"
                 android:gravity="top|start"
-                android:inputType="textMultiLine|textCapSentences"/>
+                android:inputType="textMultiLine|textCapSentences"
+                android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
@@ -113,14 +113,14 @@
             android:layout_marginBottom="16dp"
             app:boxBackgroundColor="@color/colorAccent"
             app:hintEnabled="false">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPurpose"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Lorem Ipsum"
-                android:minLines="3"
                 android:gravity="top|start"
-                android:inputType="textMultiLine|textCapSentences"/>
+                android:inputType="textMultiLine|textCapSentences"
+                android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
@@ -138,14 +138,14 @@
             android:layout_marginBottom="16dp"
             app:boxBackgroundColor="@color/colorAccent"
             app:hintEnabled="false">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etExample"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Lorem Ipsum"
-                android:minLines="3"
                 android:gravity="top|start"
-                android:inputType="textMultiLine|textCapSentences"/>
+                android:inputType="textMultiLine|textCapSentences"
+                android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
@@ -163,14 +163,14 @@
             android:layout_marginBottom="16dp"
             app:boxBackgroundColor="@color/colorAccent"
             app:hintEnabled="false">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etDiscussion1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Lorem Ipsum"
-                android:minLines="3"
                 android:gravity="top|start"
-                android:inputType="textMultiLine|textCapSentences"/>
+                android:inputType="textMultiLine|textCapSentences"
+                android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
@@ -192,7 +192,6 @@
                 android:id="@+id/etMastery"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Lorem Ipsum"
                 android:minLines="3"
                 android:gravity="top|start"
                 android:inputType="textMultiLine|textCapSentences"/>
@@ -217,7 +216,6 @@
                 android:id="@+id/etApplication"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Lorem Ipsum"
                 android:minLines="3"
                 android:gravity="top|start"
                 android:inputType="textMultiLine|textCapSentences"/>
@@ -242,7 +240,6 @@
                 android:id="@+id/etGeneralization"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Lorem Ipsum"
                 android:minLines="3"
                 android:gravity="top|start"
                 android:inputType="textMultiLine|textCapSentences"/>
@@ -267,7 +264,6 @@
                 android:id="@+id/etEvaluation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Lorem Ipsum"
                 android:minLines="3"
                 android:gravity="top|start"
                 android:inputType="textMultiLine|textCapSentences"/>
@@ -291,7 +287,6 @@
                 android:id="@+id/etAdditional"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Lorem Ipsum"
                 android:minLines="3"
                 android:gravity="top|start"
                 android:inputType="textCapSentences|textMultiLine"/>

@@ -285,7 +285,7 @@ class AppLoginActivity : AppCompatActivity() {
                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
                         UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                        showUserAgreement(role, id);
+
                     }, 800)
 
                 } else {

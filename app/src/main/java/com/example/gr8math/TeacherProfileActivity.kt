@@ -52,6 +52,7 @@ import java.util.TimeZone
 
 
 class TeacherProfileActivity : AppCompatActivity() {
+    private var tempCertificateLink: String? = null
     private var cameraUri: Uri? = null
 
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -352,6 +353,7 @@ class TeacherProfileActivity : AppCompatActivity() {
                 etDob.setText(formattedBirthdate ?: "")
                 etTeachingPos.setText(body.data.teachingPosition ?: "", false)
                 etGender.setText(profile.gender ?: "", false)
+                displayAchievements(body.data.achievements)
             }
 
             override fun onFailure(call: Call<ProfileResponse>, t: Throwable) {
@@ -370,7 +372,7 @@ class TeacherProfileActivity : AppCompatActivity() {
             gender = if (fieldName == "gender") newValue else null,
             birthdate = if (fieldName == "birthdate") newValue else null,
             teachingPosition = if (fieldName == "teaching_position") newValue else null,
-            profilePic = if (fieldName == "profile_pic") newValue else null
+            profilePic = if (fieldName == "profilePic") newValue else null
         )
 
         ConnectURL.api.updateProfile(request).enqueue(object : Callback<ProfileResponse> {
@@ -431,29 +433,44 @@ class TeacherProfileActivity : AppCompatActivity() {
         }
     }
 
+    // In ProfileActivity.kt
+
     private fun formatDate(timestamp: String?): String? {
         if (timestamp.isNullOrEmpty()) return null
 
-        // This is the input format we expect from the backend (DATE converted to DateTime string)
+        // This input pattern should match yyyy-MM-dd HH:mm:ss.SSSS
+        // If your server returns 'T' and 'Z', use: yyyy-MM-dd'T'HH:mm:ss.SSSS'Z'
+        // Since you didn't show the exact input here, let's keep it close to your original logic:
         val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS", Locale.US)
-
-        // The timestamp usually comes in UTC/ZULU time from the server/Supabase
-        // Setting the input timezone to UTC helps interpret the date correctly.
-        inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+        inputFormat.timeZone = TimeZone.getTimeZone("UTC") // Input is typically UTC
 
         return try {
             val date: Date? = inputFormat.parse(timestamp)
             date?.let {
-                // This is your desired output format (e.g., 01/01/2025)
-                val outputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.US)
+                // --- FIX: Ensure the final output is simple date-only ---
+                val outputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.US) // Simple Date
                 outputFormat.format(it)
             }
         } catch (e: Exception) {
-            Log.e("DateFormatter", "Failed to parse date: $timestamp", e)
-            // Fallback: return the original unformatted string if parsing fails
-            timestamp
+            // If the S.SSSS format fails, try the date-only format (yyyy-MM-dd)
+            try {
+                val simpleInputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                val simpleDate: Date? = simpleInputFormat.parse(timestamp)
+                simpleDate?.let {
+                    val outputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.US)
+                    outputFormat.format(it)
+                }
+            } catch (e2: Exception) {
+                Log.e("DateFormatter", "Failed to parse date: $timestamp", e2)
+                timestamp // Return unformatted as fallback
+            }
         }
     }
+
+    // In TeacherProfileActivity.kt
+
+// REMOVE THIS CLASS VARIABLE:
+// private var tempCertificateLink: String? = null
 
     private fun showAddAchievementDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_achievement, null)
@@ -462,8 +479,11 @@ class TeacherProfileActivity : AppCompatActivity() {
             .setCancelable(false)
             .create()
 
+        val etAchievementName = dialogView.findViewById<TextInputEditText>(R.id.etAchievementName) // Assuming this ID exists
         val etYear = dialogView.findViewById<TextInputEditText>(R.id.etYearReceived)
-        val btnUpload = dialogView.findViewById<View>(R.id.btnUploadCertificate)
+         val btnUpload = dialogView.findViewById<View>(R.id.btnUploadCertificate) // REMOVE REFERENCE
+        btnUpload.visibility = View.GONE
+
         val btnSave = dialogView.findViewById<View>(R.id.btnSaveAchievement)
         val btnClose = dialogView.findViewById<View>(R.id.btnCloseDialog)
 
@@ -472,20 +492,20 @@ class TeacherProfileActivity : AppCompatActivity() {
             showYearPickerDialog(etYear)
         }
 
-        // 2. Upload Certificate
-        btnUpload.setOnClickListener {
-            showUploadSourceDialog()
-        }
+        // 2. Remove btnUpload listener here. (The button should be removed from XML)
 
         // 3. Save Logic
         btnSave.setOnClickListener {
-            val name = dialogView.findViewById<TextInputEditText>(R.id.etAchievementName).text.toString()
-            if(name.isEmpty()) {
-                Toast.makeText(this, "Please enter achievement name", Toast.LENGTH_SHORT).show()
+            val name = etAchievementName.text.toString().trim()
+            val year = etYear.text.toString().trim()
+
+            if(name.isEmpty() || year.isEmpty()) {
+                Toast.makeText(this, "Please enter achievement name and year", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            // Show Confirmation
-            showSaveConfirmation(dialog)
+
+            // Pass essential data (name and year) to the confirmation dialog
+            showSaveConfirmation(dialog, name, year)
         }
 
         btnClose.setOnClickListener { dialog.dismiss() }
@@ -581,7 +601,9 @@ class TeacherProfileActivity : AppCompatActivity() {
     }
 
     // --- Save Confirmation Dialog ---
-    private fun showSaveConfirmation(parentDialog: androidx.appcompat.app.AlertDialog) {
+    private fun showSaveConfirmation(parentDialog: androidx.appcompat.app.AlertDialog,
+                                     name: String,
+                                     year: String,  ) {
         val messageView = TextView(this).apply {
             text = "Are you sure you want to save\nthis achievements?"
             textSize = 16f
@@ -603,8 +625,17 @@ class TeacherProfileActivity : AppCompatActivity() {
             // "Yes" is now the Negative Button (Left Side)
             .setNegativeButton("Yes") { dialogInterface, _ ->
                 // Actual Saving Logic
-
-                Toast.makeText(this, "Achievement Saved!", Toast.LENGTH_SHORT).show()
+                updateAchievement(
+                    achievementName = name,
+                    yearAcquired = year,
+                    certificateFile = null, // *** CERTIFICATE IS EXPLICITLY NULL ***
+                    onSuccess = {
+                        displayProfile()
+                        dialogInterface.dismiss()
+                        parentDialog.dismiss()
+                    }
+                )
+                ShowToast.showMessage(this@TeacherProfileActivity, "Achievement Saved!")
                 dialogInterface.dismiss() // Close confirmation
                 parentDialog.dismiss()    // Close main dialog
             }
@@ -639,6 +670,7 @@ class TeacherProfileActivity : AppCompatActivity() {
             "Birthdate" -> updateField("birthdate", value)
             "LRN" -> updateField("LRN", value)
             "Profile Picture" -> updateField("profilePic", value) // FIXED
+            "Teaching Position" -> updateField("teaching_position", value)
         }
     }
 
@@ -672,14 +704,31 @@ class TeacherProfileActivity : AppCompatActivity() {
                 response: retrofit2.Response<ProfileResponse>
             ) {
                 if (response.isSuccessful && response.body()?.status == "success") {
+                    Log.i("AchievementUpdate", "SUCCESS: Achievement successfully saved.")
                     onSuccess()
                 } else {
-                    Toast.makeText(this@TeacherProfileActivity, "Failed to save achievement", Toast.LENGTH_SHORT).show()
+                    // --- Logging the Error Response Body ---
+                    val errorBody = response.errorBody()?.string()
+                    val code = response.code()
+
+                    // Log the full HTTP error code and body content
+                    Log.e("AchievementUpdate", "API FAILED. Code: $code, Body: $errorBody")
+
+                    // Check if the error body is valid JSON to extract a clean message
+                    try {
+                        val errorJson = org.json.JSONObject(errorBody ?: "{}")
+                        val errorMessage = errorJson.optString("error", "Failed to save achievement.")
+                        ShowToast.showMessage(this@TeacherProfileActivity, errorMessage)
+                    } catch (e: Exception) {
+                        ShowToast.showMessage(this@TeacherProfileActivity, "Update failed (Error $code). Check logs.")
+                    }
+                    // ----------------------------------------
                 }
             }
 
             override fun onFailure(call: retrofit2.Call<ProfileResponse>, t: Throwable) {
-                Toast.makeText(this@TeacherProfileActivity, "Server error: ${t.message}", Toast.LENGTH_SHORT).show()
+                Log.e("AchievementUpdate", "NETWORK FAILED: ${t.localizedMessage}", t)
+                ShowToast.showMessage(this@TeacherProfileActivity, "Server error: Check connection or logs.")
             }
         })
 

@@ -55,7 +55,7 @@ class ParticipantProfileActivity : AppCompatActivity() {
         // -------------------------------
         tvName.text = name
         tvRole.text = "Role: $role"
-        tvBirthdate.text = birthdate
+        tvBirthdate.text = "Birthdate: $birthdate"
 
         Glide.with(this)
             .load(profilePic)
@@ -67,7 +67,7 @@ class ParticipantProfileActivity : AppCompatActivity() {
         // ROLE-BASED UI
         // -------------------------------
         if (role == "Teacher") {
-            tvLRN.text = "Teaching Position: $teachingPosition"
+            tvLRN.text = "Position: $teachingPosition"
             tvBadgesHeader.text = achievementsHeader
 
         } else {

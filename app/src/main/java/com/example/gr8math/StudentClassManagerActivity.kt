@@ -72,7 +72,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
         name = intent.getStringExtra("name")?:""
         profilePic = intent.getStringExtra("profilePic")
             ?.takeIf { it.isNotBlank() }
-
+        Log.d("PROFILE_DEBUG", "Received ProfilePic URL: $profilePic")
         if (!role.isNullOrEmpty() && id > 0) {
             inflateClasses(role, id)
         }
@@ -139,7 +139,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
         if (profilePic.isNullOrEmpty()) {
             ivProfile.setImageResource(R.drawable.ic_profile_default)
         } else if (profilePic!!.startsWith("http")) {
-            Glide.with(this)
+            Glide.with(this@StudentClassManagerActivity) // <--- Use qualified 'this'
                 .load(profilePic)
                 .placeholder(R.drawable.ic_profile_default)
                 .error(R.drawable.ic_profile_default)
@@ -173,6 +173,11 @@ class StudentClassManagerActivity : AppCompatActivity() {
             dialog.dismiss()
         }
 
+        dialogView.findViewById<View>(R.id.btnLogout).setOnClickListener {
+            dialog.dismiss()
+            logout()
+        }
+
         // 4. Configure the Window to stretch properly
         val window = dialog.window
         if (window != null) {
@@ -191,6 +196,17 @@ class StudentClassManagerActivity : AppCompatActivity() {
         }
 
         dialog.show()
+    }
+
+    private fun logout() {
+        val preferences = getSharedPreferences("user_session", MODE_PRIVATE)
+        preferences.edit().clear().apply() // Clears all session data (user ID, token, role, etc.)
+        CurrentCourse.userId = 0
+        val intent = Intent(this, AppLoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+
+        startActivity(intent)
+        finish()
     }
     fun inflateClasses(role: String, id: Int) {
         UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)

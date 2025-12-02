@@ -1,5 +1,8 @@
 package com.example.gr8math.api
 
+import CreateDllRequest
+import DllDisplayResponse
+import DllListResponse
 import com.example.gr8math.AccountRequestResponse
 import com.example.gr8math.adapter.FacultyNotification
 import com.example.gr8math.adapter.MarkAllReadRequest
@@ -15,7 +18,11 @@ import com.example.gr8math.dataObject.LoginUser
 import com.example.gr8math.dataObject.ParticipantResponse
 import com.example.gr8math.dataObject.ProfileResponse
 import com.example.gr8math.dataObject.StudentProfileResponse
+import com.example.gr8math.dataObject.UpdateDllMainRequest
+import com.example.gr8math.dataObject.UpdateProcedureRequest
 import com.example.gr8math.dataObject.UpdateProfileRequest
+import com.example.gr8math.dataObject.UpdateReferenceRequest
+import com.example.gr8math.dataObject.UpdateReflectionRequest
 import com.example.gr8math.dataObject.UpdateStudentProfileRequest
 import com.example.gr8math.dataObject.User
 import okhttp3.MultipartBody
@@ -226,6 +233,46 @@ interface ApiService {
 
     @GET("api/student/display-participants")
     fun getParticipants(@Query("course_id") courseId: Int): Call<ParticipantResponse>
+
+
+    // CREATE DLL
+    @POST("api/teacher/dll/create")
+    fun createDll(
+        @Body body: CreateDllRequest
+    ): Call<ResponseBody>
+
+    // DISPLAY DLL
+    @GET("api/dll/by-course/{courseId}")
+    fun fetchAllDllsByCourse(@Path("courseId") courseId: Int): Call<DllListResponse>
+
+
+    // UPDATE MAIN DLL
+    @POST("api/teacher/dll/update-main/{mainId}")
+    fun updateDllMain(
+        @Path("mainId") mainId: Int,
+        @Body request: UpdateDllMainRequest
+    ): Call<ResponseBody>
+
+
+
+    // UPDATE ONE PROCEDURE
+    @POST("api/teacher/dll/update-procedure")
+    fun updateProcedure(
+        @Body request: UpdateProcedureRequest
+    ): Call<ResponseBody>
+
+    // UPDATE ONE REFERENCE
+    @POST("api/teacher/dll/update-reference")
+    fun updateReference(
+        @Body request: UpdateReferenceRequest
+    ): Call<ResponseBody>
+
+    // UPDATE ONE REFLECTION
+    @POST("api/teacher/dll/update-reflection")
+    fun updateReflection(
+        @Body request: UpdateReflectionRequest
+    ): Call<ResponseBody>
+
 
 }
 

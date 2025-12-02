@@ -143,6 +143,12 @@ class TeacherNotificationsActivity : AppCompatActivity() {
                 R.id.nav_notifications -> {
                     true // Already here
                 }
+                R.id.nav_dll -> {
+                    startActivity(Intent(this, DLLViewActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
+                    finish()
+                    true
+                }
                 else -> false
             }
         }

@@ -1,18 +1,27 @@
 package com.example.gr8math
 
+import android.app.Activity
 import android.content.Intent // Required for navigation
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import com.example.gr8math.api.ConnectURL
+import com.example.gr8math.dataObject.CurrentCourse
+import com.example.gr8math.dataObject.UpdateDllMainRequest
 import com.example.gr8math.utils.UIUtils
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
+import okhttp3.ResponseBody
+import retrofit2.Callback
+import retrofit2.Response
 
 class DailyLessonLogActivity : AppCompatActivity() {
 
@@ -24,10 +33,20 @@ class DailyLessonLogActivity : AppCompatActivity() {
 
     private lateinit var tilCompetencies: TextInputLayout
     private lateinit var etCompetencies: EditText
+    private var isEditMode = false
+    private var dllMainId: Int = -1
+    private var sectionTitle: String? = null
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_daily_lesson_log)
+
+        isEditMode = intent.getBooleanExtra(DLLEditActivity.EXTRA_MODE_EDIT, false)
+        dllMainId = intent.getIntExtra(DLLEditActivity.EXTRA_DLL_MAIN_ID, -1)
+        sectionTitle = intent.getStringExtra(DLLEditActivity.EXTRA_SECTION_TITLE)
+
 
         // 1. Initialize Views
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
@@ -57,22 +76,36 @@ class DailyLessonLogActivity : AppCompatActivity() {
         // 4. Handle "Next" Button - Navigate to Step 2
         btnNext.setOnClickListener {
             if (validateForm()) {
-                // Create Intent to go to Step 2
-                val intent = Intent(this, DLLStep2Activity::class.java)
+                if (isEditMode) {
+                    callSingleStepUpdateApi()
+                } else {
+                    // Create Intent to go to Step 2
+                    val intent = Intent(this, DLLStep2Activity::class.java)
 
-                // Pass Data Forward (from previous dialog)
-                intent.putExtra("EXTRA_QUARTER", getIntent().getStringExtra("EXTRA_QUARTER"))
-                intent.putExtra("EXTRA_WEEK", getIntent().getStringExtra("EXTRA_WEEK"))
-                intent.putExtra("EXTRA_FROM", getIntent().getStringExtra("EXTRA_FROM"))
-                intent.putExtra("EXTRA_UNTIL", getIntent().getStringExtra("EXTRA_UNTIL"))
+                    // Pass Data Forward (from previous dialog)
+                    intent.putExtra("EXTRA_QUARTER", getIntent().getStringExtra("EXTRA_QUARTER"))
+                    intent.putExtra("EXTRA_WEEK", getIntent().getStringExtra("EXTRA_WEEK"))
+                    intent.putExtra("EXTRA_FROM", getIntent().getStringExtra("EXTRA_FROM"))
+                    intent.putExtra("EXTRA_UNTIL", getIntent().getStringExtra("EXTRA_UNTIL"))
 
-                // Pass Data from this screen
-                intent.putExtra("EXTRA_CONTENT_STD", etContent.text.toString())
-                intent.putExtra("EXTRA_PERF_STD", etPerformance.text.toString())
-                intent.putExtra("EXTRA_COMPETENCIES", etCompetencies.text.toString())
+                    // Pass Data from this screen
+                    intent.putExtra("EXTRA_CONTENT_STD", etContent.text.toString())
+                    intent.putExtra("EXTRA_PERF_STD", etPerformance.text.toString())
+                    intent.putExtra("EXTRA_COMPETENCIES", etCompetencies.text.toString())
 
-                startActivity(intent)
+                    startActivity(intent)
+                }
             }
+
+        }
+
+        if (isEditMode) {
+            toolbar.title = sectionTitle ?: "Edit Daily Lesson Log"
+            btnNext.text = "SAVE"
+
+            etContent.setText(intent.getStringExtra("EXTRA_CONTENT_STD"))
+            etPerformance.setText(intent.getStringExtra("EXTRA_PERF_STD"))
+            etCompetencies.setText(intent.getStringExtra("EXTRA_COMPETENCIES"))
         }
     }
 
@@ -93,6 +126,49 @@ class DailyLessonLogActivity : AppCompatActivity() {
         }
     }
 
+
+    private fun callSingleStepUpdateApi() {
+        if (dllMainId == -1) {
+            Toast.makeText(this, "Error: DLL ID is missing for update.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // 1. Collect Data from UI and Intent Extras
+        val request = UpdateDllMainRequest(
+            course_id = CurrentCourse.courseId,
+
+            // These fields must be passed from the initial dialog via the Intent (getIntent())
+            quarter_number = getIntent().getStringExtra("EXTRA_QUARTER")?.toIntOrNull() ?: 0,
+            week_number = getIntent().getStringExtra("EXTRA_WEEK")?.toIntOrNull() ?: 0,
+            available_from = getIntent().getStringExtra("EXTRA_FROM") ?: "",
+            available_until = getIntent().getStringExtra("EXTRA_UNTIL") ?: "",
+
+            content_standard = etContent.text.toString(),
+            performance_standard = etPerformance.text.toString(),
+            learning_comp = etCompetencies.text.toString()
+        )
+
+        // 2. Call the API
+        ConnectURL.api.updateDllMain(dllMainId, request).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: retrofit2.Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(this@DailyLessonLogActivity, "Objectives Updated Successfully!", Toast.LENGTH_SHORT).show()
+
+                    // 3. Notify the calling activity (DLLViewActivity) to refresh the display
+                    setResult(Activity.RESULT_OK)
+                    finish()
+                } else {
+                    val errorBody = response.errorBody()?.string() ?: "Unknown API Error"
+                    Toast.makeText(this@DailyLessonLogActivity, "Update Failed: ${response.code()}", Toast.LENGTH_LONG).show()
+                    Log.e("DLL_UPDATE", "API Error: $errorBody")
+                }
+            }
+
+            override fun onFailure(call: retrofit2.Call<ResponseBody>, t: Throwable) {
+                Toast.makeText(this@DailyLessonLogActivity, "Network Failure: ${t.message}", Toast.LENGTH_LONG).show()
+            }
+        })
+    }
     /**
      * Shows the custom dialog matching your screenshot (Left Aligned, White Background).
      */

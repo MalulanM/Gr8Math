@@ -140,6 +140,12 @@ class TeacherClassPageActivity : AppCompatActivity() {
                     finish()
                     true
                 }
+                R.id.nav_dll -> {
+                    startActivity(Intent(this, DLLViewActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
+                    finish()
+                    true
+                }
                 else -> false
             }
         }
@@ -282,11 +288,194 @@ class TeacherClassPageActivity : AppCompatActivity() {
                         showCreateAssessmentDialog()
                     }
                     R.id.rbLessonLog -> {
-                        Toast.makeText(this, "Opening Lesson Log...", Toast.LENGTH_SHORT).show()
+                        showCreateDLLDialog()
                     }
                 }
             }
         }
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+    }
+
+
+    // In TeacherClassPageActivity.kt
+
+    private fun showCreateDLLDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_create_dll, null)
+
+        val btnBack = dialogView.findViewById<ImageButton>(R.id.btnBack)
+        val btnNext = dialogView.findViewById<Button>(R.id.btnNext)
+
+        val etQuarter = dialogView.findViewById<TextInputEditText>(R.id.etQuarterNumber)
+        val tilQuarter = dialogView.findViewById<TextInputLayout>(R.id.tilQuarterNumber)
+        val etWeek = dialogView.findViewById<TextInputEditText>(R.id.etWeekNumber)
+        val tilWeek = dialogView.findViewById<TextInputLayout>(R.id.tilWeekNumber)
+        val etFrom = dialogView.findViewById<TextInputEditText>(R.id.etAvailableFrom)
+        val tilFrom = dialogView.findViewById<TextInputLayout>(R.id.tilAvailableFrom)
+        val etUntil = dialogView.findViewById<TextInputEditText>(R.id.etAvailableUntil)
+        val tilUntil = dialogView.findViewById<TextInputLayout>(R.id.tilAvailableUntil)
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        btnBack.setOnClickListener {
+            dialog.dismiss()
+            showAddOptionsDialog()
+        }
+
+        // --- Date & Time Picker Logic (COPIED FROM ASSESSMENT) ---
+
+        val myCalendar = Calendar.getInstance()
+
+        // 🌟 NEW: This variable stores the chosen "Available From" date *and* time.
+        var availableFromTimestamp: Long = System.currentTimeMillis()
+
+        // 🌟 NEW: 12-hour format with AM/PM
+        val dateTimeFormat = SimpleDateFormat("MM/dd/yy - hh:mm a", Locale.US)
+
+        // --- "Available From" Listeners ---
+        val fromTimeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
+            myCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+            myCalendar.set(Calendar.MINUTE, minute)
+
+            // Update the EditText field and save the timestamp
+            etFrom.setText(dateTimeFormat.format(myCalendar.time))
+            tilFrom.error = null
+            availableFromTimestamp = myCalendar.timeInMillis
+        }
+
+        val fromDateSetListener = DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
+            myCalendar.set(Calendar.YEAR, year)
+            myCalendar.set(Calendar.MONTH, monthOfYear)
+            myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+
+            // Show TimePicker immediately after DatePicker
+            TimePickerDialog(this,
+                fromTimeSetListener,
+                myCalendar.get(Calendar.HOUR_OF_DAY),
+                myCalendar.get(Calendar.MINUTE),
+                false // 12-hour format
+            ).show()
+        }
+
+        etFrom.setOnClickListener {
+            val datePicker = DatePickerDialog(
+                this,
+                fromDateSetListener,
+                myCalendar.get(Calendar.YEAR),
+                myCalendar.get(Calendar.MONTH),
+                myCalendar.get(Calendar.DAY_OF_MONTH)
+            )
+            // 🌟 CONSTRAINT: Cannot select date before the current time
+            datePicker.datePicker.minDate = System.currentTimeMillis() - 1000
+            datePicker.show()
+        }
+
+        // --- "Available Until" Listeners ---
+        val untilTimeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
+            // Create a temporary Calendar instance for validation only
+            val tempCalendar = Calendar.getInstance().apply {
+                // Use the date set in the DatePicker (stored in myCalendar)
+                timeInMillis = myCalendar.timeInMillis
+                set(Calendar.HOUR_OF_DAY, hourOfDay)
+                set(Calendar.MINUTE, minute)
+            }
+
+            // 🌟 CONSTRAINT VALIDATION: Check if time is before 'Available From' timestamp
+            if (tempCalendar.timeInMillis < availableFromTimestamp) {
+                ShowToast.showMessage(this@TeacherClassPageActivity,"Cannot select time before 'Available From'")
+                // Do not update myCalendar or EditText if invalid
+                return@OnTimeSetListener
+            }
+
+            // If valid, set the time and update the EditText
+            myCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+            myCalendar.set(Calendar.MINUTE, minute)
+            etUntil.setText(dateTimeFormat.format(myCalendar.time))
+            tilUntil.error = null
+        }
+
+        val untilDateSetListener = DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
+            myCalendar.set(Calendar.YEAR, year)
+            myCalendar.set(Calendar.MONTH, monthOfYear)
+            myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+
+            // Show TimePicker immediately after DatePicker
+            TimePickerDialog(this,
+                untilTimeSetListener,
+                myCalendar.get(Calendar.HOUR_OF_DAY),
+                myCalendar.get(Calendar.MINUTE),
+                false // 12-hour format
+            ).show()
+        }
+
+        etUntil.setOnClickListener {
+            // 🌟 INITIAL CHECK: Ensure "Available From" has been set
+            if (etFrom.text.toString().isEmpty()) {
+                ShowToast.showMessage(this, "Please select 'Available From' date and time first.")
+                return@setOnClickListener
+            }
+
+            val datePicker = DatePickerDialog(
+                this,
+                untilDateSetListener,
+                myCalendar.get(Calendar.YEAR),
+                myCalendar.get(Calendar.MONTH),
+                myCalendar.get(Calendar.DAY_OF_MONTH)
+            )
+            // 🌟 CONSTRAINT: Prevent selecting a date before "Available From" date
+            datePicker.datePicker.minDate = availableFromTimestamp
+            datePicker.show()
+        }
+
+        // --- End of Date & Time Picker Logic ---
+
+        btnNext.setOnClickListener {
+            val errorMsg = getString(R.string.error_blank_field)
+
+            // Basic Text Validation
+            UIUtils.errorDisplay(this, tilQuarter, etQuarter, true, errorMsg)
+            UIUtils.errorDisplay(this, tilWeek, etWeek, true, errorMsg)
+            UIUtils.errorDisplay(this, tilFrom, etFrom, true, errorMsg)
+            UIUtils.errorDisplay(this, tilUntil, etUntil, true, errorMsg)
+
+            val isValid = etQuarter.text.toString().trim().isNotEmpty() &&
+                    etWeek.text.toString().trim().isNotEmpty() &&
+                    etFrom.text.toString().trim().isNotEmpty() &&
+                    etUntil.text.toString().trim().isNotEmpty()
+
+            if (isValid) {
+
+                // 🌟 FINAL DATE/TIME VALIDATION (in case of manual manipulation)
+                try {
+                    val fromDate = dateTimeFormat.parse(etFrom.text.toString())
+                    val untilDate = dateTimeFormat.parse(etUntil.text.toString())
+
+                    if (fromDate != null && untilDate != null && untilDate.time < fromDate.time) {
+                        UIUtils.errorDisplay(this, tilUntil, etUntil, true, "Must be on or after 'Available From' time.")
+                        return@setOnClickListener
+                    }
+                } catch (e: Exception) {
+                    // Should not happen if user uses the pickers, but handles edge case
+                    UIUtils.errorDisplay(this, tilUntil, etUntil, true, "Invalid date format.")
+                    return@setOnClickListener
+                }
+
+                // If validation passes, proceed to next activity
+                val intent = Intent(this, DailyLessonLogActivity::class.java).apply {
+                    putExtra("EXTRA_QUARTER", etQuarter.text.toString().trim())
+                    putExtra("EXTRA_WEEK", etWeek.text.toString().trim())
+                    // 🌟 PASSING DATE TIME STRING
+                    putExtra("EXTRA_FROM", etFrom.text.toString().trim())
+                    putExtra("EXTRA_UNTIL", etUntil.text.toString().trim())
+                }
+                startActivity(intent)
+                dialog.dismiss()
+            }
+        }
+
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
     }

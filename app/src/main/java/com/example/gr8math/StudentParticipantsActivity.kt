@@ -6,10 +6,12 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.gr8math.api.ConnectURL
 import com.example.gr8math.dataObject.CurrentCourse
 import com.example.gr8math.dataObject.ParticipantResponse
@@ -79,9 +81,22 @@ class StudentParticipantsActivity : AppCompatActivity() {
                 val teacherCard = findViewById<View>(R.id.cardTeacher)
                 val tvTeacherName = teacherCard.findViewById<TextView>(R.id.tvName)
 
+                val ivTeacherProfile = teacherCard.findViewById<ImageView>(R.id.ivProfile)
                 if (teacher != null) {
                     val fullName = "${teacher.last_name}, ${teacher.first_name}"
                     tvTeacherName.text = fullName
+
+                    val profilePicUrl = teacher.profile_pic ?: ""
+                    if (profilePicUrl.isNotEmpty()) {
+                        Glide.with(this@StudentParticipantsActivity)
+                            .load(profilePicUrl)
+                            .placeholder(R.drawable.ic_profile_default)
+                            .error(R.drawable.ic_profile_default)
+                            .circleCrop()
+                            .into(ivTeacherProfile)
+                    } else {
+                        ivTeacherProfile.setImageResource(R.drawable.ic_profile_default)
+                    }
 
                     teacherCard.setOnClickListener {
                         val intent = Intent(this@StudentParticipantsActivity, ParticipantProfileActivity::class.java)
@@ -138,6 +153,7 @@ class StudentParticipantsActivity : AppCompatActivity() {
 
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val tvName: TextView = view.findViewById(R.id.tvName)
+            val ivProfile: ImageView = view.findViewById(R.id.ivProfile)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -150,6 +166,17 @@ class StudentParticipantsActivity : AppCompatActivity() {
             val student = students[position]
             val fullName = "${student.last_name}, ${student.first_name}"
             holder.tvName.text = fullName
+            val profilePicUrl = student.profile_pic ?: ""
+            if (profilePicUrl.isNotEmpty()) {
+                Glide.with(holder.itemView.context)
+                    .load(profilePicUrl)
+                    .placeholder(R.drawable.ic_profile_default) // Assume you have a default image
+                    .error(R.drawable.ic_profile_default)
+                    .circleCrop()
+                    .into(holder.ivProfile)
+            } else {
+                holder.ivProfile.setImageResource(R.drawable.ic_profile_default)
+            }
 
             holder.itemView.setOnClickListener { onClick(student) }
         }

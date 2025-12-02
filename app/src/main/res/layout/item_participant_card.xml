@@ -31,13 +31,12 @@
             android:id="@+id/tvName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginStart="16dp"
+            android:layout_weight="1"
             android:fontFamily="@font/lexend"
-            android:text="Dela Cruz, Juan"
             android:textColor="@color/colorText"
-            android:textStyle="bold"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <ImageView
             android:layout_width="24dp"
