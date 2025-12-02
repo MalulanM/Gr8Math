@@ -166,10 +166,12 @@ class StudentClassManagerActivity : AppCompatActivity() {
         }
 
         dialogView.findViewById<View>(R.id.btnTerms).setOnClickListener {
+            startActivity(Intent(this@StudentClassManagerActivity, TermsAndConditionsActivity::class.java))
             dialog.dismiss()
         }
 
         dialogView.findViewById<View>(R.id.btnPrivacy).setOnClickListener {
+            startActivity(Intent(this@StudentClassManagerActivity, PrivacyPolicyActivity::class.java))
             dialog.dismiss()
         }
 

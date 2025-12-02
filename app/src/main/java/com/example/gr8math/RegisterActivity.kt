@@ -368,6 +368,11 @@ class RegisterActivity : AppCompatActivity() {
     // ----------------------------------------------------------
     // TERMS & CONDITIONS
     // ----------------------------------------------------------
+    // ... inside RegisterActivity.kt
+
+    // ----------------------------------------------------------
+// TERMS & CONDITIONS AND PRIVACY POLICY
+// ----------------------------------------------------------
     private fun showUserAgreement(isFirstTime: Boolean) {
 
         val dialogView = LayoutInflater.from(this)
@@ -383,12 +388,79 @@ class RegisterActivity : AppCompatActivity() {
 
         btnProceed.isEnabled = false
 
+        // --- CODE TO MAKE "Terms and Conditions" AND "Privacy Policy" CLICKABLE ---
+
+        val fullText = chkBoxAgree.text.toString()
+        val spannable = android.text.SpannableString(fullText)
+
+        // Define the style for the hyperlinks
+        val setLinkStyle = { ds: android.text.TextPaint ->
+            ds.isUnderlineText = true
+            ds.color = resources.getColor(R.color.colorMatisse, theme) // Use your link color
+        }
+
+
+        // 1. TERMS AND CONDITIONS Link
+        val termsLinkText = "Terms and Conditions"
+        val termsStartIndex = fullText.indexOf(termsLinkText)
+        val termsEndIndex = termsStartIndex + termsLinkText.length
+
+        if (termsStartIndex != -1) {
+            val termsClickableSpan = object : android.text.style.ClickableSpan() {
+                override fun onClick(widget: View) {
+                    val intent = Intent(this@RegisterActivity, TermsAndConditionsActivity::class.java)
+                    startActivity(intent)
+                }
+                override fun updateDrawState(ds: android.text.TextPaint) { setLinkStyle(ds) }
+            }
+
+            spannable.setSpan(
+                termsClickableSpan,
+                termsStartIndex,
+                termsEndIndex,
+                android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+
+        // 2. PRIVACY POLICY Link
+        val privacyLinkText = "Privacy Policy"
+        val privacyStartIndex = fullText.indexOf(privacyLinkText)
+        val privacyEndIndex = privacyStartIndex + privacyLinkText.length
+
+        if (privacyStartIndex != -1) {
+            val privacyClickableSpan = object : android.text.style.ClickableSpan() {
+                override fun onClick(widget: View) {
+                    // Launch the new PrivacyActivity
+                    val intent = Intent(this@RegisterActivity, PrivacyPolicyActivity::class.java)
+                    startActivity(intent)
+                }
+                override fun updateDrawState(ds: android.text.TextPaint) { setLinkStyle(ds) }
+            }
+
+            spannable.setSpan(
+                privacyClickableSpan,
+                privacyStartIndex,
+                privacyEndIndex,
+                android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+        // Set the modified text and enable link movement
+        chkBoxAgree.text = spannable
+        chkBoxAgree.movementMethod = android.text.method.LinkMovementMethod.getInstance()
+
+        // --- END CLICKABLE CODE ---
+
+
+        // Checkbox listener for enabling the button
         chkBoxAgree.setOnCheckedChangeListener { _, checked ->
             btnProceed.isEnabled = checked
         }
 
+        // Button click listener to proceed
         btnProceed.setOnClickListener {
-
+            // ... (rest of your button click logic) ...
             dialog.dismiss()
             UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
 
@@ -412,7 +484,6 @@ class RegisterActivity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
     }
-
     // ----------------------------------------------------------
     // UPDATE STATUS API
     // ----------------------------------------------------------

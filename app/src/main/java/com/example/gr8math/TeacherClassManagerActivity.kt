@@ -311,10 +311,12 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         }
 
         dialogView.findViewById<View>(R.id.btnTerms).setOnClickListener {
+            startActivity(Intent(this@TeacherClassManagerActivity, TermsAndConditionsActivity::class.java))
             dialog.dismiss()
         }
 
         dialogView.findViewById<View>(R.id.btnPrivacy).setOnClickListener {
+            startActivity(Intent(this@TeacherClassManagerActivity, PrivacyPolicyActivity::class.java))
             dialog.dismiss()
         }
 
