@@ -160,7 +160,7 @@ class DailyLessonLogActivity : AppCompatActivity() {
                 } else {
                     val errorBody = response.errorBody()?.string() ?: "Unknown API Error"
                     Toast.makeText(this@DailyLessonLogActivity, "Update Failed: ${response.code()}", Toast.LENGTH_LONG).show()
-                    Log.e("DLL_UPDATE", "API Error: $errorBody")
+
                 }
             }
 

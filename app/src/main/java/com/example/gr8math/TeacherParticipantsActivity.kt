@@ -121,12 +121,12 @@ class TeacherParticipantsActivity : AppCompatActivity() {
                     }
 
                 } catch (e: Exception) {
-                    Log.e("displayStudents", e.message ?: "Error")
+
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
+
                 ShowToast.showMessage(this@TeacherParticipantsActivity, "Failed to connect to server. Check your internet connection.")
             }
         })

@@ -153,11 +153,11 @@ class PasswordCreationActivity : AppCompatActivity() {
                         finish()
                     } else {
                         val errorMsg = response.errorBody()?.string() ?: "Registration failed"
-                        Log.e("RegisterError", errorMsg)
+
                         ShowToast.showMessage(this@PasswordCreationActivity, "Registration failed. Please try again.")
                     }
                 } catch (e: Exception) {
-                    Log.e("RegisterException", "Error: ${e.message}")
+
                     ShowToast.showMessage(this@PasswordCreationActivity, "An error occurred.")
                 }
             }
@@ -165,7 +165,7 @@ class PasswordCreationActivity : AppCompatActivity() {
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                 saveButton.isEnabled = true
-                Log.e("NetworkError", "onFailure: ${t.localizedMessage}")
+
                 ShowToast.showMessage(this@PasswordCreationActivity, "Failed to connect. Check internet.")
             }
         })

@@ -65,7 +65,7 @@ class StudentNotificationsActivity : AppCompatActivity() {
                     }
 
                     override fun onFailure(call: Call<Void>, t: Throwable) {
-                        Log.e("NOTIF_ERROR", t.localizedMessage ?: "")
+
                     }
                 })
 
@@ -105,15 +105,11 @@ class StudentNotificationsActivity : AppCompatActivity() {
             ConnectURL.api.markAllNotificationsRead(request)
                 .enqueue(object : Callback<Void> {
                     override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                        if (response.isSuccessful) {
-                            Log.d("NOTIF", "All notifications marked read")
-                        } else {
-                            Log.e("NOTIF_ERROR", "Failed to mark all read: ${response.code()}")
-                        }
+
                     }
 
                     override fun onFailure(call: Call<Void>, t: Throwable) {
-                        Log.e("NOTIF_ERROR", t.localizedMessage ?: "")
+
                     }
                 })
 
@@ -157,7 +153,7 @@ class StudentNotificationsActivity : AppCompatActivity() {
                 response: Response<StudentNotificationResponse>
             ) {
                 if (response.isSuccessful && response.body() != null) {
-                    Log.e("KDJ2BUHDCE", response.body().toString())
+
                     notifications.clear()
                     notifications.addAll(response.body()!!.notifications) // <-- extract list
                     adapter.notifyDataSetChanged()

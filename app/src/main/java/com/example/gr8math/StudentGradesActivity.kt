@@ -130,7 +130,7 @@ class StudentGradesActivity : AppCompatActivity() {
 
                     val arr = json.getJSONArray("answered_assessments")
 
-                    Log.e("JEHDWYECHVWBUCRJE", arr.toString())
+
                     gradeList.clear()
 
                     for (i in 0 until arr.length()) {
@@ -153,12 +153,12 @@ class StudentGradesActivity : AppCompatActivity() {
                     }
 
                 } catch (e: Exception) {
-                    Log.e(TAG, "JSON ERROR: ${e.message}")
+
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e(TAG, "RetrofitError: ${t.localizedMessage}", t)
+
                 ShowToast.showMessage(this@StudentGradesActivity, "Failed to connect to server.")
             }
         })

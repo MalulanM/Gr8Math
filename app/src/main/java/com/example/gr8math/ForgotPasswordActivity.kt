@@ -126,7 +126,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
                     ?: response.body()?.string()
                     ?: ""
 
-                Log.e("sendCode", "Code=${response.code()} | Body=$body")
+
 
                 if (body.isEmpty()) {
                     ShowToast.showMessage(this@ForgotPasswordActivity, "Empty response.")
@@ -174,7 +174,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("sendCode", "Failure ${t.message}")
+
                 ShowToast.showMessage(this@ForgotPasswordActivity, "Failed to connect.")
                 txtSendCode.isEnabled = true
                 txtSendCode.isClickable = true
@@ -196,7 +196,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
                     ?: response.body()?.string()
                     ?: "{}"
 
-                Log.e("verifyCode", "Code=${response.code()} | Body=$raw")
+
 
                 val json = JSONObject(raw)
                 val success = json.optBoolean("success", false)
@@ -268,7 +268,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 val json = JSONObject(jsonStr)
                 val msg = json.optString("message", "")
 
-                Log.e("newPass", "Code=${response.code()} | Body=$jsonStr")
+
 
                 UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
 

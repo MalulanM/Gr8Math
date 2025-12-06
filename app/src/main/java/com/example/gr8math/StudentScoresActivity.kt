@@ -195,12 +195,12 @@ class StudentScoresActivity : AppCompatActivity() {
 
 
                 } catch (e: Exception) {
-                    Log.e("displayAssessments", e.message ?: "Error")
+
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
+
                 ShowToast.showMessage(this@StudentScoresActivity, "Failed to connect to server.")
             }
         })

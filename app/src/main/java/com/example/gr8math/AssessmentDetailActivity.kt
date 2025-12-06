@@ -75,7 +75,7 @@ class AssessmentDetailActivity : AppCompatActivity() {
             ) {
                 val body = response.body()
                 if (body == null || !body.success) return
-                Log.e("sswjhd", body.toString())
+
                 val a = body.assessment
 
                 val formattedStart = formatTimestamp(a.start_time)
@@ -91,7 +91,7 @@ class AssessmentDetailActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<AssessmentResponse>, t: Throwable) {
-                Log.e("wdje", t.message.toString())
+
                 ShowToast.showMessage(this@AssessmentDetailActivity, "Server error")
             }
         })

@@ -157,7 +157,7 @@ class RegisterActivity : AppCompatActivity() {
                 override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
 
                     val responseString = response.body()?.string() ?: response.errorBody()?.string()
-                    Log.e("OWSQJEWR", responseString.toString())
+
                     if (responseString == null || !responseString.trim().startsWith("{")) {
                         ShowToast.showMessage(
                             this@RegisterActivity,
@@ -208,7 +208,7 @@ class RegisterActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                    Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
+
                     ShowToast.showMessage(this@RegisterActivity, "Failed to connect to server. Check your internet connection.")
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                 }
@@ -328,10 +328,7 @@ class RegisterActivity : AppCompatActivity() {
                     val rawBody = response.body()?.string()
                     val rawError = response.errorBody()?.string()
 
-                    Log.e(
-                        "RegisterResponse",
-                        "Code: ${response.code()} | Body: $rawBody | ErrorBody: $rawError"
-                    )
+
 
                     // Use what was read above
                     val body = rawBody ?: rawError
@@ -346,7 +343,7 @@ class RegisterActivity : AppCompatActivity() {
                     showUserAgreement(isFirst)
 
                 } catch (e: Exception) {
-                    Log.e("registerAcc", "Exception: ${e.message}", e)
+
                     ShowToast.showMessage(
                         this@RegisterActivity,
                         "An error occurred while handling the response."
@@ -357,7 +354,7 @@ class RegisterActivity : AppCompatActivity() {
 
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
+
                 ShowToast.showMessage(this@RegisterActivity, "Failed to connect to server. Check your internet connection.")
                 UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
             }
@@ -494,11 +491,11 @@ class RegisterActivity : AppCompatActivity() {
                 val body = response.body()?.string()
                 val error = response.errorBody()?.string()
                 val result = body ?: error
-                Log.e("updateStat", "Code: ${response.code()} | Body: $result")
+
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("updateStat", "Failed: ${t.message}")
+
             }
         })
     }

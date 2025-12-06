@@ -23,11 +23,16 @@ android {
 
     buildTypes {
         release {
+            buildConfigField("String", "BASE_URL", "https://gr8mathbackend.onrender.com")
+
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+           buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000\"")
         }
     }
     compileOptions {
@@ -39,6 +44,7 @@ android {
     }
     buildFeatures {
         compose = true
+
     }
     buildFeatures { viewBinding; true }
 }

@@ -167,7 +167,7 @@ class QuarterlyReportActivity : AppCompatActivity() {
                     }
 
                 } catch (e: Exception) {
-                    Log.e("Quarter1Error", e.message ?: "error")
+
                 }
             }
 

@@ -289,7 +289,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                     ivProfile.setImageBitmap(bitmap)
                 } catch (e: Exception) {
                     ivProfile.setImageResource(R.drawable.ic_profile_default)
-                    Log.e("PROFILE_ERROR", "Failed to decode Base64 image: ${e.message}")
+
                 }
             }
 
@@ -358,7 +358,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                 val responseString = response.body()?.string() ?: response.errorBody()?.string()
 
                 if (responseString.isNullOrEmpty()) {
-                    Log.e("API_ERROR", "Empty response")
+
                     return
                 }
 
@@ -368,17 +368,17 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                     val message = jsonObj.optString("message", "No message")
                     val dataArray = jsonObj.optJSONArray("data") ?: org.json.JSONArray()
 
-                    Log.e("API_RESPONSE", message)
+
 
 
 
                 } catch (e: Exception) {
-                    Log.e("API_ERROR", "Failed to parse response: ${e.localizedMessage}", e)
+
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("API_ERROR", "Request failed: ${t.localizedMessage}", t)
+
             }
         })
     }
@@ -391,7 +391,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 val responseString = response.body()?.string() ?: response.errorBody()?.string() ?: ""
                 if (!responseString.trim().startsWith("{")) {
-                    Log.e("API_ERROR", "Invalid JSON: $responseString")
+
                     return
                 }
 
@@ -408,12 +408,12 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                     llPastSearches.visibility = if (data.length() > 0) View.VISIBLE else View.GONE
 
                 } catch (e: Exception) {
-                    Log.e("API_ERROR", "Parse error: ${e.localizedMessage}", e)
+
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("API_ERROR", "Request failed: ${t.localizedMessage}", t)
+
             }
         })
     }
@@ -484,7 +484,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
 
                 val responseString = response.body()?.string() ?: response.errorBody()?.string() ?: ""
                 if (responseString.isEmpty()) {
-                    Log.e("API_ERROR", "Empty response")
+
                     return
                 }
 
@@ -523,13 +523,13 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e("API_ERROR", "Parse error: ${e.localizedMessage}", e)
+
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 if (call.isCanceled) return // ignore canceled calls
-                Log.e("API_ERROR", "Request failed: ${t.localizedMessage}", t)
+
             }
         })
     }
@@ -543,10 +543,6 @@ class TeacherClassManagerActivity : AppCompatActivity() {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 val responseString = response.body()?.string() ?: response.errorBody()?.string()
 
-                if (responseString.isNullOrEmpty()) {
-                    Log.e("API_ERROR", "Empty response")
-                    return
-                }
 
                 try {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
@@ -555,7 +551,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                     val message = jsonObj.optString("message", "No message")
                     val dataArray = jsonObj.optJSONArray("data") ?: org.json.JSONArray()
 
-                    Log.e("API_RESPONSE", dataArray.toString())
+
 
                     parentLayout.removeAllViews()
 
@@ -611,13 +607,13 @@ class TeacherClassManagerActivity : AppCompatActivity() {
 
                 } catch (e: Exception) {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                    Log.e("API_ERROR", "Failed to parse response: ${e.localizedMessage}", e)
+
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                Log.e("API_ERROR", "Request failed: ${t.localizedMessage}", t)
+
             }
         })
     }

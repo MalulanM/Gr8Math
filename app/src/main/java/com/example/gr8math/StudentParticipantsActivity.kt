@@ -68,7 +68,7 @@ class StudentParticipantsActivity : AppCompatActivity() {
             ) {
 
                 if (!response.isSuccessful || response.body() == null) {
-                    Log.e("API_DEBUG", "Response failed or body null")
+
                     return
                 }
 
@@ -138,7 +138,7 @@ class StudentParticipantsActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: retrofit2.Call<ParticipantResponse>, t: Throwable) {
-                Log.e("API_DEBUG", "API CALL FAILED: ${t.localizedMessage}")
+
             }
         })
     }

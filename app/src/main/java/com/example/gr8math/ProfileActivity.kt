@@ -274,7 +274,7 @@ class ProfileActivity : AppCompatActivity() {
             selectedImageBase64?.let { saveData("Profile Picture", it) }
                 ?: ShowToast.showMessage(this, "Failed to read image")
         } catch (e: Exception) {
-            Log.e("ImageError", "Failed to handle image result", e)
+
             ivProfile.setImageResource(R.drawable.ic_profile_default)
         }
     }
@@ -316,7 +316,7 @@ class ProfileActivity : AppCompatActivity() {
                 "data:$mimeType;base64,$base64String"
             }
         } catch (e: Exception) {
-            Log.e("Base64Convert", "Error converting image to Base64", e)
+
             null
         }
     }
@@ -343,7 +343,7 @@ class ProfileActivity : AppCompatActivity() {
                             ivProfile.setImageBitmap(bitmap)
                         }
                         catch (e: Exception) {
-                            Log.e("Base64Load", "Failed to decode Base64", e)
+
                             ivProfile.setImageResource(R.drawable.ic_profile_default)
                         }
                     } else {
@@ -430,7 +430,7 @@ class ProfileActivity : AppCompatActivity() {
                     outputFormat.format(it)
                 }
             } catch (e2: Exception) {
-                Log.e("DateFormatter", "Failed to parse date: $timestamp", e2)
+
                 timestamp // Return unformatted as fallback
             }
         }

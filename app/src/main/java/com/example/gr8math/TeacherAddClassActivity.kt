@@ -193,7 +193,7 @@ class TeacherAddClassActivity : AppCompatActivity() {
         val call = apiService.saveClass(classData)
         call.enqueue(object : retrofit2.Callback<ResponseBody> {
             override fun onResponse(call: retrofit2.Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
-                Log.e("Response_Ress", response.toString())
+
                 val responseString = response.errorBody()?.string() ?: response.body()?.string()
                 val jsonObj = org.json.JSONObject(responseString)
                 val success = jsonObj.optBoolean("success")
@@ -209,7 +209,7 @@ class TeacherAddClassActivity : AppCompatActivity() {
                 }
             }
             override fun onFailure(call: retrofit2.Call<ResponseBody>, t: Throwable) {
-                Log.e("Error_Response", "Error: ${t.message}")
+
                 ShowToast.showMessage(this@TeacherAddClassActivity, "Error: ${t.message}")
                 setInputsEnabled(true)
             }

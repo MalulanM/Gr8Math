@@ -333,7 +333,7 @@ class LessonContentActivity : AppCompatActivity() {
                         builder.append("\n\n")
                     }
                 } catch (e: Exception) {
-                    Log.e("LessonContent", "Failed to decode base64 image", e)
+
                 }
             } else if (!urlPart.isNullOrEmpty()) {
                 // insert placeholder for async load
@@ -376,18 +376,17 @@ class LessonContentActivity : AppCompatActivity() {
                                             text.setSpan(ImageSpan(this@LessonContentActivity, bmp), insertIndex, insertIndex + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                                         }
                                     } catch (e: Exception) {
-                                        Log.e("LessonContent", "Failed to insert ImageSpan from URL", e)
+
                                     }
                                 }
                             } catch (e: Exception) {
-                                Log.e("LessonContent", "Resize/load error", e)
+
                             }
                         }
 
                         override fun onLoadCleared(placeholder: Drawable?) {}
                         override fun onLoadFailed(errorDrawable: Drawable?) {
-                            // leave the placeholder as text if failed (user can see the URL as fallback)
-                            Log.w("LessonContent", "Glide failed to load image: $imageUrl")
+
                         }
                     })
             }

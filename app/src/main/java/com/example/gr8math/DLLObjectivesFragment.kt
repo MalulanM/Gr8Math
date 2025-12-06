@@ -137,7 +137,7 @@ class DLLObjectivesFragment : Fragment() {
                 dbDate // Return original if parsing fails (shouldn't happen if format is consistent)
             }
         } catch (e: Exception) {
-            Log.e("DATE_CONVERT", "Failed to convert date: $dbDate", e)
+
             dbDate // Return original on failure
         }
     }

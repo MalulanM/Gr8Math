@@ -167,7 +167,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 val responseString = response.body()?.string() ?: response.errorBody()?.string()
                 if (responseString.isNullOrEmpty()) {
-                    Log.e("API_ERROR", "Empty response")
+
                     return
                 }
 
@@ -227,13 +227,12 @@ class TeacherClassPageActivity : AppCompatActivity() {
                     }
 
                 } catch (e: Exception) {
-                    Log.e("API_ERROR", "Failed to parse response: ${e.localizedMessage}", e)
+
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("API_ERROR", "Internet: ${t.localizedMessage}", t)
-                Log.e("RetrofitError", "onFailure: ${t.localizedMessage}", t)
+
                 ShowToast.showMessage(this@TeacherClassPageActivity, "Failed to connect to server. Check your internet connection.")
             }
         })

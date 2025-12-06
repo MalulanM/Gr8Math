@@ -65,8 +65,7 @@ class ActiveAccountsListActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<AccountRequestResponse>, t: Throwable) {
-                Log.e("API_ERROR", "Active accounts failed: ${t.localizedMessage}", t)
-            }
+                   }
         })
     }
 }

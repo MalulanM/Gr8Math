@@ -215,7 +215,7 @@ class TakeAssessmentActivity : AppCompatActivity() {
                     finish()
                 } catch (e: Exception) {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                    Log.e("TakeAssessmentActivity", "Error parsing response", e)
+
                     ShowToast.showMessage(this@TakeAssessmentActivity, "Unexpected error occurred")
                 }
             }

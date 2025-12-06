@@ -106,13 +106,13 @@ class AssessmentResultActivity : AppCompatActivity() {
                     } catch (e: Exception) {
                         UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
 
-                        Log.e("API_PARSE_ERROR", e.localizedMessage ?: "")
+
                         ShowToast.showMessage(this@AssessmentResultActivity, "Error parsing result")
                     }
                 }
 
                 override fun onFailure(call: retrofit2.Call<ResponseBody>, t: Throwable) {
-                    Log.e("API_ERROR", t.localizedMessage ?: "")
+
                     ShowToast.showMessage(this@AssessmentResultActivity, "Failed to connect to server. Check your internet connection.")
 
                 }

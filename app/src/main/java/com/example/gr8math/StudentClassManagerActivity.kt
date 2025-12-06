@@ -221,7 +221,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
 
                 if (responseString.isNullOrEmpty()) {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                    Log.e("API_ERROR", "Empty response")
+
                     return
                 }
 
@@ -232,7 +232,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
                     val message = jsonObj.optString("message", "No message")
                     val dataArray = jsonObj.optJSONArray("data") ?: org.json.JSONArray()
 
-                    Log.e("API_RESPONSE", message)
+
 //                    Toast.makeText(this@StudentClassManagerActivity, message, Toast.LENGTH_SHORT).show()
 
                     parentLayout.removeAllViews()
@@ -282,13 +282,13 @@ class StudentClassManagerActivity : AppCompatActivity() {
 
                 } catch (e: Exception) {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                    Log.e("API_ERROR", "Failed to parse response: ${e.localizedMessage}", e)
+
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                Log.e("API_ERROR", "Request failed: ${t.localizedMessage}", t)
+
                 UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
             }
         })

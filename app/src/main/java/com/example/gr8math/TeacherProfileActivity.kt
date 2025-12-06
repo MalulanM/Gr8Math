@@ -105,7 +105,7 @@ class TeacherProfileActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_profile)
-        Log.e("KEN2BDWBRE", id.toString())
+
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
 
@@ -282,7 +282,7 @@ class TeacherProfileActivity : AppCompatActivity() {
                 "data:$mimeType;base64,$base64String"
             }
         } catch (e: Exception) {
-            Log.e("Base64Convert", "Error converting image to Base64", e)
+
             null
         }
     }
@@ -304,7 +304,6 @@ class TeacherProfileActivity : AppCompatActivity() {
             selectedImageBase64?.let { saveData("Profile Picture", it) }
                 ?: ShowToast.showMessage(this, "Failed to read image")
         } catch (e: Exception) {
-            Log.e("ImageError", "Failed to handle image result", e)
             ivProfile.setImageResource(R.drawable.ic_profile_default)
         }
     }
@@ -330,7 +329,7 @@ class TeacherProfileActivity : AppCompatActivity() {
                             val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
                             ivProfile.setImageBitmap(bitmap)
                         } catch (e: Exception) {
-                            Log.e("Base64Load", "Failed to decode Base64", e)
+
                             ivProfile.setImageResource(R.drawable.ic_profile_default)
                         }
                     } else {
@@ -358,7 +357,6 @@ class TeacherProfileActivity : AppCompatActivity() {
 
             override fun onFailure(call: Call<ProfileResponse>, t: Throwable) {
                 UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                Log.e("ProfileError", t.localizedMessage ?: "")
                 ShowToast.showMessage(this@TeacherProfileActivity, "Failed to load profile")
             }
         })
@@ -387,7 +385,7 @@ class TeacherProfileActivity : AppCompatActivity() {
                     }
                 } else {
                     val errorBody = response.errorBody()?.string()
-                    Log.e("UpdateProfileError", "code:${response.code()} body:$errorBody")
+
                     ShowToast.showMessage(this@TeacherProfileActivity, "Update failed: ${response.code()}")
                 }
             }
@@ -461,7 +459,6 @@ class TeacherProfileActivity : AppCompatActivity() {
                     outputFormat.format(it)
                 }
             } catch (e2: Exception) {
-                Log.e("DateFormatter", "Failed to parse date: $timestamp", e2)
                 timestamp // Return unformatted as fallback
             }
         }
@@ -711,9 +708,6 @@ class TeacherProfileActivity : AppCompatActivity() {
                     val errorBody = response.errorBody()?.string()
                     val code = response.code()
 
-                    // Log the full HTTP error code and body content
-                    Log.e("AchievementUpdate", "API FAILED. Code: $code, Body: $errorBody")
-
                     // Check if the error body is valid JSON to extract a clean message
                     try {
                         val errorJson = org.json.JSONObject(errorBody ?: "{}")
@@ -727,7 +721,7 @@ class TeacherProfileActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: retrofit2.Call<ProfileResponse>, t: Throwable) {
-                Log.e("AchievementUpdate", "NETWORK FAILED: ${t.localizedMessage}", t)
+
                 ShowToast.showMessage(this@TeacherProfileActivity, "Server error: Check connection or logs.")
             }
         })

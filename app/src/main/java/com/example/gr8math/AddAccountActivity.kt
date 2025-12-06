@@ -437,11 +437,11 @@ class AddAccountActivity : AppCompatActivity() {
                 val body = response.body()?.string()
                 val error = response.errorBody()?.string()
                 val result = body ?: error
-                Log.e("updateStat", "Code: ${response.code()} | Body: $result")
+
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("updateStat", "Failed: ${t.message}")
+
             }
         })
     }

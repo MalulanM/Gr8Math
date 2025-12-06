@@ -170,14 +170,14 @@ class StudentClassPageActivity : AppCompatActivity() {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 val responseString = response.body()?.string() ?: response.errorBody()?.string()
                 if (responseString.isNullOrEmpty()) {
-                    Log.e("API_ERROR", "Empty response")
+
                     return
                 }
 
                 try {
                     val jsonObj = org.json.JSONObject(responseString)
                     val dataArray = jsonObj.optJSONArray("data") ?: org.json.JSONArray()
-                    Log.e("COURSE_CONTENT_JSON", responseString ?: "empty")
+
 
 
                     for (i in 0 until dataArray.length()) {
@@ -247,12 +247,12 @@ class StudentClassPageActivity : AppCompatActivity() {
                     }
 
                 } catch (e: Exception) {
-                    Log.e("API_ERROR", "Failed to parse response: ${e.localizedMessage}", e)
+
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("API_ERROR", "Internet: ${t.localizedMessage}", t)
+
             }
         })
     }

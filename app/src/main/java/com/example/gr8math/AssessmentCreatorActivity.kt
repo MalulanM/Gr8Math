@@ -305,7 +305,7 @@ class AssessmentCreatorActivity : AppCompatActivity() {
         assessmentQuarter = intent.getStringExtra("EXTRA_AVAILABLE_QUARTER")?.toIntOrNull() ?: 0
         courseId = CurrentCourse.courseId
 
-        Log.e("CONTENT_PPPP", "${assessmentNumber}, ${assessmentTitle}, ${courseId}")
+
         toolbar = findViewById(R.id.toolbar)
         questionsContainer = findViewById(R.id.questionsContainer)
         btnAddQuestion = findViewById(R.id.btnAddQuestion)
@@ -486,7 +486,7 @@ class AssessmentCreatorActivity : AppCompatActivity() {
                 val responseString = response.body()?.string() ?: response.errorBody()?.string()
 
                 if (responseString.isNullOrEmpty()) {
-                    Log.e("API_ERROR", "Empty response")
+
                     return
                 }
                 try {
@@ -504,7 +504,7 @@ class AssessmentCreatorActivity : AppCompatActivity() {
                         finish()
                     }
                 }  catch (e: Exception) {
-                Log.e("API_ERROR", "Failed to parse response: ${e.localizedMessage}", e)
+
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
             }
 

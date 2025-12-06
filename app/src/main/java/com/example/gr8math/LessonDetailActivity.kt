@@ -71,7 +71,7 @@ class LessonDetailActivity : AppCompatActivity() {
                 val body = response.body()?.string() ?: response.errorBody()?.string()
                 if (body.isNullOrEmpty()) return
                 
-                Log.e("APIIDEJB", body.toString())
+
 
                 try {
                     val json = org.json.JSONObject(body)
@@ -89,7 +89,7 @@ class LessonDetailActivity : AppCompatActivity() {
                     }
 
                 } catch (e: Exception) {
-                    Log.e("API_ERROR", "JSON parse error ${e.message}")
+
                 }
             }
 
@@ -174,7 +174,7 @@ class LessonDetailActivity : AppCompatActivity() {
                 .submit()
                 .get()
         } catch (e: Exception) {
-            Log.e("IMG_LOAD", "Failed URL image: ${e.message}")
+
             null
         }
     }
