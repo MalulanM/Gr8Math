@@ -55,16 +55,6 @@
                 android:textColor="@color/colorText"
                 android:textSize="16sp" />
 
-            <RadioButton
-                android:id="@+id/rbLessonLog"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:fontFamily="@font/lexend"
-                android:text="@string/option_lesson_log"
-                android:textColor="@color/colorText"
-                android:textSize="16sp" />
-
         </RadioGroup>
 
         <!-- Proceed Button -->

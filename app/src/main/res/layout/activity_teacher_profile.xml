@@ -374,7 +374,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_below="@id/tvBadgesLabel"
                                 android:gravity="center"
-                                android:text="@string/no_badges_displayed"
+                                android:text="@string/no_cert_displayed"
                                 android:fontFamily="@font/lexend"
                                 android:textColor="@color/colorSubtleText"
                                 android:textSize="14sp"

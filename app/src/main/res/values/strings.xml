@@ -261,6 +261,7 @@
     <string name="change_password">Change Password</string>
     <string name="badges_label">Badges</string>
     <string name="no_badges_displayed">No current badges displayed</string>
+    <string name="no_cert_displayed">No current certificate displayed</string>
 
     <string name="select_badges_title">Select badges to display</string>
     <string name="select_badges_subtitle">(Maximum of 3)</string>

@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -14,7 +15,7 @@
 
         <!-- Splash Activity (Launcher) -->
         <activity
-            android:name=".SplashActivity"
+            android:name=".Activity.SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math">
             <intent-filter>
@@ -25,13 +26,13 @@
 
         <!-- Login Activity -->
         <activity
-            android:name=".AppLoginActivity"
+            android:name=".Activity.LoginAndRegister.AppLoginActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math" />
 
         <!-- Register Activity -->
         <activity
-            android:name=".RegisterActivity"
+            android:name=".Activity.LoginAndRegister.StudentRegisterActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math"
             android:configChanges="orientation|screenSize|keyboardHidden"
@@ -39,39 +40,20 @@
 
         <!-- Forgot Password Activity -->
         <activity
-            android:name=".ForgotPasswordActivity"
+            android:name=".Activity.LoginAndRegister.ForgotPasswordActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
-        <!-- Account Management Activity -->
-        <activity
-            android:name=".AccountManagementActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Gr8Math">
-
-        </activity>
-
-        <!-- "SEE MORE" PAGE 1: ACTIVE ACCOUNTS -->
-        <activity
-            android:name=".ActiveAccountsListActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Gr8Math" />
-
-        <!-- "SEE MORE" PAGE 2: ACCOUNT REQUESTS -->
-        <activity
-            android:name=".AccountRequestsListActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Gr8Math" />
 
         <!-- AddAccount -->
         <activity
-            android:name=".AddAccountActivity"
+            android:name=".Activity.LoginAndRegister.TeacherRegisterActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <!-- STUDENT'S CLASS MANAGER-->
         <activity
-            android:name=".StudentClassManagerActivity"
+            android:name=".Activity.StudentModule.ClassManager.StudentClassManagerActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math">
 
@@ -79,7 +61,7 @@
 
         <!-- TEACHER'S CLASS MANAGER -->
         <activity
-            android:name=".TeacherClassManagerActivity"
+            android:name=".Activity.TeacherModule.ClassManager.TeacherClassManagerActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math">
 
@@ -87,19 +69,19 @@
 
         <!-- (NEW) STUDENT'S ADD CLASS PAGE (as a dialog) -->
         <activity
-            android:name=".StudentAddClassActivity"
+            android:name=".Activity.StudentModule.StudentAddClassActivity"
             android:exported="false"
             android:theme="@style/Theme.App.Dialog.Floating" />
 
         <!-- (NEW) TEACHER'S ADD CLASS PAGE (as a dialog) -->
         <activity
-            android:name=".TeacherAddClassActivity"
+            android:name=".Activity.TeacherModule.ClassManager.TeacherAddClassActivity"
             android:exported="false"
             android:theme="@style/Theme.App.Dialog.Floating" />
 
         <!-- (NEW) STUDENT'S CLASS PAGE -->
         <activity
-            android:name=".StudentClassPageActivity"
+            android:name=".Activity.StudentModule.ClassManager.StudentClassPageActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math" >
 
@@ -107,13 +89,13 @@
 
         <!-- (NEW) TEACHER'S CLASS PAGE -->
         <activity
-            android:name=".TeacherClassPageActivity"
+            android:name=".Activity.TeacherModule.ClassManager.TeacherClassPageActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math" >
         </activity>
 
         <activity
-            android:name=".LessonContentActivity"
+            android:name=".Activity.TeacherModule.Lesson.LessonContentActivity"
             android:exported="true" android:theme="@style/Theme.Gr8Math" >
 <!--            <intent-filter>-->
 <!--                <action android:name="android.intent.action.MAIN" />-->
@@ -122,62 +104,58 @@
         </activity>
 
         <activity
-            android:name=".LessonDetailActivity"
+            android:name=".Activity.TeacherModule.Lesson.LessonDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".AssessmentCreatorActivity"
+            android:name=".Activity.TeacherModule.Assessment.AssessmentCreatorActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".AssessmentDetailActivity"
+            android:name=".Activity.StudentModule.Assessment.AssessmentDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".TakeAssessmentActivity"
+            android:name=".Activity.TakeAssessmentActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".AssessmentResultActivity"
+            android:name=".Activity.StudentModule.Assessment.AssessmentResultActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <!-- (NEW) NOTIFICATION PAGES -->
         <activity
-            android:name=".TeacherNotificationsActivity"
+            android:name=".Activity.TeacherModule.Notification.TeacherNotificationsActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".StudentNotificationsActivity"
+            android:name=".Activity.StudentModule.Notification.StudentNotificationsActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
-        <activity
-            android:name=".FacultyNotificationsActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Gr8Math" />
 
         <!-- (NEW) GRADES AND PARTICIPANTS PAGES -->
 
         <activity
-            android:name=".ParticipantProfileActivity"
+            android:name=".Activity.StudentModule.Participants.ParticipantProfileActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".ProfileActivity"
+            android:name=".Activity.StudentModule.Profile.ProfileActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math" >
 
         </activity>
 
         <activity
-            android:name=".TeacherProfileActivity"
+            android:name=".Activity.TeacherModule.Profile.TeacherProfileActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math"  >
 <!--            <intent-filter>-->
@@ -187,33 +165,33 @@
         </activity>
 
         <activity
-            android:name=".StudentParticipantsActivity"
+            android:name=".Activity.StudentModule.Participants.StudentParticipantsActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".TeacherParticipantsActivity"
+            android:name=".Activity.TeacherModule.Participants.TeacherParticipantsActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".StudentScoresActivity"
+            android:name=".Activity.TeacherModule.StudentScoresActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".QuarterlyReportActivity"
+            android:name=".Activity.StudentModule.Grades.QuarterlyReportActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".StudentGradesActivity"
+            android:name=".Activity.StudentModule.Grades.StudentGradesActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <!-- (NEW) Badges PAGES -->
         <activity
-            android:name=".StudentBadgesActivity"
+            android:name=".Activity.StudentModule.Badges.StudentBadgesActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math" >
 <!--            <intent-filter>-->
@@ -223,54 +201,59 @@
         </activity>
 
         <activity
-            android:name=".RegisterRoleActivity"
+            android:name=".Activity.LoginAndRegister.RegisterRoleActivity"
             android:exported="true"
             android:theme="@style/Theme.Gr8Math" />
 
         <!-- (NEW) DLL PAGES -->
         <activity
-            android:name=".DailyLessonLogActivity"
+            android:name=".Activity.TeacherModule.DLL.DailyLessonLogActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".DLLStep2Activity"
+            android:name=".Activity.TeacherModule.DLL.DLLStep2Activity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".DLLStep3Activity"
+            android:name=".Activity.TeacherModule.DLL.DLLStep3Activity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".DLLStep4Activity"
+            android:name=".Activity.TeacherModule.DLL.DLLStep4Activity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".DLLViewActivity"
+            android:name=".Activity.TeacherModule.DLL.DLLViewActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".DLLEditActivity"
+            android:name=".Activity.TeacherModule.DLL.DLLEditActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math"
             android:windowSoftInputMode="adjustResize"/>
 
         <activity
-            android:name=".TermsAndConditionsActivity"
+            android:name=".Activity.TermsAndConditionsActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".PrivacyPolicyActivity"
+            android:name=".Activity.PrivacyPolicyActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Gr8Math" />
+
+        <activity
+            android:name=".Activity.TeacherModule.DLL.DLLViewActivityMain"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
         <service
-            android:name=".services.MyFirebaseService"
+            android:name=".Services.MyFirebaseService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
