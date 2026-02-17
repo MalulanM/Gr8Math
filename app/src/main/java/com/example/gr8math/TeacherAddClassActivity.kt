@@ -133,11 +133,9 @@ class TeacherAddClassActivity : AppCompatActivity() {
             // Set the data to the clipboard
             clipboard.setPrimaryClip(clip)
 
-            // Show a "Copied!" message
-            ShowToast.showMessage(this, "Copied to clipboard!")
 
-            // Optional: Close the dialog after copying
-            // dialog.dismiss()
+            ShowToast.showMessage(this, "Copied to clipboard!")
+            
         }
 
         // Make the dialog background transparent so our CardView's rounded corners are visible
