@@ -40,7 +40,7 @@ class DLLViewActivity : AppCompatActivity() {
     var currentDayIndex: Int = 0
 
     private val dbDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-    private val uiDateFormat = SimpleDateFormat("EEEE, MMM d, yyyy", Locale.US)
+    private val uiDateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.US)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,7 +57,6 @@ class DLLViewActivity : AppCompatActivity() {
         }
     }
 
-    // 🌟 Refresh data when returning from an Edit Activity
     override fun onRestart() {
         super.onRestart()
         if (targetMainId != -1) {
@@ -112,7 +111,6 @@ class DLLViewActivity : AppCompatActivity() {
             result.onSuccess { entries ->
                 if (entries.isNotEmpty()) {
                     dailyEntries = entries
-                    // On refresh, we stay on the currentDayIndex
                     displayCurrentDay()
                     setNavigationVisibility(View.VISIBLE)
                 }
@@ -136,7 +134,6 @@ class DLLViewActivity : AppCompatActivity() {
         val currentEntry = dailyEntries[currentDayIndex]
         tvDateHeader.text = formatDisplayDate(currentEntry.entryDate)
 
-        // Reset the adapter to force fragment recreation with fresh data
         viewPager.adapter = DLLViewPagerAdapter(this, currentEntry)
         viewPager.currentItem = 0
 

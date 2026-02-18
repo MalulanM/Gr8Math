@@ -60,7 +60,7 @@
                             android:id="@+id/tvName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Dela Cruz, Juan"
+                            android:text="Name"
                             android:fontFamily="@font/lexend"
                             android:textStyle="bold"
                             android:textSize="18sp"
@@ -71,7 +71,7 @@
                             android:id="@+id/tvRole"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Roles: Student"
+                            android:text="Role: Student"
                             android:fontFamily="@font/lexend"
                             android:textSize="12sp"
                             android:textColor="@color/colorText"/>
@@ -80,7 +80,7 @@
                             android:id="@+id/tvLRN"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="LRN: 123456123456"
+                            android:text="LRN: -"
                             android:fontFamily="@font/lexend"
                             android:textSize="12sp"
                             android:textColor="@color/colorText"/>
@@ -89,7 +89,7 @@
                             android:id="@+id/tvBirthdate"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Birthdate: 1/1/2005"
+                            android:text="Birthdate: -"
                             android:fontFamily="@font/lexend"
                             android:textSize="12sp"
                             android:textColor="@color/colorText"/>
@@ -114,7 +114,7 @@
                     android:padding="24dp">
 
                     <TextView
-                        android:id="@+id/tvBadgesHeader"
+                        android:id="@+id/tvDynamicHeader"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Badges"
@@ -124,74 +124,102 @@
                         android:textColor="@color/colorText"
                         android:layout_marginBottom="16dp"/>
 
+                    <TextView
+                        android:id="@+id/tvEmptyState"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No items to display."
+                        android:gravity="center"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="@color/colorSubtleText"
+                        android:visibility="gone"/>
+
                     <LinearLayout
-                        android:id="@+id/badgesContainer"
+                        android:id="@+id/llBadgesContainer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_horizontal">
+                        android:visibility="gone"
+                        android:baselineAligned="false"
+                        android:weightSum="3">
 
                         <LinearLayout
+                            android:id="@+id/llBadgeSlot1"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:orientation="vertical"
                             android:gravity="center"
-                            android:orientation="vertical">
+                            android:visibility="invisible">
                             <ImageView
+                                android:id="@+id/ivBadge1"
                                 android:layout_width="50dp"
-                                android:layout_height="50dp"
-                                android:src="@drawable/badge_firstace"/>
+                                android:layout_height="50dp" />
                             <TextView
+                                android:id="@+id/tvBadgeName1"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="First Ace!"
+                                android:layout_marginTop="4dp"
                                 android:fontFamily="@font/lexend"
                                 android:textSize="10sp"
                                 android:textColor="@color/colorText"
-                                android:layout_marginTop="4dp"/>
+                                android:gravity="center"/>
                         </LinearLayout>
 
                         <LinearLayout
+                            android:id="@+id/llBadgeSlot2"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:orientation="vertical"
                             android:gravity="center"
-                            android:orientation="vertical">
+                            android:visibility="invisible">
                             <ImageView
+                                android:id="@+id/ivBadge2"
                                 android:layout_width="50dp"
-                                android:layout_height="50dp"
-                                android:src="@drawable/badge_firsttimer"/>
+                                android:layout_height="50dp" />
                             <TextView
+                                android:id="@+id/tvBadgeName2"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="First-Timer"
+                                android:layout_marginTop="4dp"
                                 android:fontFamily="@font/lexend"
                                 android:textSize="10sp"
                                 android:textColor="@color/colorText"
-                                android:layout_marginTop="4dp"/>
+                                android:gravity="center"/>
                         </LinearLayout>
 
                         <LinearLayout
+                            android:id="@+id/llBadgeSlot3"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:orientation="vertical"
                             android:gravity="center"
-                            android:orientation="vertical">
+                            android:visibility="invisible">
                             <ImageView
+                                android:id="@+id/ivBadge3"
                                 android:layout_width="50dp"
-                                android:layout_height="50dp"
-                                android:src="@drawable/badge_tripleace"/>
+                                android:layout_height="50dp" />
                             <TextView
+                                android:id="@+id/tvBadgeName3"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Triple Ace"
+                                android:layout_marginTop="4dp"
                                 android:fontFamily="@font/lexend"
                                 android:textSize="10sp"
                                 android:textColor="@color/colorText"
-                                android:layout_marginTop="4dp"/>
+                                android:gravity="center"/>
                         </LinearLayout>
-
                     </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/llCertificatesContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"/>
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

@@ -1,31 +1,22 @@
 package com.example.gr8math.Activity.TeacherModule.Lesson
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.ImageSpan
-import android.util.Base64
 import android.view.View
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
 import com.example.gr8math.R
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
 import com.example.gr8math.ViewModel.LessonContentViewModel
 import com.example.gr8math.ViewModel.LessonState
 import com.google.android.material.appbar.MaterialToolbar
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class LessonDetailActivity : AppCompatActivity() {
 
-    // Reuse the same ViewModel since it already has loadLesson()
     private val viewModel: LessonContentViewModel by viewModels()
 
     lateinit var loadingLayout: View
@@ -34,7 +25,9 @@ class LessonDetailActivity : AppCompatActivity() {
 
     private lateinit var tvWeek: TextView
     private lateinit var tvTitle: TextView
-    private lateinit var tvDescription: TextView
+
+    // The WebView engine
+    private lateinit var webViewContent: WebView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,12 +46,27 @@ class LessonDetailActivity : AppCompatActivity() {
         val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
         tvWeek = findViewById(R.id.tvWeek)
         tvTitle = findViewById(R.id.tvTitle)
-        tvDescription = findViewById(R.id.tvDescription)
+
         loadingLayout = findViewById(R.id.loadingLayout)
         loadingProgress = findViewById(R.id.loadingProgressBg)
         loadingText = findViewById(R.id.loadingText)
 
+        webViewContent = findViewById(R.id.webViewContent)
+        setupWebView()
+
         toolbar.setNavigationOnClickListener { finish() }
+    }
+
+    private fun setupWebView() {
+        webViewContent.settings.apply {
+            javaScriptEnabled = true // Required for Video players and PDF iframes to work
+            domStorageEnabled = true
+            useWideViewPort = true
+            loadWithOverviewMode = true
+        }
+        // Keeps videos and PDFs inside the app instead of launching external browsers
+        webViewContent.webViewClient = WebViewClient()
+        webViewContent.webChromeClient = WebChromeClient()
     }
 
     private fun setupObservers() {
@@ -70,13 +78,12 @@ class LessonDetailActivity : AppCompatActivity() {
                 is LessonState.ContentLoaded -> {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
 
-                    // FIX: Access fields from the 'lesson' object
                     val lesson = state.lesson
                     tvWeek.text = "Week ${lesson.weekNumber}"
                     tvTitle.text = lesson.lessonTitle
 
-                    // Use the existing content renderer
-                    displayLazyContent(tvDescription, lesson.lessonContent)
+                    // Load HTML into WebView
+                    displayHtmlInWebView(lesson.lessonContent)
                 }
                 is LessonState.Error -> {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
@@ -87,83 +94,52 @@ class LessonDetailActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Renders text containing Base64 images or Image URLs into the TextView.
-     */
-    private fun displayLazyContent(tv: TextView, content: String) {
-        lifecycleScope.launch(Dispatchers.Default) {
-            val spannable = SpannableStringBuilder()
-
-            // Match BOTH Base64 and URL
-            val regex = """(data:image/[^;]+;base64,[A-Za-z0-9+/=]+|https?://[^\s]+?\.(png|jpg|jpeg|webp))""".toRegex()
-            val matches = regex.findAll(content).toList()
-
-            var lastIndex = 0
-
-            for (match in matches) {
-                val start = match.range.first
-                val end = match.range.last + 1
-
-                if (start > lastIndex) {
-                    spannable.append(content.substring(lastIndex, start))
-                }
-                lastIndex = end
-
-                val spanStart = spannable.length
-                spannable.append("\uFFFC\n\n")
-
-                withContext(Dispatchers.Main) {
-                    tv.text = spannable
-                }
-
-                val token = match.value
-                val bitmap = if (token.startsWith("data:image")) {
-                    loadBase64Image(token)
-                } else {
-                    loadUrlImage(token)
-                }
-
-                if (bitmap != null) {
-                    withContext(Dispatchers.Main) {
-                        spannable.setSpan(
-                            ImageSpan(tv.context, bitmap),
-                            spanStart,
-                            spanStart + 1,
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                        )
-                        tv.text = spannable
+    private fun displayHtmlInWebView(htmlContent: String) {
+        // We inject CSS to make sure the text uses your brand styling,
+        // and that images, videos, and PDFs perfectly fit the width of the screen.
+        val formattedHtml = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+                <style>
+                    body {
+                        font-family: 'sans-serif';
+                        font-size: 16px;
+                        color: #1F2937;
+                        line-height: 1.6;
+                        padding: 0px;
+                        margin: 0px;
                     }
-                }
-            }
+                    img, video {
+                        max-width: 100%;
+                        height: auto;
+                        border-radius: 8px;
+                        margin-top: 12px;
+                        margin-bottom: 12px;
+                    }
+                    iframe {
+                        width: 100%;
+                        height: 500px;
+                        border-radius: 8px;
+                        margin-top: 12px;
+                        margin-bottom: 12px;
+                        border: 1px solid #E5E7EB;
+                    }
+                    h1, h2, h3, h4, h5 {
+                        color: #111827;
+                        margin-top: 16px;
+                        margin-bottom: 8px;
+                    }
+                </style>
+            </head>
+            <body>
+                $htmlContent
+            </body>
+            </html>
+        """.trimIndent()
 
-            if (lastIndex < content.length) {
-                spannable.append(content.substring(lastIndex))
-            }
-            withContext(Dispatchers.Main) {
-                tv.text = spannable
-            }
-        }
-    }
-
-    private fun loadBase64Image(base64Image: String): Bitmap? {
-        return try {
-            val pureBase64 = base64Image.substringAfter("base64,")
-            val bytes = Base64.decode(pureBase64, Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun loadUrlImage(url: String): Bitmap? {
-        return try {
-            Glide.with(this@LessonDetailActivity)
-                .asBitmap()
-                .load(url)
-                .submit()
-                .get()
-        } catch (e: Exception) {
-            null
-        }
+        // Load the styled HTML into the view
+        webViewContent.loadDataWithBaseURL(null, formattedHtml, "text/html", "UTF-8", null)
     }
 }

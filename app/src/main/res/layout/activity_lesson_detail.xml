@@ -7,7 +7,6 @@
     android:background="@color/colorLight"
     tools:context=".Activity.TeacherModule.Lesson.LessonDetailActivity">
 
-
     <View
         android:id="@+id/loadingLayout"
         android:layout_width="0dp"
@@ -35,7 +34,6 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="gone">
 
-        <!-- Circular progress indicator centered inside the box -->
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/loadingSpinner"
             android:layout_width="50dp"
@@ -52,7 +50,6 @@
             app:trackCornerRadius="3dp"
             app:trackThickness="6dp" />
 
-
         <TextView
             android:id="@+id/loadingText"
             android:layout_width="wrap_content"
@@ -66,8 +63,8 @@
             app:layout_constraintStart_toEndOf="@+id/loadingSpinner"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="HardcodedText" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
+
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
@@ -82,51 +79,47 @@
         app:titleTextColor="@color/colorLight"
         tools:title="Lesson Title" />
 
-    <ScrollView
+    <TextView
+        android:id="@+id/tvWeek"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:fontFamily="@font/lexend"
+        android:textColor="@color/colorText"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar" />
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        android:fontFamily="@font/lexend"
+        android:textColor="@color/colorText"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvWeek" />
+
+    <WebView
+        android:id="@+id/webViewContent"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/tvWeek"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/lexend"
-                android:textColor="@color/colorText"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/lexend"
-                android:textColor="@color/colorText"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:fontFamily="@font/lexend"
-                android:scrollbars="vertical"
-                android:textColor="@color/colorText"
-                android:textSize="16sp" />
-
-
-
-        </LinearLayout>
-    </ScrollView>
+        app:layout_constraintTop_toBottomOf="@id/tvTitle" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

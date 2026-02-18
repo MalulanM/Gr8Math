@@ -46,8 +46,8 @@ class DLLStep2Activity : AppCompatActivity() {
 
     private var isEditMode = false
     private var dllMainId: Int = -1
-    private var dailyEntryId: Int = -1 // Target specific daily entry
-    private var originalReferenceId: Int = -1 // Target specific reference record
+    private var dailyEntryId: Int = -1
+    private var originalReferenceId: Int = -1
     private var sectionTitle: String? = null
 
     // List to keep track of all active day cards
@@ -135,7 +135,6 @@ class DLLStep2Activity : AppCompatActivity() {
 
         manager.etDate.setText(prefillDate)
 
-        // strictly disable date editing because references belong to a fixed daily entry
         manager.etDate.isEnabled = false
         manager.etDate.isFocusable = false
         manager.etDate.isClickable = false
@@ -166,7 +165,6 @@ class DLLStep2Activity : AppCompatActivity() {
         return isValid
     }
 
-    // 🌟 SUPABASE UPDATE LOGIC (Strictly Updates) 🌟
     private fun updateResourcesInSupabase() {
         if (dailyEntryId == -1 || originalReferenceId == -1) {
             Toast.makeText(this, "Error: Required IDs are missing.", Toast.LENGTH_LONG).show()

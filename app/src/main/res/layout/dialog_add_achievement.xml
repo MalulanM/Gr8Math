@@ -2,6 +2,7 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="16dp"
@@ -117,6 +118,45 @@
             android:layout_marginTop="24dp"
             android:text="Upload Certificate"
             app:backgroundTint="@color/colorMatisse"/>
+
+        <RelativeLayout
+            android:id="@+id/rlCertPreviewContainer"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/til_stroke">
+
+                <ImageView
+                    android:id="@+id/ivDialogCertPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <ImageView
+                android:id="@+id/btnRemoveCertPreview"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:layout_margin="8dp"
+                android:background="@drawable/circle_background_white"
+                android:elevation="4dp"
+                android:padding="6dp"
+                android:src="@drawable/ic_close"
+                app:tint="@color/colorDarkCyan"
+                android:clickable="true"
+                android:focusable="true" />
+        </RelativeLayout>
 
         <TextView
             android:id="@+id/btnSaveAchievement"

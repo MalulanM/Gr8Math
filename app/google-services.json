@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "567238073202",
+    "project_id": "gr8math-4337f",
+    "storage_bucket": "gr8math-4337f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:567238073202:android:6df1756590011d54279beb",
+        "android_client_info": {
+          "package_name": "com.example.gr8math"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPYvsoROX-zkaVIPJzRzf2fNeJ943_RFk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

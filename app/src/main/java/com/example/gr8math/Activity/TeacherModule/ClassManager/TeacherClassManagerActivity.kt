@@ -18,6 +18,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -27,6 +28,7 @@ import com.example.gr8math.Activity.TeacherModule.Profile.TeacherProfileActivity
 import com.example.gr8math.Activity.TermsAndConditionsActivity
 import com.example.gr8math.Adapter.ClassAdapter
 import com.example.gr8math.Data.Model.ClassUiModel
+import com.example.gr8math.Helper.NotificationMethods
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.Model.TeacherClass
 import com.example.gr8math.R
@@ -68,6 +70,14 @@ class TeacherClassManagerActivity : AppCompatActivity() {
     lateinit var loadingProgress: View
     lateinit var loadingText: TextView
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            NotificationMethods.registerToken(id, lifecycleScope)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_class_manager_teacher)
@@ -84,11 +94,19 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         initViews()
         setupListeners()
         setupObservers()
+        NotificationMethods.handleNotificationIntent(this, intent, id, role)
 
         if (id > 0) {
             viewModel.loadClasses(id, role)
             viewModel.loadHistory(id)
+            NotificationMethods.setupNotifications(this, id, requestPermissionLauncher, lifecycleScope)
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        NotificationMethods.handleNotificationIntent(this, intent, id, role)
     }
 
     private fun initViews() {
@@ -314,12 +332,14 @@ class TeacherClassManagerActivity : AppCompatActivity() {
     }
 
     private fun logout() {
-        val preferences = getSharedPreferences("user_session", MODE_PRIVATE)
-        preferences.edit().clear().apply()
-        CurrentCourse.userId = 0
-        val intent = Intent(this, AppLoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
+        NotificationMethods.removeTokenOnLogout(id, lifecycleScope) {
+            val preferences = getSharedPreferences("user_session", MODE_PRIVATE)
+            preferences.edit().clear().apply()
+
+            val intent = Intent(this, AppLoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        }
     }
 }

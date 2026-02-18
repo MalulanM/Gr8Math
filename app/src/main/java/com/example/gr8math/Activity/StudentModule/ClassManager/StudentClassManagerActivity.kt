@@ -20,10 +20,12 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.gr8math.Activity.LoginAndRegister.AppLoginActivity
 import com.example.gr8math.Activity.StudentModule.Profile.ProfileActivity
 import com.example.gr8math.Activity.StudentModule.StudentAddClassActivity
+import com.example.gr8math.Helper.NotificationMethods
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
 import com.example.gr8math.Utils.ShowToast
@@ -50,6 +52,14 @@ class StudentClassManagerActivity : AppCompatActivity() {
     private var profilePic: String? = null
     private var name: String = ""
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            NotificationMethods.registerToken(id, lifecycleScope)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_class_manager_student)
@@ -58,11 +68,19 @@ class StudentClassManagerActivity : AppCompatActivity() {
         initData()
         setupListeners()
         setupObservers()
+        NotificationMethods.handleNotificationIntent(this, intent, id, role)
 
 
         if (id > 0) {
             viewModel.loadClasses(id, role)
+            NotificationMethods.setupNotifications(this, id, requestPermissionLauncher, lifecycleScope)
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        NotificationMethods.handleNotificationIntent(this, intent, id, role)
     }
 
     private fun initViews() {
@@ -189,12 +207,14 @@ class StudentClassManagerActivity : AppCompatActivity() {
     }
 
     private fun logout() {
-        val preferences = getSharedPreferences("user_session", MODE_PRIVATE)
-        preferences.edit().clear().apply()
-        CurrentCourse.userId = 0
-        val intent = Intent(this, AppLoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
+        NotificationMethods.removeTokenOnLogout(id, lifecycleScope) {
+            val preferences = getSharedPreferences("user_session", MODE_PRIVATE)
+            preferences.edit().clear().apply()
+
+            val intent = Intent(this, AppLoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        }
     }
 }

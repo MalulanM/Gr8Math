@@ -7,83 +7,59 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.example.gr8math.NotificationActivity
+import com.example.gr8math.Activity.LoginAndRegister.AppLoginActivity
+import com.example.gr8math.R
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.example.gr8math.Data.Api.ConnectURL
-import okhttp3.ResponseBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
-class MyFirebaseService : FirebaseMessagingService() {
+class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        super.onMessageReceived(remoteMessage)
 
-        val title = remoteMessage.notification?.title ?: "New Notification"
-        val body = remoteMessage.notification?.body ?: ""
+        // 1. Extract Title and Body from the Notification payload
+        val title = remoteMessage.notification?.title ?: "Gr8Math Update"
+        val body = remoteMessage.notification?.body ?: "Check your dashboard for details."
 
-        // Show the notification
-        showNotification(title, body)
+        // 2. Extract 'type' and 'meta' from the Data payload (for navigation later)
+        val type = remoteMessage.data["type"] ?: "general"
+        val meta = remoteMessage.data["meta"] ?: "{}"
+
+        showDeviceNotification(title, body, type, meta)
     }
 
-    private fun showNotification(title: String, message: String) {
-        val channelId = "class_time_channel"
-
-        // Open NotificationActivity when tapped
-        val intent = Intent(this, NotificationActivity::class.java).apply {
-            putExtra("title", title)
-            putExtra("message", message)
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        }
-
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
+    private fun showDeviceNotification(title: String, message: String, type: String, meta: String) {
+        val channelId = "gr8math_notifications"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Create notification channel for Android O+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "Notifications",
-                NotificationManager.IMPORTANCE_HIGH
-            )
+            val channel = NotificationChannel(channelId, "Gr8Math Alerts", NotificationManager.IMPORTANCE_HIGH)
             notificationManager.createNotificationChannel(channel)
         }
 
+        // When the user taps the notification, we open the Login activity (or Dashboard)
+        // You can use 'type' and 'meta' to route them to specific pages later
+        val intent = Intent(this, AppLoginActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("notif_type", type)
+            putExtra("notif_meta", meta)
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            this, System.currentTimeMillis().toInt(), intent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notifications_green)
             .setContentTitle(title)
             .setContentText(message)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .build()
 
         notificationManager.notify(System.currentTimeMillis().toInt(), notification)
-    }
-
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-
-        val prefs = getSharedPreferences("user_session", Context.MODE_PRIVATE)
-        val userId = prefs.getInt("user_id", -1)
-
-        if (userId != -1) {
-            // Send the new token to the backend
-            ConnectURL.api.storeDeviceToken(userId, token)
-                .enqueue(object : Callback<ResponseBody> {
-                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                        // Optional: token successfully sent
-                    }
-
-                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                        // Optional: log failure
-                        t.printStackTrace()
-                    }
-                })
-        }
     }
 }

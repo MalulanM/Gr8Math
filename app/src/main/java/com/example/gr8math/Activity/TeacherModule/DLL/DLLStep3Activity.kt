@@ -48,17 +48,16 @@ class DLLStep3Activity : AppCompatActivity() {
 
     private var isEditMode = false
     private var dllMainId: Int = -1
-    private var dailyEntryId: Int = -1 // Target specific daily entry
+    private var dailyEntryId: Int = -1
     private var sectionTitle: String? = null
 
-    // List to track dynamic cards
     private val dayManagers = mutableListOf<ProcedureDayManager>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dll_step3)
 
-        // 🌟 RETRIEVE EDIT INFO
+
         isEditMode = intent.getBooleanExtra(DLLEditActivity.EXTRA_MODE_EDIT, false)
         dllMainId = intent.getIntExtra(DLLEditActivity.EXTRA_DLL_MAIN_ID, -1)
         dailyEntryId = intent.getIntExtra("EXTRA_DAILY_ENTRY_ID", -1)
@@ -69,7 +68,7 @@ class DLLStep3Activity : AppCompatActivity() {
         btnAddDay = findViewById(R.id.btnAddDay)
         btnNext = findViewById(R.id.btnNext)
 
-        // 1. Setup Back Navigation (Toolbar & System)
+
         toolbar.setNavigationOnClickListener { handleBackPress() }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -77,7 +76,7 @@ class DLLStep3Activity : AppCompatActivity() {
             }
         })
 
-        // 2. Date Constraints
+
         availableFrom = intent.getStringExtra("EXTRA_FROM")
         availableUntil = intent.getStringExtra("EXTRA_UNTIL")
         val sdf = SimpleDateFormat("MM/dd/yyyy", Locale.US)
@@ -98,7 +97,7 @@ class DLLStep3Activity : AppCompatActivity() {
             maxDateMillis = Long.MAX_VALUE
         }
 
-        // 3. Setup UI based on mode
+
         if (isEditMode) {
             toolbar.title = sectionTitle ?: "Edit Procedures"
             btnNext.text = "SAVE"
@@ -110,7 +109,6 @@ class DLLStep3Activity : AppCompatActivity() {
             addDay()
         }
 
-        // 4. Listeners
         btnAddDay.setOnClickListener { addDay() }
 
         btnNext.setOnClickListener {
@@ -127,10 +125,9 @@ class DLLStep3Activity : AppCompatActivity() {
     private fun prefillSingleCardIfEditing() {
         val manager = dayManagers.firstOrNull() ?: return
 
-        // Fill data passed from DLLProceduresFragment
         manager.etDate.setText(intent.getStringExtra("EXTRA_ENTRY_DATE") ?: "")
 
-        // 🌟 Strictly disable date editing since procedure is tied to a specific daily entry row
+
         manager.etDate.isEnabled = false
         manager.etDate.isFocusable = false
         manager.etDate.isClickable = false
@@ -151,7 +148,6 @@ class DLLStep3Activity : AppCompatActivity() {
         return dayManagers.firstOrNull()?.isValid() ?: false
     }
 
-    // 🌟 SUPABASE UPDATE LOGIC 🌟
     private fun updateProceduresInSupabase() {
         if (dailyEntryId == -1) {
             Toast.makeText(this, "Error: Cannot save, Daily Entry ID missing.", Toast.LENGTH_LONG).show()

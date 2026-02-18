@@ -34,7 +34,6 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="gone">
 
-        <!-- Circular progress indicator centered inside the box -->
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/loadingSpinner"
             android:layout_width="50dp"
@@ -51,7 +50,6 @@
             app:trackCornerRadius="3dp"
             app:trackThickness="6dp" />
 
-
         <TextView
             android:id="@+id/loadingText"
             android:layout_width="wrap_content"
@@ -65,7 +63,6 @@
             app:layout_constraintStart_toEndOf="@+id/loadingSpinner"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="HardcodedText" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.appbar.MaterialToolbar
@@ -82,18 +79,45 @@
         app:titleTextAppearance="@style/TextAppearance.Gr8.ToolbarTitle"
         app:titleTextColor="@color/colorText" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnAddMedia"
-        style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
-        android:layout_width="wrap_content"
+    <include
+        android:id="@+id/editorToolbar"
+        layout="@layout/richtext_editor"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:text="@string/add_media"
-        android:textColor="@color/colorDarkCyan"
-        app:icon="@drawable/ic_add_image"
-        app:iconTint="@color/colorDarkCyan"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="4dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar" /> <com.google.android.material.card.MaterialCardView
+    android:id="@+id/cardContent"
+    android:layout_width="0dp"
+    android:layout_height="0dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="16dp"
+    app:cardBackgroundColor="@color/colorAccent"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:layout_constraintBottom_toTopOf="@id/btnSave"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@id/editorToolbar">
+
+    <EditText
+        android:id="@+id/etLessonContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:fontFamily="@font/lexend"
+        android:gravity="top|start"
+        android:inputType="textMultiLine|textCapSentences"
+        android:padding="16dp"
+        android:textColor="@color/colorText"
+        android:textColorHint="@color/colorSubtleText"
+        android:textSize="16sp" />
+
+</com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSave"
@@ -107,36 +131,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardContent"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        app:cardBackgroundColor="@color/colorAccent"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="4dp"
-        app:layout_constraintBottom_toTopOf="@id/btnSave"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnAddMedia">
-
-        <EditText
-            android:id="@+id/etLessonContent"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/transparent"
-            android:fontFamily="@font/lexend"
-            android:gravity="top|start"
-            android:inputType="textMultiLine|textCapSentences"
-            android:padding="16dp"
-            android:textColor="@color/colorText"
-            android:textColorHint="@color/colorSubtleText"
-            android:textSize="16sp" />
-
-    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

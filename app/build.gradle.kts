@@ -5,7 +5,9 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-}
+    id("com.google.gms.google-services")
+
+    }
 
 android {
     namespace = "com.example.gr8math"
@@ -92,9 +94,17 @@ dependencies {
     implementation(libs.supabase.postgrest)
     implementation(libs.supabase.auth)
     implementation(libs.ktor.client.android)
+    implementation("io.github.jan-tennert.supabase:storage-kt")
+
+    //Tigris
+    implementation("aws.sdk.kotlin:s3:1.0.0")
+
+    implementation("com.github.skydoves:colorpickerview:2.2.4")
 
     // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
     implementation("com.google.firebase:firebase-messaging:24.1.0")
+    implementation("com.google.firebase:firebase-analytics")
     implementation(libs.protolite.well.known.types)
 
     // Testing

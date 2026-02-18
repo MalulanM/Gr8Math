@@ -93,7 +93,7 @@ class StudentGradesActivity : AppCompatActivity() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_assessment_details, null)
         val dialog = MaterialAlertDialogBuilder(this).setView(dialogView).create()
 
-        dialogView.findViewById<TextView>(R.id.tvDetailNumber).text = "Assessment ${scoreItem.assessmentNumber}"
+        dialogView.findViewById<TextView>(R.id.tvDetailNumber).text = "${scoreItem.assessmentNumber}"
         dialogView.findViewById<TextView>(R.id.tvDetailTitle).text = scoreItem.title
 
         // Format Score (Double to String, removing unnecessary decimals)

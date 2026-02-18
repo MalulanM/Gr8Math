@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorLight">
+
     <View
         android:id="@+id/loadingLayout"
         android:layout_width="0dp"
@@ -19,7 +20,6 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="gone" />
 
-    <!-- White box for progress -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/loadingProgressBg"
         android:layout_width="180dp"
@@ -34,7 +34,6 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="gone">
 
-        <!-- Circular progress indicator centered inside the box -->
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/loadingSpinner"
             android:layout_width="50dp"
@@ -51,7 +50,6 @@
             app:trackCornerRadius="3dp"
             app:trackThickness="6dp" />
 
-
         <TextView
             android:id="@+id/loadingText"
             android:layout_width="wrap_content"
@@ -64,8 +62,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/loadingSpinner"
             app:layout_constraintTop_toTopOf="parent" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
+
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -107,17 +105,19 @@
                     android:paddingStart="24dp"
                     android:paddingEnd="24dp"
                     android:paddingBottom="24dp"
-                    android:paddingTop="70dp"> <TextView
-                    android:id="@+id/tvChangePassword"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:text="@string/change_password"
-                    android:textColor="@color/colorMatisse"
-                    android:fontFamily="@font/lexend"
-                    android:textStyle="bold"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="24dp"/>
+                    android:paddingTop="70dp">
+
+                    <TextView
+                        android:id="@+id/tvChangePassword"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:text="@string/change_password"
+                        android:textColor="@color/colorMatisse"
+                        android:fontFamily="@font/lexend"
+                        android:textStyle="bold"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="24dp"/>
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -141,7 +141,6 @@
                                 android:background="@drawable/edit_text_underline"
                                 android:fontFamily="@font/lexend"
                                 android:paddingBottom="12dp"
-                                android:text="Juan"
                                 android:textColor="@color/colorText"
                                 android:textSize="18sp"
                                 android:textStyle="normal" />
@@ -181,7 +180,6 @@
                                 android:background="@drawable/edit_text_underline"
                                 android:fontFamily="@font/lexend"
                                 android:paddingBottom="12dp"
-                                android:text="Dela Cruz"
                                 android:textColor="@color/colorText"
                                 android:textSize="18sp"
                                 android:textStyle="normal" />
@@ -221,7 +219,6 @@
                                 android:background="@drawable/edit_text_underline"
                                 android:fontFamily="@font/lexend"
                                 android:paddingBottom="12dp"
-                                android:text="123456123456"
                                 android:textColor="@color/colorText"
                                 android:textSize="18sp"
                                 android:textStyle="normal" />
@@ -271,12 +268,9 @@
                                 android:id="@+id/etGender"
                                 android:layout_width="match_parent"
                                 android:layout_height="48dp"
-                                android:contentDescription="@string/hint_gender"
                                 android:fontFamily="@font/lexend"
-                                android:importantForAccessibility="yes"
                                 android:inputType="none"
                                 android:padding="10dp"
-                                android:text="Male"
                                 android:textColor="@color/colorText"
                                 android:textSize="16sp" />
                         </com.google.android.material.textfield.TextInputLayout>
@@ -318,7 +312,6 @@
                                 android:clickable="true"
                                 android:focusable="false"
                                 android:fontFamily="@font/lexend"
-                                android:text="1/1/1995"
                                 android:padding="0dp"
                                 android:textSize="16sp"
                                 android:inputType="none"
@@ -357,9 +350,13 @@
                                 android:layout_alignParentEnd="true"
                                 android:src="@drawable/ic_edit"
                                 app:tint="@color/colorDarkCyan"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:clickable="true"
+                                android:focusable="true"
                                 android:padding="4dp"/>
 
                             <TextView
+                                android:id="@+id/tvNoBadges"
                                 android:layout_width="match_parent"
                                 android:layout_height="100dp"
                                 android:layout_below="@id/tvBadgesLabel"
@@ -367,7 +364,103 @@
                                 android:text="@string/no_badges_displayed"
                                 android:fontFamily="@font/lexend"
                                 android:textColor="@color/colorSubtleText"
-                                android:textSize="14sp"/>
+                                android:textSize="14sp"
+                                android:visibility="visible"/>
+
+                            <LinearLayout
+                                android:id="@+id/llBadgeContainer"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_below="@id/tvBadgesLabel"
+                                android:layout_marginTop="12dp"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:visibility="gone"
+                                android:baselineAligned="false"
+                                android:weightSum="3">
+
+                                <LinearLayout
+                                    android:id="@+id/llBadgeSlot1"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:gravity="center"
+                                    android:visibility="invisible">
+                                    <ImageView
+                                        android:id="@+id/ivBadge1"
+                                        android:layout_width="60dp"
+                                        android:layout_height="60dp"
+                                        android:scaleType="fitCenter" />
+                                    <TextView
+                                        android:id="@+id/tvBadgeName1"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:fontFamily="@font/lexend"
+                                        android:textSize="10sp"
+                                        android:textStyle="bold"
+                                        android:textColor="@color/colorText"
+                                        android:gravity="center"
+                                        android:maxLines="2"
+                                        android:ellipsize="end"/>
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:id="@+id/llBadgeSlot2"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:gravity="center"
+                                    android:visibility="invisible">
+                                    <ImageView
+                                        android:id="@+id/ivBadge2"
+                                        android:layout_width="60dp"
+                                        android:layout_height="60dp"
+                                        android:scaleType="fitCenter" />
+                                    <TextView
+                                        android:id="@+id/tvBadgeName2"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:fontFamily="@font/lexend"
+                                        android:textSize="10sp"
+                                        android:textStyle="bold"
+                                        android:textColor="@color/colorText"
+                                        android:gravity="center"
+                                        android:maxLines="2"
+                                        android:ellipsize="end"/>
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:id="@+id/llBadgeSlot3"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:gravity="center"
+                                    android:visibility="invisible">
+                                    <ImageView
+                                        android:id="@+id/ivBadge3"
+                                        android:layout_width="60dp"
+                                        android:layout_height="60dp"
+                                        android:scaleType="fitCenter" />
+                                    <TextView
+                                        android:id="@+id/tvBadgeName3"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:fontFamily="@font/lexend"
+                                        android:textSize="10sp"
+                                        android:textStyle="bold"
+                                        android:textColor="@color/colorText"
+                                        android:gravity="center"
+                                        android:maxLines="2"
+                                        android:ellipsize="end"/>
+                                </LinearLayout>
+
+                            </LinearLayout>
                         </RelativeLayout>
                     </com.google.android.material.card.MaterialCardView>
 
