@@ -140,13 +140,13 @@ class AppLoginActivity : AppCompatActivity() {
             "teacher" -> Intent(this, TeacherClassManagerActivity::class.java)
             else -> Intent(this, AppLoginActivity::class.java)
         }
-
         nextIntent.putExtra("toast_msg", "Welcome back, ${user.firstName}")
         nextIntent.putExtra("id", user.id)
         nextIntent.putExtra("role", user.roles)
         nextIntent.putExtra("name", user.firstName)
         nextIntent.putExtra("profilePic", user.profilePic)
-
+        nextIntent.putExtra("notif_type", intent.getStringExtra("notif_type"))
+        nextIntent.putExtra("notif_meta", intent.getStringExtra("notif_meta"))
         startActivity(nextIntent)
         finish()
     }
