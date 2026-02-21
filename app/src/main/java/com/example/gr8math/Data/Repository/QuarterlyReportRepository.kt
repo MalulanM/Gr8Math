@@ -14,10 +14,20 @@ class QuarterlyReportRepository {
 
     private val db = SupabaseService.client
 
-    suspend fun getQuarterlyReport(courseId: Int, studentId: Int, quarter: Int): Result<QuarterlyReportData> {
+    // 🌟 NEW: The Monthly Report Function!
+    suspend fun getMonthlyReport(courseId: Int, studentId: Int, month: Int, year: Int): Result<QuarterlyReportData> {
         return withContext(Dispatchers.IO) {
             try {
-                // Fetch Data joined with assessment_created
+                // 1. Figure out the exact start and end dates for the database filter
+                val monthStr = month.toString().padStart(2, '0')
+                val startDate = "$year-$monthStr-01" // e.g., "2026-02-01"
+
+                val nextMonth = if (month == 12) 1 else month + 1
+                val nextYear = if (month == 12) year + 1 else year
+                val nextMonthStr = nextMonth.toString().padStart(2, '0')
+                val endDate = "$nextYear-$nextMonthStr-01" // e.g., "2026-03-01"
+
+                // 2. Fetch Data joined with assessment_created
                 val rawList = db.from("assessment_record")
                     .select(
                         columns = Columns.raw("""
@@ -30,12 +40,13 @@ class QuarterlyReportRepository {
                         filter {
                             eq("student_id", studentId)
                             eq("assessment_created.course_id", courseId)
-                            eq("assessment_created.assessment_quarter", quarter) // Filter by Quarter here
+                            gte("date_accomplished", startDate)
+                            lt("date_accomplished", endDate)
                         }
                         order("assessment_created(assessment_number)", Order.ASCENDING)
                     }.decodeList<ReportRecordRes>()
 
-                // Calculate Totals and Map to UI Model
+
                 var totalScore = 0.0
                 var totalItems = 0
 

@@ -190,7 +190,8 @@ class StudentClassManagerActivity : AppCompatActivity() {
             startActivity(Intent(this, ProfileActivity::class.java)); dialog.dismiss()
         }
         dialogView.findViewById<View>(R.id.btnLogout).setOnClickListener {
-            dialog.dismiss(); logout()
+            dialog.dismiss()
+            UIUtils.performLogout(this, CurrentCourse.courseId)
         }
 
         // Window config
@@ -206,15 +207,4 @@ class StudentClassManagerActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun logout() {
-        NotificationMethods.removeTokenOnLogout(id, lifecycleScope) {
-            val preferences = getSharedPreferences("user_session", MODE_PRIVATE)
-            preferences.edit().clear().apply()
-
-            val intent = Intent(this, AppLoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            finish()
-        }
-    }
 }

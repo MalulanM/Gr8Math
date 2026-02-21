@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gr8math.Activity.StudentModule.Assessment.AssessmentResultActivity
+import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
@@ -112,6 +113,8 @@ class TakeAssessmentActivity : AppCompatActivity() {
                     // Go to Results
                     val intent = Intent(this, AssessmentResultActivity::class.java)
                     intent.putExtra("assessment_id", viewModel.assessment?.id)
+                    intent.putExtra("student_id", CurrentCourse.userId)
+                    intent.putExtra("is_newly_completed", true)
                     startActivity(intent)
                     finish()
                 }

@@ -5,13 +5,13 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.gr8math.Activity.TeacherModule.DLL.DLLViewActivity
 import com.example.gr8math.Activity.TeacherModule.StudentScoresActivity
 import com.example.gr8math.Activity.TeacherModule.ClassManager.TeacherClassPageActivity
 import com.example.gr8math.Activity.TeacherModule.DLL.DLLViewActivityMain
@@ -32,38 +32,38 @@ class TeacherNotificationsActivity : AppCompatActivity() {
     private lateinit var adapter: TeacherNotificationAdapter
     private lateinit var bottomNav: BottomNavigationView
 
+    // 🌟 Global reference for the button
+    private lateinit var btnMarkAllRead: Button
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_notifications)
 
-
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<ImageView>(R.id.btnSettings).setOnClickListener { showSettingsDialog() }
 
+        btnMarkAllRead = findViewById(R.id.btnMarkAllRead)
 
+
+        btnMarkAllRead.visibility = View.GONE
         bottomNav = findViewById(R.id.bottom_navigation)
         bottomNav.selectedItemId = R.id.nav_notifications
         setupBottomNav()
-
 
         val rvNotifications = findViewById<RecyclerView>(R.id.rvNotifications)
         rvNotifications.layoutManager = LinearLayoutManager(this)
 
         adapter = TeacherNotificationAdapter(mutableListOf()) { item, position ->
-            // ON CLICK LOGIC
             if (!item.isRead) {
-                // 1. Visual Update
                 item.isRead = true
                 adapter.notifyItemChanged(position)
 
-                // 2. Backend Update
-                viewModel.markRead(item.id)
+                updateMarkAllButtonVisibility()
 
-                // 3. Badge Update
+                viewModel.markRead(item.id)
                 NotificationHelper.fetchUnreadCount(bottomNav)
             }
 
-            // 4. Navigate
             val intent = Intent(this, StudentScoresActivity::class.java).apply {
                 putExtra("EXTRA_STUDENT_ID", item.studentId)
                 putExtra("EXTRA_STUDENT_NAME", item.studentName)
@@ -73,40 +73,46 @@ class TeacherNotificationsActivity : AppCompatActivity() {
         }
         rvNotifications.adapter = adapter
 
-        // --- Mark All Read ---
-        findViewById<Button>(R.id.btnMarkAllRead).setOnClickListener {
+        btnMarkAllRead.setOnClickListener {
             val list = adapter.getList()
-            if (list.isEmpty()) return@setOnClickListener
+            val unreadIds = list.filter { !it.isRead }.map { it.id }
 
-            val ids = list.map { it.id }
+            if (unreadIds.isEmpty()) return@setOnClickListener
 
-            // 1. Optimistic Update
             list.forEach { it.isRead = true }
             adapter.notifyDataSetChanged()
 
-            // 2. Backend Update
-            viewModel.markAllRead(ids)
+            updateMarkAllButtonVisibility()
 
-            // 3. Badge Update
+            viewModel.markAllRead(unreadIds)
             NotificationHelper.fetchUnreadCount(bottomNav)
 
             ShowToast.showMessage(this, "All notifications marked as read")
         }
 
-        // --- Observe ViewModel ---
         viewModel.loadTeacherNotifications(CurrentCourse.userId, CurrentCourse.courseId)
 
         viewModel.teacherState.observe(this) { state ->
             when(state) {
-                is NotifState.Loading -> {}
+                is NotifState.Loading -> {
+                    btnMarkAllRead.visibility = View.GONE
+                }
                 is NotifState.Success -> {
                     adapter.updateList(state.data)
+                    updateMarkAllButtonVisibility()
                 }
                 is NotifState.Error -> {
+                    btnMarkAllRead.visibility = View.GONE
                     ShowToast.showMessage(this, state.message)
                 }
             }
         }
+    }
+
+
+    private fun updateMarkAllButtonVisibility() {
+        val hasUnread = adapter.getList().any { !it.isRead }
+        btnMarkAllRead.visibility = if (hasUnread) View.VISIBLE else View.GONE
     }
 
     private fun setupBottomNav() {

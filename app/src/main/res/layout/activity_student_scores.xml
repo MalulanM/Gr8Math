@@ -35,13 +35,13 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:padding="16dp"
-        app:layout_constraintBottom_toTopOf="@id/btnQuarterlyReport"
+        app:layout_constraintBottom_toTopOf="@id/btnMonthlyReport"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvStudentName" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnQuarterlyReport"
+        android:id="@+id/btnMonthlyReport"
         style="@style/Gr8ButtonStyle"
         android:layout_width="match_parent"
         android:layout_height="52dp"

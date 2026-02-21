@@ -3,6 +3,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.Manifest.permission.POST_NOTIFICATIONS"/>
 
     <application
         android:allowBackup="true"
@@ -96,11 +97,8 @@
 
         <activity
             android:name=".Activity.TeacherModule.Lesson.LessonContentActivity"
-            android:exported="true" android:theme="@style/Theme.Gr8Math" >
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
+            android:exported="true" android:theme="@style/Theme.Gr8Math"
+            android:windowSoftInputMode="adjustResize">
         </activity>
 
         <activity
@@ -180,7 +178,7 @@
             android:theme="@style/Theme.Gr8Math" />
 
         <activity
-            android:name=".Activity.StudentModule.Grades.QuarterlyReportActivity"
+            android:name=".Activity.StudentModule.Grades.MonthlyReportActivity"
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 

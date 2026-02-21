@@ -95,8 +95,6 @@ class LessonDetailActivity : AppCompatActivity() {
     }
 
     private fun displayHtmlInWebView(htmlContent: String) {
-        // We inject CSS to make sure the text uses your brand styling,
-        // and that images, videos, and PDFs perfectly fit the width of the screen.
         val formattedHtml = """
             <!DOCTYPE html>
             <html>
@@ -108,7 +106,9 @@ class LessonDetailActivity : AppCompatActivity() {
                         font-size: 16px;
                         color: #1F2937;
                         line-height: 1.6;
-                        padding: 0px;
+                        
+                        /* 🌟 FIX: Added 20px of padding to the left and right */
+                        padding: 0px 20px; 
                         margin: 0px;
                     }
                     img, video {
@@ -139,7 +139,6 @@ class LessonDetailActivity : AppCompatActivity() {
             </html>
         """.trimIndent()
 
-        // Load the styled HTML into the view
         webViewContent.loadDataWithBaseURL(null, formattedHtml, "text/html", "UTF-8", null)
     }
 }

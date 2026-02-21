@@ -13,7 +13,8 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.gr8math.Activity.StudentModule.Grades.QuarterlyReportActivity
+// 🌟 Make sure to create/rename your activity to MonthlyReportActivity!
+import com.example.gr8math.Activity.StudentModule.Grades.MonthlyReportActivity
 import com.example.gr8math.Data.Model.StudentScore
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
@@ -23,6 +24,7 @@ import com.example.gr8math.ViewModel.StudentScoresViewModel
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
@@ -47,10 +49,18 @@ class StudentScoresActivity : AppCompatActivity() {
         setupToolbar()
         findViewById<TextView>(R.id.tvStudentName).text = studentName
 
-        val btnQuarterlyReport = findViewById<Button>(R.id.btnQuarterlyReport)
-        btnQuarterlyReport.setOnClickListener {
-            val intent = Intent(this, QuarterlyReportActivity::class.java)
+        // 🌟 FIX: Switched to Monthly Report Logic
+        val btnMonthlyReport = findViewById<Button>(R.id.btnMonthlyReport)
+        btnMonthlyReport.setOnClickListener {
+            // Get the CURRENT month and year automatically
+            val calendar = Calendar.getInstance()
+            val currentMonth = calendar.get(Calendar.MONTH) + 1 // Calendar.MONTH starts at 0 (Jan), so we add 1
+            val currentYear = calendar.get(Calendar.YEAR)
+
+            val intent = Intent(this, MonthlyReportActivity::class.java)
             intent.putExtra("EXTRA_STUDENT_ID", studentId)
+            intent.putExtra("EXTRA_MONTH", currentMonth) // Pass the month (e.g., 2 for February)
+            intent.putExtra("EXTRA_YEAR", currentYear)   // Pass the year (e.g., 2026)
             startActivity(intent)
         }
 
@@ -153,27 +163,23 @@ class StudentScoresActivity : AppCompatActivity() {
     // --- REFINED DATE FORMATTING ---
     private fun formatDate(dateString: String): String {
         val formats = arrayOf(
-            "yyyy-MM-dd'T'HH:mm:ss",          // Matches your image sample
-            "yyyy-MM-dd'T'HH:mm:ssXXX",       // Supabase Default
-            "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",   // With Millis
-            "yyyy-MM-dd"                      // Short Date
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd'T'HH:mm:ssXXX",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+            "yyyy-MM-dd"
         )
 
         for (format in formats) {
             try {
                 val inputFormat = SimpleDateFormat(format, Locale.US)
-                // Supabase timestamps are in UTC
                 inputFormat.timeZone = TimeZone.getTimeZone("UTC")
 
-                // If the string is long (like your sample), we take the first 19 chars
-                // to match the "yyyy-MM-dd'T'HH:mm:ss" pattern perfectly.
                 val parseableString = if (dateString.length > 19) dateString.substring(0, 19) else dateString
 
                 val date = inputFormat.parse(parseableString)
                 if (date != null) {
-                    // Returns "Jan. 12, 2026"
                     val outputFormat = SimpleDateFormat("MMM. dd, yyyy", Locale.US)
-                    outputFormat.timeZone = TimeZone.getDefault() // Convert to your local time
+                    outputFormat.timeZone = TimeZone.getDefault()
                     return outputFormat.format(date)
                 }
             } catch (e: Exception) {
@@ -199,9 +205,8 @@ class StudentScoresActivity : AppCompatActivity() {
 
                 val date = inputFormat.parse(parseableString)
                 if (date != null) {
-                    // Returns "11:00 AM"
                     val outputFormat = SimpleDateFormat("h:mm a", Locale.US)
-                    outputFormat.timeZone = TimeZone.getDefault() // Local time conversion
+                    outputFormat.timeZone = TimeZone.getDefault()
                     return outputFormat.format(date).uppercase()
                 }
             } catch (e: Exception) {

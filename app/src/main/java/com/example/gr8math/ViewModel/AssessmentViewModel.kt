@@ -36,7 +36,7 @@ class AssessmentViewModel : ViewModel() {
     ) {
         _state.value = AssessmentState.Loading
 
-        // 1. Format Dates to ISO (Supabase requires YYYY-MM-DD HH:MM:SS)
+        // 1. Format Dates to ISO 8601 (Supabase strict requirement)
         val startTime = convertToIso(rawStartTime)
         val endTime = convertToIso(rawEndTime)
 
@@ -67,12 +67,19 @@ class AssessmentViewModel : ViewModel() {
         }
     }
 
+    // 🌟 FULLY IMPLEMENTED ISO FORMATTER
     private fun convertToIso(raw: String): String? {
         return try {
+            // Read the exact format from your UI text boxes
             val inputFormat = SimpleDateFormat("MM/dd/yy - hh:mm a", Locale.US)
             val date = inputFormat.parse(raw) ?: return null
 
-            val outputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+            // Format precisely to Supabase JSON requirements (adding 'T' and 'Z')
+            val outputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+
+            // Convert to UTC time so Supabase saves it accurately
+            outputFormat.timeZone = TimeZone.getTimeZone("UTC")
+
             outputFormat.format(date)
         } catch (e: Exception) {
             e.printStackTrace()

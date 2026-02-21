@@ -64,7 +64,7 @@ class StudentClassPageActivity : AppCompatActivity() {
             CurrentCourse.courseId = incomingCourseId
             CurrentCourse.currentRole = incomingRole ?: "student"
 
-            // 🌟 Ensures ViewModel knows the right Student ID!
+
             if (incomingUserId != -1) CurrentCourse.userId = incomingUserId
 
             if (incomingSectionName.isNullOrEmpty()) {

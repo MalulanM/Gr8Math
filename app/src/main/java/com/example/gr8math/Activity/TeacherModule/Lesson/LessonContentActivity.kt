@@ -82,6 +82,9 @@ class LessonContentActivity : AppCompatActivity() {
     // 🌟 DEFERRED UPLOAD QUEUE
     data class PendingMedia(val localUri: Uri, val mimeType: String, val fileName: String)
     private val mediaQueue = mutableMapOf<String, PendingMedia>()
+    // Views
+    private lateinit var editorToolbar: View
+    private lateinit var btnToggleFormat: MaterialButton
 
     private val pickMediaLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
@@ -114,6 +117,9 @@ class LessonContentActivity : AppCompatActivity() {
         loadingProgress = findViewById(R.id.loadingProgressBg)
         loadingText = findViewById(R.id.loadingText)
         tvFontSize = findViewById(R.id.action_font_size_text)
+        editorToolbar = findViewById(R.id.editorToolbar)
+        btnToggleFormat = findViewById(R.id.btnToggleFormat)
+        editorToolbar.visibility = View.GONE
     }
 
     private fun setupListeners() {
@@ -122,6 +128,16 @@ class LessonContentActivity : AppCompatActivity() {
 
         btnSave.setOnClickListener { showSaveConfirmationDialog() }
         toolbar.setNavigationOnClickListener { checkUnsavedContentAndGoBack() }
+
+        btnToggleFormat.setOnClickListener {
+            if (editorToolbar.visibility == View.VISIBLE) {
+                editorToolbar.visibility = View.GONE
+                btnToggleFormat.alpha = 1.0f // Make button fully solid when toolbar is hidden
+            } else {
+                editorToolbar.visibility = View.VISIBLE
+                btnToggleFormat.alpha = 0.5f // Fade the button slightly when toolbar is open
+            }
+        }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { checkUnsavedContentAndGoBack() }

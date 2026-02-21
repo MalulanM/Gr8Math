@@ -200,8 +200,8 @@
     <!-- Participants and Grades Page-->
     <string name="participants_title">Participants</string>
     <string name="scores_title">Scores</string>
-    <string name="quarterly_report_btn">Quarterly Completion Report</string>
-    <string name="quarterly_report_title">Quarterly Completion Report</string>
+    <string name="quarterly_report_btn">Monthly Completion Report</string>
+    <string name="quarterly_report_title">Monthly Completion Report</string>
     <string name="quarter_label">Quarter 1</string>
     <string name="generate_copy">Generate a copy</string>
 

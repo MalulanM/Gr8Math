@@ -63,7 +63,6 @@ class TeacherClassPageActivity : AppCompatActivity() {
         setupObservers()
 
         viewModel.loadContent()
-
         handleNotificationIntent(intent)
     }
 
@@ -84,7 +83,6 @@ class TeacherClassPageActivity : AppCompatActivity() {
             CurrentCourse.currentRole = incomingRole ?: "teacher"
             if (incomingUserId != -1) CurrentCourse.userId = incomingUserId
 
-
             if (incomingSectionName.isNullOrEmpty()) {
                 viewModel.fetchSectionName(incomingCourseId)
             } else {
@@ -104,13 +102,10 @@ class TeacherClassPageActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
-        // 1. Section Name Observer
         viewModel.sectionName.observe(this) { name ->
             toolbar.title = name
             CurrentCourse.sectionName = name
         }
-
-        // 2. Content Data Observer
         viewModel.state.observe(this) { state ->
             when (state) {
                 is ContentState.Loading -> parentLayout.removeAllViews()
@@ -122,18 +117,14 @@ class TeacherClassPageActivity : AppCompatActivity() {
 
     private fun handleNotificationIntent(intent: Intent?) {
         if (intent == null) return
-
         val type = intent.getStringExtra("notif_type")
         val metaString = intent.getStringExtra("notif_meta")
-
         val directLessonId = intent.getIntExtra("lessonId", -1)
 
         if (type != null && !metaString.isNullOrEmpty()) {
             try {
-                val metaJson = org.json.JSONObject(metaString)
                 if (type == "arrival") ShowToast.showMessage(this, "Class is starting!")
             } catch (e: Exception) { e.printStackTrace() }
-
             intent.removeExtra("notif_type")
             intent.removeExtra("notif_meta")
         } else if (directLessonId > 0) {
@@ -159,7 +150,6 @@ class TeacherClassPageActivity : AppCompatActivity() {
                         i.putExtra("lesson_id", item.id)
                         startActivity(i)
                     }
-
                     view.findViewById<ImageButton>(R.id.ibEditLesson).setOnClickListener {
                         showEditALessonDialog(item.weekNumber.toString(), item.title, item.id)
                     }
@@ -199,7 +189,6 @@ class TeacherClassPageActivity : AppCompatActivity() {
         NotificationHelper.fetchUnreadCount(bottomNav)
     }
 
-    // --- DIALOGS ---
     private fun showAddOptionsDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_teacher_add_options, null)
         val radioGroup = dialogView.findViewById<RadioGroup>(R.id.rgOptions)
@@ -261,6 +250,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    // 🌟 FULLY IMPLEMENTED UX LOCK LOGIC
     private fun showCreateAssessmentDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_create_assessment, null)
         val etNum = dialogView.findViewById<TextInputEditText>(R.id.etAssessmentNumber)
@@ -272,15 +262,98 @@ class TeacherClassPageActivity : AppCompatActivity() {
         val dialog = MaterialAlertDialogBuilder(this).setView(dialogView).setCancelable(false).create()
         dialogView.findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { dialog.dismiss(); showAddOptionsDialog() }
 
-        // Time/Date picker logic here (omitted for brevity, keep your original logic)
+        val dateTimeFormat = SimpleDateFormat("MM/dd/yy - hh:mm a", Locale.US)
 
+        // Use two completely separate calendars to avoid overwriting!
+        val fromCalendar = Calendar.getInstance()
+        val untilCalendar = Calendar.getInstance()
+        var isFromSet = false
+
+        etFrom.isFocusable = false
+        etFrom.isClickable = true
+        etUntil.isFocusable = false
+        etUntil.isClickable = true
+
+        // --- "FROM" LOGIC ---
+        etFrom.setOnClickListener {
+            val datePicker = DatePickerDialog(this, { _, year, month, day ->
+                fromCalendar.set(Calendar.YEAR, year)
+                fromCalendar.set(Calendar.MONTH, month)
+                fromCalendar.set(Calendar.DAY_OF_MONTH, day)
+
+                TimePickerDialog(this, { _, hour, min ->
+                    fromCalendar.set(Calendar.HOUR_OF_DAY, hour)
+                    fromCalendar.set(Calendar.MINUTE, min)
+                    fromCalendar.set(Calendar.SECOND, 0)
+
+                    etFrom.setText(dateTimeFormat.format(fromCalendar.time))
+                    isFromSet = true
+
+                    // Auto-clear until box if the new start time overlaps the old end time
+                    if (etUntil.text.toString().isNotEmpty() && untilCalendar.timeInMillis <= fromCalendar.timeInMillis) {
+                        etUntil.text?.clear()
+                        ShowToast.showMessage(this, "'Available Until' cleared because it was earlier than new start time.")
+                    }
+                }, fromCalendar.get(Calendar.HOUR_OF_DAY), fromCalendar.get(Calendar.MINUTE), false).show()
+            }, fromCalendar.get(Calendar.YEAR), fromCalendar.get(Calendar.MONTH), fromCalendar.get(Calendar.DAY_OF_MONTH))
+
+            datePicker.datePicker.minDate = System.currentTimeMillis() - 1000
+            datePicker.show()
+        }
+
+        // --- "UNTIL" LOGIC ---
+        etUntil.setOnClickListener {
+            if (!isFromSet) {
+                ShowToast.showMessage(this, "Please select 'Available From' first!")
+                return@setOnClickListener
+            }
+
+            val datePicker = DatePickerDialog(this, { _, year, month, day ->
+                untilCalendar.set(Calendar.YEAR, year)
+                untilCalendar.set(Calendar.MONTH, month)
+                untilCalendar.set(Calendar.DAY_OF_MONTH, day)
+
+                TimePickerDialog(this, { _, hour, min ->
+                    val tempCal = Calendar.getInstance()
+                    tempCal.timeInMillis = untilCalendar.timeInMillis
+                    tempCal.set(Calendar.HOUR_OF_DAY, hour)
+                    tempCal.set(Calendar.MINUTE, min)
+                    tempCal.set(Calendar.SECOND, 0)
+
+                    // Strict check to ensure end time is AFTER start time
+                    if (tempCal.timeInMillis <= fromCalendar.timeInMillis) {
+                        ShowToast.showMessage(this, "End time must be later than Start time!")
+                    } else {
+                        untilCalendar.timeInMillis = tempCal.timeInMillis
+                        etUntil.setText(dateTimeFormat.format(untilCalendar.time))
+                    }
+                }, untilCalendar.get(Calendar.HOUR_OF_DAY), untilCalendar.get(Calendar.MINUTE), false).show()
+            }, untilCalendar.get(Calendar.YEAR), untilCalendar.get(Calendar.MONTH), untilCalendar.get(Calendar.DAY_OF_MONTH))
+
+            // Lock calendar: Cannot pick a date before the 'From' date
+            datePicker.datePicker.minDate = fromCalendar.timeInMillis
+            datePicker.show()
+        }
+
+        // --- SUBMIT LOGIC ---
         dialogView.findViewById<Button>(R.id.btnNext).setOnClickListener {
+            val assessmentNumber = etNum.text.toString().trim()
+            val assessmentTitle = etTitle.text.toString().trim()
+            val availableFrom = etFrom.text.toString().trim()
+            val availableUntil = etUntil.text.toString().trim()
+            val assessmentQuarter = etQuarter.text.toString().trim()
+
+            if (assessmentNumber.isEmpty() || assessmentTitle.isEmpty() || availableFrom.isEmpty() || availableUntil.isEmpty() || assessmentQuarter.isEmpty()) {
+                ShowToast.showMessage(this, "Please fill in all fields.")
+                return@setOnClickListener
+            }
+
             val intent = Intent(this, AssessmentCreatorActivity::class.java).apply {
-                putExtra("EXTRA_ASSESSMENT_NUMBER", etNum.text.toString())
-                putExtra("EXTRA_ASSESSMENT_TITLE", etTitle.text.toString())
-                putExtra("EXTRA_AVAILABLE_FROM", etFrom.text.toString())
-                putExtra("EXTRA_AVAILABLE_UNTIL", etUntil.text.toString())
-                putExtra("EXTRA_AVAILABLE_QUARTER", etQuarter.text.toString())
+                putExtra("EXTRA_ASSESSMENT_NUMBER", assessmentNumber)
+                putExtra("EXTRA_ASSESSMENT_TITLE", assessmentTitle)
+                putExtra("EXTRA_AVAILABLE_FROM", availableFrom)
+                putExtra("EXTRA_AVAILABLE_UNTIL", availableUntil)
+                putExtra("EXTRA_AVAILABLE_QUARTER", assessmentQuarter)
             }
             createAssessmentLauncher.launch(intent)
             dialog.dismiss()

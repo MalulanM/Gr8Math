@@ -35,7 +35,18 @@ class AppLoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val pref = getSharedPreferences("user_session", MODE_PRIVATE)
+        val isLoggedIn = pref.getBoolean("isLoggedIn", false)
+
+        if (isLoggedIn) {
+            // Bypass the login screen and go straight to dashboard
+            autoLogin(pref)
+            return // Stop onCreate here so the login screen never loads!
+        }
+
+        // 2. If NOT logged in, load the normal login screen
         setContentView(R.layout.app_login_activity)
+
 
         initViews()
         setupObservers()
@@ -62,6 +73,8 @@ class AppLoginActivity : AppCompatActivity() {
 
             viewModel.login(email, password)
         }
+
+
     }
 
     private fun initViews() {
@@ -134,12 +147,21 @@ class AppLoginActivity : AppCompatActivity() {
 
     private fun navigateToDashboard(user: UserProfile) {
         val pref = getSharedPreferences("user_session", MODE_PRIVATE)
+        pref.edit().apply {
+            putBoolean("isLoggedIn", true)
+            putInt("id", user.id ?: -1)
+            putString("role", user.roles)
+            putString("name", user.firstName)
+            putString("profilePic", user.profilePic)
+            apply()
+        }
 
         val nextIntent = when (user.roles.lowercase()) {
             "student" -> Intent(this, StudentClassManagerActivity::class.java)
             "teacher" -> Intent(this, TeacherClassManagerActivity::class.java)
             else -> Intent(this, AppLoginActivity::class.java)
         }
+
         nextIntent.putExtra("toast_msg", "Welcome back, ${user.firstName}")
         nextIntent.putExtra("id", user.id)
         nextIntent.putExtra("role", user.roles)
@@ -147,6 +169,32 @@ class AppLoginActivity : AppCompatActivity() {
         nextIntent.putExtra("profilePic", user.profilePic)
         nextIntent.putExtra("notif_type", intent.getStringExtra("notif_type"))
         nextIntent.putExtra("notif_meta", intent.getStringExtra("notif_meta"))
+
+        startActivity(nextIntent)
+        finish()
+    }
+
+    private fun autoLogin(pref: android.content.SharedPreferences) {
+        val role = pref.getString("role", "") ?: ""
+        val id = pref.getInt("id", -1)
+        val name = pref.getString("name", "")
+        val profilePic = pref.getString("profilePic", "")
+
+        val nextIntent = when (role.lowercase()) {
+            "student" -> Intent(this, StudentClassManagerActivity::class.java)
+            "teacher" -> Intent(this, TeacherClassManagerActivity::class.java)
+            else -> Intent(this, AppLoginActivity::class.java)
+        }
+
+        nextIntent.putExtra("id", id)
+        nextIntent.putExtra("role", role)
+        nextIntent.putExtra("name", name)
+        nextIntent.putExtra("profilePic", profilePic)
+
+        // Pass along any push notification data if they tapped a banner while closed!
+        nextIntent.putExtra("notif_type", intent.getStringExtra("notif_type"))
+        nextIntent.putExtra("notif_meta", intent.getStringExtra("notif_meta"))
+
         startActivity(nextIntent)
         finish()
     }

@@ -26,13 +26,19 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import java.io.File
 import java.io.FileOutputStream
+import java.text.DateFormatSymbols
 
-class QuarterlyReportActivity : AppCompatActivity() {
+class MonthlyReportActivity : AppCompatActivity() {
 
     private val viewModel: QuarterlyReportViewModel by viewModels()
     private lateinit var reportTable: TableLayout
     private lateinit var tvTotalScore: TextView
     private lateinit var tvTotalItems: TextView
+
+    // 🌟 Class-level variables so the PDF generator can use them later!
+    private var currentMonth = -1
+    private var currentYear = -1
+    private var studentId = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,16 +47,19 @@ class QuarterlyReportActivity : AppCompatActivity() {
         initViews()
         setupTableStyling()
 
-        val studentId = intent.getIntExtra("EXTRA_STUDENT_ID", 0)
+        // 🌟 Grab ALL the data passed from the StudentScoresActivity
+        studentId = intent.getIntExtra("EXTRA_STUDENT_ID", 0)
+        currentMonth = intent.getIntExtra("EXTRA_MONTH", -1)
+        currentYear = intent.getIntExtra("EXTRA_YEAR", -1)
 
         // Observe Data
         setupObservers()
 
-        // Load Data
-        if (studentId != 0) {
-            viewModel.loadReport(studentId)
+        // Load Data (Passing the month and year to the ViewModel!)
+        if (studentId != 0 && currentMonth != -1) {
+            viewModel.loadReport(studentId, currentMonth, currentYear)
         } else {
-            ShowToast.showMessage(this, "Invalid Student ID")
+            ShowToast.showMessage(this, "Invalid Data")
         }
 
         // PDF Button
@@ -115,11 +124,32 @@ class QuarterlyReportActivity : AppCompatActivity() {
 
     private fun populateTable(items: List<ReportItem>) {
         // Remove existing data rows (Keep Header [0] and Footer [Last])
-        // We repeatedly remove index 1 until only Header and Footer remain
         while (reportTable.childCount > 2) {
             reportTable.removeViewAt(1)
         }
 
+        // 🌟 Check if there are no records for this month
+        if (items.isEmpty()) {
+            val emptyRow = TableRow(this)
+            val emptyText = TextView(this).apply {
+                text = "No assessments recorded for this month."
+                gravity = Gravity.CENTER
+                setPadding(32, 32, 32, 32)
+                setTextColor(ContextCompat.getColor(this@MonthlyReportActivity, R.color.colorSubtleText))
+
+                // Make this single text view stretch across all 4 columns
+                val params = TableRow.LayoutParams()
+                params.span = 4
+                layoutParams = params
+            }
+            emptyRow.addView(emptyText)
+            reportTable.addView(emptyRow, 1) // Insert right below the header
+
+            ShowToast.showMessage(this, "No scores found for this month.")
+            return // Stop here
+        }
+
+        // Normal logic if there ARE records
         var insertIndex = 1
         for (item in items) {
             val row = TableRow(this)
@@ -148,9 +178,6 @@ class QuarterlyReportActivity : AppCompatActivity() {
         return tv
     }
 
-    // ================= PDF PERMISSION & GENERATION =====================
-    // Kept mostly identical to your logic as it deals with System APIs
-
     private fun requestStoragePermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             val permission = Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -178,10 +205,14 @@ class QuarterlyReportActivity : AppCompatActivity() {
         val page = pdfDocument.startPage(pageInfo)
         val canvas = page.canvas
 
+        // 🌟 Get the month name (e.g., "February")
+        val monthName = if (currentMonth != -1) DateFormatSymbols().months[currentMonth - 1] else ""
+        val pdfTitle = "Monthly Report - $monthName $currentYear"
+
         // Title
         titlePaint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         titlePaint.textSize = 48f
-        canvas.drawText("Quarterly Report", 400f, 80f, titlePaint)
+        canvas.drawText(pdfTitle, 350f, 80f, titlePaint)
 
         var yPos = 160f
 
@@ -198,17 +229,20 @@ class QuarterlyReportActivity : AppCompatActivity() {
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.textSize = 30f
 
-
-        val dataRowCount = reportTable.childCount - 2
-
-
         for (i in 1 until reportTable.childCount - 1) {
             val row = reportTable.getChildAt(i) as TableRow
             // Safely cast children to TextView
-            val t1 = (row.getChildAt(0) as? TextView)?.text.toString()
-            val t2 = (row.getChildAt(1) as? TextView)?.text.toString()
-            val t3 = (row.getChildAt(2) as? TextView)?.text.toString()
-            val t4 = (row.getChildAt(3) as? TextView)?.text.toString()
+            val t1 = (row.getChildAt(0) as? TextView)?.text.toString() ?: ""
+            val t2 = (row.getChildAt(1) as? TextView)?.text.toString() ?: ""
+            val t3 = (row.getChildAt(2) as? TextView)?.text.toString() ?: ""
+            val t4 = (row.getChildAt(3) as? TextView)?.text.toString() ?: ""
+
+            // Skip drawing if this is our "Empty State" row!
+            if (t1 == "No assessments recorded for this month.") {
+                canvas.drawText(t1, 80f, yPos, paint)
+                yPos += 40f
+                continue
+            }
 
             canvas.drawText(t1, 80f, yPos, paint)
             canvas.drawText(t2, 280f, yPos, paint)
@@ -228,10 +262,12 @@ class QuarterlyReportActivity : AppCompatActivity() {
         pdfDocument.finishPage(page)
 
         val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+
+        // 🌟 Updated the file name so it says "Monthly_Report_February_2026_..."
         val file = File(
             directory,
-            "Quarterly_Report_${System.currentTimeMillis()}.pdf"
-        ) // Added timestamp to avoid overwrite
+            "Monthly_Report_${monthName}_${currentYear}_${System.currentTimeMillis()}.pdf"
+        )
 
         try {
             pdfDocument.writeTo(FileOutputStream(file))

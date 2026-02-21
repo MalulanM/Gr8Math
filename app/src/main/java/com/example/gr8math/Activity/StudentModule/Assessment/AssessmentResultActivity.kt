@@ -1,9 +1,12 @@
 package com.example.gr8math.Activity.StudentModule.Assessment
 
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -14,10 +17,16 @@ import com.example.gr8math.Utils.UIUtils
 import com.example.gr8math.ViewModel.AssessmentResultViewModel
 import com.example.gr8math.ViewModel.ResultState
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.Position
+import nl.dionsegijn.konfetti.core.emitter.Emitter
+import nl.dionsegijn.konfetti.xml.KonfettiView
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
+import java.util.concurrent.TimeUnit
 
 class AssessmentResultActivity : AppCompatActivity() {
 
@@ -34,6 +43,12 @@ class AssessmentResultActivity : AppCompatActivity() {
     lateinit var loadingProgress: View
     lateinit var loadingText: TextView
 
+    private lateinit var konfettiView: KonfettiView
+    private var mediaPlayer: MediaPlayer? = null
+
+    private var isNewlyCompleted: Boolean = false
+    private var studentId = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_assessment_result)
@@ -42,6 +57,11 @@ class AssessmentResultActivity : AppCompatActivity() {
         setupObservers()
 
         val assessmentId = intent.getIntExtra("assessment_id", 0)
+
+        isNewlyCompleted = intent.getBooleanExtra("is_newly_completed", false)
+
+        studentId = intent.getIntExtra("student_id", 0)
+
         Log.e("ASSESwderf", assessmentId.toString())
         if (assessmentId != 0) {
             viewModel.loadResult(assessmentId)
@@ -67,6 +87,7 @@ class AssessmentResultActivity : AppCompatActivity() {
         loadingLayout = findViewById(R.id.loadingLayout)
         loadingProgress = findViewById(R.id.loadingProgressBg)
         loadingText = findViewById(R.id.loadingText)
+        konfettiView = findViewById(R.id.konfettiView)
     }
 
     @Deprecated("Deprecated in Java")
@@ -93,8 +114,11 @@ class AssessmentResultActivity : AppCompatActivity() {
                     val df = DecimalFormat("#.##")
                     tvScore.text = "Score: ${df.format(data.score)}"
 
-                    // FIX: Use the robust date formatter
                     tvDate.text = "Date Accomplished: ${formatDate(data.dateAccomplished)}"
+
+                    if (isNewlyCompleted) {
+                        viewModel.checkAndAwardBadges(studentId, data.score, data.assessmentItems)
+                    }
                 }
                 is ResultState.Error -> {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
@@ -102,14 +126,68 @@ class AssessmentResultActivity : AppCompatActivity() {
                 }
             }
         }
+        viewModel.newBadges.observe(this) { badges ->
+            for (badgeName in badges) {
+                showBadgeDialog(badgeName)
+            }
+        }
     }
 
-    // FIX: Robust Date Parsing for Result Screen
+    private fun showBadgeDialog(badgeName: String) {
+        val imageResource = when (badgeName) {
+            "First-Timer" -> R.drawable.badge_firsttimer
+            "First Ace!" -> R.drawable.badge_firstace
+            "Three-Quarter Score!" -> R.drawable.badge_threequarter
+            "Triple Ace" -> R.drawable.badge_tripleace
+            else -> R.drawable.badge_firsttimer
+        }
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_badge_acquired, null)
+
+        val ivBadge = dialogView.findViewById<ImageView>(R.id.ivDialogBadge)
+        val tvBadgeTitle = dialogView.findViewById<TextView>(R.id.tvDialogTitle)
+        val btnClose = dialogView.findViewById<ImageButton>(R.id.btnClose)
+
+        ivBadge.setImageResource(imageResource)
+        tvBadgeTitle.text = "$badgeName Badge!"
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.game_win)
+        mediaPlayer?.start()
+
+        val party = Party(
+            speed = 0f,
+            maxSpeed = 30f,
+            damping = 0.9f,
+            spread = 360,
+            colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def, 0x1E4B95),
+            position = Position.Relative(0.5, 0.3),
+            emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100)
+        )
+        konfettiView.start(party)
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setOnDismissListener {
+                mediaPlayer?.release()
+                mediaPlayer = null
+            }
+            .create()
+
+
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
     private fun formatDate(dateString: String): String {
         val formats = arrayOf(
-            "yyyy-MM-dd'T'HH:mm:ssXXX",      // Supabase Default
-            "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",  // With Millis
-            "yyyy-MM-dd"                     // Short Date
+            "yyyy-MM-dd'T'HH:mm:ssXXX",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+            "yyyy-MM-dd"
         )
 
         for (format in formats) {

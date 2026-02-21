@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gr8math.Data.Model.AssessmentResultUiModel
 import com.example.gr8math.Data.Repository.AssessmentResultRepository
+import com.example.gr8math.Data.Repository.BadgeRepository
 import com.example.gr8math.Model.CurrentCourse
 import kotlinx.coroutines.launch
 
@@ -31,6 +32,21 @@ class AssessmentResultViewModel : ViewModel() {
                 _state.value = ResultState.Success(data)
             }.onFailure {
                 _state.value = ResultState.Error(it.message ?: "Failed to load results")
+            }
+        }
+    }
+
+   //FOR BADGES
+    private val badgeRepository = BadgeRepository()
+
+    private val _newBadges = MutableLiveData<List<String>>()
+    val newBadges: LiveData<List<String>> = _newBadges
+
+    fun checkAndAwardBadges(studentId: Int, score: Double, totalItems: Int) {
+        viewModelScope.launch {
+            val earnedBadges = badgeRepository.evaluateAndAwardBadges(studentId, score, totalItems)
+            if (earnedBadges.isNotEmpty()) {
+                _newBadges.value = earnedBadges
             }
         }
     }

@@ -22,8 +22,6 @@ class PrivacyPolicyActivity : AppCompatActivity() {
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
 
-        // 2. Populate Text Sections
-        // Use "findViewById" to safely get the views
         val tvPart1 = findViewById<TextView>(R.id.tvPart1)
         val tvPart2 = findViewById<TextView>(R.id.tvPart2)
         val tvPart3 = findViewById<TextView>(R.id.tvPart3)

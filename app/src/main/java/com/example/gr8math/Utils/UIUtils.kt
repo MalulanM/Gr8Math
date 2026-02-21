@@ -1,9 +1,14 @@
 package com.example.gr8math.Utils
 
 import android.content.Context
+import android.content.Intent
 import android.view.View
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.gr8math.Activity.LoginAndRegister.AppLoginActivity
+import com.example.gr8math.Helper.NotificationMethods
 import com.example.gr8math.R
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.CoroutineScope
@@ -37,7 +42,6 @@ object UIUtils {
                 animate().alpha(1f).setDuration(fade).start()
             }
 
-            // animate dots
             val job = scope.launch {
                 var i = 0
                 while (isActive) {
@@ -87,6 +91,20 @@ object UIUtils {
             til.setBoxStrokeColorStateList(
                 ContextCompat.getColorStateList(context, R.color.til_stroke)!!
             )
+        }
+    }
+
+    fun performLogout(activity: AppCompatActivity, userId: Int) {
+        NotificationMethods.removeTokenOnLogout(userId, activity.lifecycleScope) {
+
+            val preferences = activity.getSharedPreferences("user_session", Context.MODE_PRIVATE)
+            preferences.edit().clear().apply()
+
+            val intent = Intent(activity, AppLoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            activity.startActivity(intent)
+            activity.finish()
         }
     }
 

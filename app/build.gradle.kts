@@ -31,9 +31,13 @@ android {
 
         val supabaseUrl = properties.getProperty("SUPABASE_URL") ?: ""
         val supabaseKey = properties.getProperty("SUPABASE_KEY") ?: ""
+        val accessKeyId = properties.getProperty("accessKeyId") ?: ""
+        val secretAccessKey = properties.getProperty("secretAccessKey") ?: ""
 
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_KEY", "\"$supabaseKey\"")
+        buildConfigField("String", "accessKeyId", "\"$accessKeyId\"")
+        buildConfigField("String", "secretAccessKey", "\"$secretAccessKey\"")
     }
 
     buildTypes {
@@ -100,6 +104,7 @@ dependencies {
     implementation("aws.sdk.kotlin:s3:1.0.0")
 
     implementation("com.github.skydoves:colorpickerview:2.2.4")
+    implementation("nl.dionsegijn:konfetti-xml:2.0.4")
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
