@@ -34,8 +34,6 @@ class MonthlyReportActivity : AppCompatActivity() {
     private lateinit var reportTable: TableLayout
     private lateinit var tvTotalScore: TextView
     private lateinit var tvTotalItems: TextView
-
-    // 🌟 Class-level variables so the PDF generator can use them later!
     private var currentMonth = -1
     private var currentYear = -1
     private var studentId = 0
@@ -47,7 +45,6 @@ class MonthlyReportActivity : AppCompatActivity() {
         initViews()
         setupTableStyling()
 
-        // 🌟 Grab ALL the data passed from the StudentScoresActivity
         studentId = intent.getIntExtra("EXTRA_STUDENT_ID", 0)
         currentMonth = intent.getIntExtra("EXTRA_MONTH", -1)
         currentYear = intent.getIntExtra("EXTRA_YEAR", -1)
@@ -108,7 +105,6 @@ class MonthlyReportActivity : AppCompatActivity() {
         viewModel.state.observe(this) { state ->
             when (state) {
                 is ReportState.Loading -> {
-                    // Optional: Show loading
                 }
                 is ReportState.Success -> {
                     populateTable(state.data.items)
@@ -205,7 +201,6 @@ class MonthlyReportActivity : AppCompatActivity() {
         val page = pdfDocument.startPage(pageInfo)
         val canvas = page.canvas
 
-        // 🌟 Get the month name (e.g., "February")
         val monthName = if (currentMonth != -1) DateFormatSymbols().months[currentMonth - 1] else ""
         val pdfTitle = "Monthly Report - $monthName $currentYear"
 
@@ -263,7 +258,6 @@ class MonthlyReportActivity : AppCompatActivity() {
 
         val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
 
-        // 🌟 Updated the file name so it says "Monthly_Report_February_2026_..."
         val file = File(
             directory,
             "Monthly_Report_${monthName}_${currentYear}_${System.currentTimeMillis()}.pdf"

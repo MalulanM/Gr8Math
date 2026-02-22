@@ -32,7 +32,6 @@ class TeacherNotificationsActivity : AppCompatActivity() {
     private lateinit var adapter: TeacherNotificationAdapter
     private lateinit var bottomNav: BottomNavigationView
 
-    // 🌟 Global reference for the button
     private lateinit var btnMarkAllRead: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {

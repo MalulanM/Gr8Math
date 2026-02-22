@@ -46,7 +46,6 @@ class StudentNotificationsActivity : AppCompatActivity() {
 
         // Bottom Nav
         bottomNav = findViewById(R.id.bottom_navigation)
-        bottomNav.selectedItemId = R.id.nav_notifications
         setupBottomNav()
 
         // RecyclerView
@@ -125,20 +124,45 @@ class StudentNotificationsActivity : AppCompatActivity() {
         }
     }
 
+    // 🌟 FIX: Safely detach, update highlight, and reattach when pressing "Back"
+    override fun onResume() {
+        super.onResume()
+        if (::bottomNav.isInitialized) {
+            // Remove listener so it doesn't trigger a fake click
+            bottomNav.setOnItemSelectedListener(null)
+
+            // Force highlight the Notifications icon
+            bottomNav.selectedItemId = R.id.nav_notifications
+
+            // Re-attach the listener
+            setupBottomNavListeners(bottomNav)
+        }
+
+        // Refresh unread count in case it changed while away
+        NotificationHelper.fetchUnreadCount(bottomNav)
+    }
+
     private fun updateMarkAllButton() {
         val hasUnread = adapter.getList().any { !it.isRead }
         btnMarkAllRead.visibility = if (hasUnread) View.VISIBLE else View.GONE
     }
 
     private fun setupBottomNav() {
+        bottomNav.selectedItemId = R.id.nav_notifications
         NotificationHelper.fetchUnreadCount(bottomNav)
-        bottomNav.setOnItemSelectedListener { item ->
-            if (item.itemId == bottomNav.selectedItemId) return@setOnItemSelectedListener true
+        setupBottomNavListeners(bottomNav)
+    }
+
+    // Extracted so we can safely reuse it in onResume
+    private fun setupBottomNavListeners(navView: BottomNavigationView) {
+        navView.setOnItemSelectedListener { item ->
+            if (item.itemId == navView.selectedItemId) return@setOnItemSelectedListener true
 
             val intent = when (item.itemId) {
                 R.id.nav_class -> Intent(this, StudentClassPageActivity::class.java)
                 R.id.nav_badges -> Intent(this, StudentBadgesActivity::class.java)
                 R.id.nav_grades -> Intent(this, StudentGradesActivity::class.java)
+                R.id.nav_notifications -> null // Already here
                 else -> null
             }
 

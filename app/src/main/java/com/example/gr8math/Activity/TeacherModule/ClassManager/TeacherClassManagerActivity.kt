@@ -190,6 +190,25 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                         classAdapter.updateData(adapterList)
                     } else {
                         populateLinearLayout(state.data)
+
+                        var targetCourseId = intent.getIntExtra("courseId", -1)
+                        val metaString = intent.getStringExtra("notif_meta")
+
+                        if (targetCourseId == -1 && !metaString.isNullOrEmpty()) {
+                            try {
+                                val metaJson = org.json.JSONObject(metaString)
+                                targetCourseId = metaJson.optInt("course_id", -1) // Unlocking the JSON!
+                            } catch (e: Exception) { e.printStackTrace() }
+                        }
+
+                        if (targetCourseId != -1) {
+                            state.data.find { it.courseId == targetCourseId }?.let {
+                                openClass(it.courseId, it.sectionName)
+                                intent.removeExtra("courseId")
+                                intent.removeExtra("notif_meta")
+                                intent.removeExtra("notif_type")
+                            }
+                        }
                     }
                 }
                 is ClassState.Empty -> {
@@ -234,6 +253,15 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         intent.putExtra("role", role)
         intent.putExtra("courseId", courseId)
         intent.putExtra("sectionName", sectionName)
+
+        this.intent.extras?.let { extras ->
+            if (extras.containsKey("lessonId")) intent.putExtra("lessonId", extras.getInt("lessonId"))
+            if (extras.containsKey("assessmentId")) intent.putExtra("assessmentId", extras.getInt("assessmentId"))
+            if (extras.containsKey("studentId")) intent.putExtra("studentId", extras.getInt("studentId")) // 🌟 Added
+            if (extras.containsKey("notif_type")) intent.putExtra("notif_type", extras.getString("notif_type"))
+            if (extras.containsKey("notif_meta")) intent.putExtra("notif_meta", extras.getString("notif_meta"))
+        }
+
         startActivity(intent)
     }
 

@@ -23,8 +23,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.gr8math.Activity.LoginAndRegister.AppLoginActivity
+import com.example.gr8math.Activity.PrivacyPolicyActivity
 import com.example.gr8math.Activity.StudentModule.Profile.ProfileActivity
 import com.example.gr8math.Activity.StudentModule.StudentAddClassActivity
+import com.example.gr8math.Activity.TermsAndConditionsActivity
 import com.example.gr8math.Helper.NotificationMethods
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
@@ -131,6 +133,16 @@ class StudentClassManagerActivity : AppCompatActivity() {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     parentLayout.removeAllViews()
 
+                    var targetCourseId = intent.getIntExtra("courseId", -1)
+                    val metaString = intent.getStringExtra("notif_meta")
+
+                    if (targetCourseId == -1 && !metaString.isNullOrEmpty()) {
+                        try {
+                            val metaJson = org.json.JSONObject(metaString)
+                            targetCourseId = metaJson.optInt("course_id", -1)
+                        } catch (e: Exception) { e.printStackTrace() }
+                    }
+
                     state.data.forEach { item ->
                         val itemView = layoutInflater.inflate(R.layout.item_student_class_card, parentLayout, false)
 
@@ -139,14 +151,26 @@ class StudentClassManagerActivity : AppCompatActivity() {
                         itemView.findViewById<TextView>(R.id.tvTeacherName).text = item.teacherName
 
                         itemView.setOnClickListener {
-                            val intent = Intent(this, StudentClassPageActivity::class.java)
-                            intent.putExtra("id", id)
-                            intent.putExtra("role", role)
-                            intent.putExtra("courseId", item.courseId)
-                            intent.putExtra("sectionName", item.sectionName)
-                            startActivity(intent)
+                            val nextIntent = Intent(this, StudentClassPageActivity::class.java)
+                            nextIntent.putExtra("id", id)
+                            nextIntent.putExtra("role", role)
+                            nextIntent.putExtra("courseId", item.courseId)
+                            nextIntent.putExtra("sectionName", item.sectionName)
+
+                            this.intent.extras?.let { nextIntent.putExtras(it) }
+
+                            startActivity(nextIntent)
                         }
                         parentLayout.addView(itemView)
+
+
+                        if (targetCourseId == item.courseId) {
+                            intent.removeExtra("courseId")
+                            intent.removeExtra("notif_meta")
+                            intent.removeExtra("notif_type")
+
+                            itemView.performClick()
+                        }
                     }
                 }
                 is ClassState.Empty -> {
@@ -189,12 +213,20 @@ class StudentClassManagerActivity : AppCompatActivity() {
         dialogView.findViewById<View>(R.id.btnAccountSettings).setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java)); dialog.dismiss()
         }
+        dialogView.findViewById<View>(R.id.btnTerms).setOnClickListener {
+            startActivity(Intent(this, TermsAndConditionsActivity::class.java))
+            dialog.dismiss()
+        }
+        dialogView.findViewById<View>(R.id.btnPrivacy).setOnClickListener {
+            startActivity(Intent(this, PrivacyPolicyActivity::class.java))
+            dialog.dismiss()
+        }
         dialogView.findViewById<View>(R.id.btnLogout).setOnClickListener {
             dialog.dismiss()
             UIUtils.performLogout(this, CurrentCourse.courseId)
         }
 
-        // Window config
+
         val window = dialog.window
         if (window != null) {
             window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))

@@ -68,7 +68,6 @@ class LessonRepository {
 
     private suspend fun notifyStudentsOfNewLesson(lessonId: Int, courseId: Int) {
         try {
-            // A. Get the Section ID linked to this Course
             val sectionRes = db.from("course_content")
                 .select(columns = Columns.list("section_id")) {
                     filter { eq("id", courseId) }
@@ -77,8 +76,6 @@ class LessonRepository {
 
             val sectionId = sectionRes?.sectionId ?: return
 
-            // B. Get all Students in this Class (Section)
-            // querying: student_class -> student -> user_id
             val students = db.from("student_class")
                 .select(columns = Columns.raw("student(user_id)")) {
                     filter { eq("class_id", sectionId) }
@@ -87,7 +84,6 @@ class LessonRepository {
 
             if (students.isEmpty()) return
 
-            // C. Prepare Meta Data (JSON)
             val metaJson = buildJsonObject {
                 put("course_id", courseId)
                 put("lesson_id", lessonId)

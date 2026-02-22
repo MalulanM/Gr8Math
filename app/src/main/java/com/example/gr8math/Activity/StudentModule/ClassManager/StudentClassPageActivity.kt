@@ -54,6 +54,38 @@ class StudentClassPageActivity : AppCompatActivity() {
         handleNotificationIntent(intent)
     }
 
+    override fun onResume() {
+        super.onResume()
+        val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
+        bottomNav.setOnItemSelectedListener(null)
+        bottomNav.selectedItemId = R.id.nav_class
+        setupBottomNavListeners(bottomNav)
+    }
+    private fun setupBottomNav() {
+        val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
+        bottomNav.selectedItemId = R.id.nav_class
+        NotificationHelper.fetchUnreadCount(bottomNav)
+        setupBottomNavListeners(bottomNav)
+    }
+
+    private fun setupBottomNavListeners(bottomNav: BottomNavigationView) {
+        bottomNav.setOnItemSelectedListener { item ->
+            if (item.itemId == bottomNav.selectedItemId) return@setOnItemSelectedListener true
+            val intent = when (item.itemId) {
+                R.id.nav_class -> null
+                R.id.nav_badges -> Intent(this, StudentBadgesActivity::class.java)
+                R.id.nav_notifications -> Intent(this, StudentNotificationsActivity::class.java)
+                R.id.nav_grades -> Intent(this, StudentGradesActivity::class.java)
+                else -> null
+            }
+            intent?.let {
+                it.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                startActivity(it)
+            }
+            true
+        }
+    }
+
     private fun handleIntentData() {
         val incomingCourseId = intent.getIntExtra("courseId", -1)
         val incomingSectionName = intent.getStringExtra("sectionName")
@@ -204,25 +236,5 @@ class StudentClassPageActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupBottomNav() {
-        val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
-        bottomNav.selectedItemId = R.id.nav_class
-        NotificationHelper.fetchUnreadCount(bottomNav)
 
-        bottomNav.setOnItemSelectedListener { item ->
-            if (item.itemId == bottomNav.selectedItemId) return@setOnItemSelectedListener true
-            val intent = when (item.itemId) {
-                R.id.nav_class -> null
-                R.id.nav_badges -> Intent(this, StudentBadgesActivity::class.java)
-                R.id.nav_notifications -> Intent(this, StudentNotificationsActivity::class.java)
-                R.id.nav_grades -> Intent(this, StudentGradesActivity::class.java)
-                else -> null
-            }
-            intent?.let {
-                it.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                startActivity(it)
-            }
-            true
-        }
-    }
 }

@@ -51,8 +51,6 @@ class StudentGradesActivity : AppCompatActivity() {
 
         // 2. Setup Navigation
         bottomNav = findViewById(R.id.bottom_navigation)
-        bottomNav.selectedItemId = R.id.nav_grades
-        NotificationHelper.fetchUnreadCount(bottomNav)
         setupBottomNav()
 
         // 3. Setup RecyclerView
@@ -68,6 +66,21 @@ class StudentGradesActivity : AppCompatActivity() {
         // 4. Observe & Load
         setupObservers()
         viewModel.loadGrades()
+    }
+
+    // 🌟 FIX: Safely detach, update highlight, and reattach when pressing "Back"
+    override fun onResume() {
+        super.onResume()
+        if (::bottomNav.isInitialized) {
+            // Remove listener so it doesn't trigger a fake click
+            bottomNav.setOnItemSelectedListener(null)
+
+            // Force highlight the Grades icon
+            bottomNav.selectedItemId = R.id.nav_grades
+
+            // Re-attach the listener
+            setupBottomNavListeners(bottomNav)
+        }
     }
 
     private fun setupObservers() {
@@ -141,8 +154,15 @@ class StudentGradesActivity : AppCompatActivity() {
 
     // --- Navigation Logic ---
     private fun setupBottomNav() {
-        bottomNav.setOnItemSelectedListener { item ->
-            if (item.itemId == bottomNav.selectedItemId) return@setOnItemSelectedListener true
+        bottomNav.selectedItemId = R.id.nav_grades
+        NotificationHelper.fetchUnreadCount(bottomNav)
+        setupBottomNavListeners(bottomNav)
+    }
+
+    // Extracted so we can safely reuse it in onResume
+    private fun setupBottomNavListeners(navView: BottomNavigationView) {
+        navView.setOnItemSelectedListener { item ->
+            if (item.itemId == navView.selectedItemId) return@setOnItemSelectedListener true
 
             val intent = when (item.itemId) {
                 R.id.nav_class -> Intent(this, StudentClassPageActivity::class.java)
@@ -157,13 +177,6 @@ class StudentGradesActivity : AppCompatActivity() {
                 startActivity(it)
             }
             true
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (::bottomNav.isInitialized) {
-            bottomNav.selectedItemId = R.id.nav_grades
         }
     }
 }

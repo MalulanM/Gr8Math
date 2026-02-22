@@ -49,11 +49,7 @@ class StudentBadgesActivity : AppCompatActivity() {
 
         initViews()
         setupBottomNav()
-
-        // 🌟 Start observing data
         observeViewModel()
-
-        // 🌟 Trigger the fetch
         viewModel.loadProfile(userId)
     }
 
@@ -80,7 +76,6 @@ class StudentBadgesActivity : AppCompatActivity() {
                     }
                     is ProfileUiState.Success -> {
                         val profileData = state.data as StudentProfileData
-                        // 🌟 Update adapter with the fetched list
                         adapter.updateData(profileData.badges)
                     }
                     is ProfileUiState.Error -> {
@@ -98,9 +93,6 @@ class StudentBadgesActivity : AppCompatActivity() {
         dialogView.findViewById<ImageView>(R.id.ivDialogBadge).setImageResource(badge.imageRes)
         dialogView.findViewById<TextView>(R.id.tvDialogTitle).text = badge.name
 
-        // If you have a description textview in the dialog XML:
-        // dialogView.findViewById<TextView>(R.id.tvDialogDesc).text = badge.description
-
         dialogView.findViewById<ImageButton>(R.id.btnClose).setOnClickListener {
             dialog.dismiss()
         }
@@ -109,12 +101,17 @@ class StudentBadgesActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    // --- Navigation Logic ---
     private fun setupBottomNav() {
         bottomNav = findViewById(R.id.bottom_navigation)
         bottomNav.selectedItemId = R.id.nav_badges
+        setupBottomNavListeners(bottomNav)
+    }
 
-        bottomNav.setOnItemSelectedListener { item ->
-            if (item.itemId == bottomNav.selectedItemId) return@setOnItemSelectedListener true
+    // Extracted so we can safely reuse it in onResume
+    private fun setupBottomNavListeners(navView: BottomNavigationView) {
+        navView.setOnItemSelectedListener { item ->
+            if (item.itemId == navView.selectedItemId) return@setOnItemSelectedListener true
 
             val intent = when (item.itemId) {
                 R.id.nav_class -> Intent(this, StudentClassPageActivity::class.java)
@@ -133,7 +130,17 @@ class StudentBadgesActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (::bottomNav.isInitialized) bottomNav.selectedItemId = R.id.nav_badges
+        if (::bottomNav.isInitialized) {
+            // Remove listener so it doesn't trigger a fake click
+            bottomNav.setOnItemSelectedListener(null)
+
+            // Force highlight the Badges icon
+            bottomNav.selectedItemId = R.id.nav_badges
+
+            // Re-attach the listener
+            setupBottomNavListeners(bottomNav)
+        }
+
         viewModel.loadProfile(userId) // Refresh in case they earned a badge elsewhere
     }
 }

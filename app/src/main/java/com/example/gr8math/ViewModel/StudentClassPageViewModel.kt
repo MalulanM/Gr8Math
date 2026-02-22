@@ -35,18 +35,16 @@ class StudentClassPageViewModel : ViewModel() {
         }
     }
 
-    // --- FIX IS HERE ---
     fun onAssessmentClicked(assessmentId: Int, studentId: Int = -1) {
         viewModelScope.launch {
             try {
                 Log.d("DEBUG_VM", "Checking Assessment: $assessmentId. Incoming StudentID: $studentId")
 
                 // 1. RESOLVE STUDENT ID
-                // FIX: Check if ID is > 0. If it is 0 (from notification default), we MUST fetch it.
                 val validStudentId = if (studentId > 0) {
                     studentId
                 } else {
-                    Log.d("DEBUG_VM", "Invalid StudentID ($studentId). Fetching from DB for UserID: ${CurrentCourse.userId}")
+                    Log.d("DEBUG_VM", "Invalid StudentID ($studentId). Fetching from DB...")
                     val fetchedId = repository.getStudentIdByUserId(CurrentCourse.userId)
                     Log.d("DEBUG_VM", "Resolved StudentID: $fetchedId")
                     fetchedId
@@ -58,15 +56,24 @@ class StudentClassPageViewModel : ViewModel() {
                     return@launch
                 }
 
-                // 2. CHECK RECORD
-                // Now we query with the CORRECT Student ID (e.g., 25), not 0.
-                val hasRecord = repository.hasAssessmentRecord(validStudentId, assessmentId)
-                Log.d("DEBUG_VM", "Has Record: $hasRecord")
+                // We use checkAssessmentAvailability instead of hasAssessmentRecord
+                val statusResult = repository.checkAssessmentAvailability(validStudentId, assessmentId)
 
-                // 3. NAVIGATE
-                if (hasRecord) {
-                    _navEvent.value = StudentNavEvent.ToAssessmentResult(assessmentId)
-                } else {
+                statusResult.onSuccess { status ->
+                    Log.d("DEBUG_VM", "Assessment Status: $status")
+
+                    when (status) {
+                        com.example.gr8math.Data.Model.AssessmentStatus.HAS_RECORD,
+                        com.example.gr8math.Data.Model.AssessmentStatus.DEADLINE_PASSED -> {
+                            _navEvent.value = StudentNavEvent.ToAssessmentResult(assessmentId)
+                        }
+
+                        com.example.gr8math.Data.Model.AssessmentStatus.AVAILABLE -> {
+                            _navEvent.value = StudentNavEvent.ToAssessmentDetail(assessmentId)
+                        }
+                    }
+                }.onFailure { error ->
+                    Log.e("DEBUG_VM", "Failed to check status", error)
                     _navEvent.value = StudentNavEvent.ToAssessmentDetail(assessmentId)
                 }
 

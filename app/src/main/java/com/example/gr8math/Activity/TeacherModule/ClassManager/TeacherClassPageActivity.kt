@@ -117,22 +117,59 @@ class TeacherClassPageActivity : AppCompatActivity() {
 
     private fun handleNotificationIntent(intent: Intent?) {
         if (intent == null) return
+
         val type = intent.getStringExtra("notif_type")
         val metaString = intent.getStringExtra("notif_meta")
-        val directLessonId = intent.getIntExtra("lessonId", -1)
 
+        // Direct IDs from internal Notification page clicks
+        val directLessonId = intent.getIntExtra("lessonId", -1)
+        val directAssessmentId = intent.getIntExtra("assessmentId", -1)
+        val directStudentId = intent.getIntExtra("studentId", -1)
+
+        // --- CASE A: Push Notifications (JSON Meta) ---
         if (type != null && !metaString.isNullOrEmpty()) {
             try {
-                if (type == "arrival") ShowToast.showMessage(this, "Class is starting!")
+                val metaJson = org.json.JSONObject(metaString)
+                when (type) {
+                    "lesson" -> {
+                        val id = metaJson.optInt("lesson_id", -1)
+                        if (id > 0) navigateToLesson(id)
+                    }
+                    "assessment" -> {
+                        val aId = metaJson.optInt("assessment_id", -1)
+                        val sId = metaJson.optInt("student_id", -1)
+                        if (aId > 0) navigateToScores(aId, sId)
+                    }
+                    "arrival" -> ShowToast.showMessage(this, "Class is starting!")
+                }
             } catch (e: Exception) { e.printStackTrace() }
+
             intent.removeExtra("notif_type")
             intent.removeExtra("notif_meta")
-        } else if (directLessonId > 0) {
-            val i = Intent(this, LessonDetailActivity::class.java)
-            i.putExtra("lesson_id", directLessonId)
-            startActivity(i)
+        }
+        // --- CASE B: Internal Notification clicks ---
+        else if (directLessonId > 0) {
+            navigateToLesson(directLessonId)
             intent.removeExtra("lessonId")
         }
+        else if (directAssessmentId > 0) {
+            navigateToScores(directAssessmentId, directStudentId)
+            intent.removeExtra("assessmentId")
+        }
+    }
+
+    private fun navigateToScores(assessmentId: Int, studentId: Int) {
+        val i = Intent(this, com.example.gr8math.Activity.TeacherModule.StudentScoresActivity::class.java).apply {
+            putExtra("AUTO_ASSESSMENT_ID", assessmentId)
+            if (studentId > 0) putExtra("EXTRA_STUDENT_ID", studentId)
+        }
+        startActivity(i)
+    }
+
+    private fun navigateToLesson(lessonId: Int) {
+        val i = Intent(this, LessonDetailActivity::class.java)
+        i.putExtra("lesson_id", lessonId)
+        startActivity(i)
     }
 
     private fun populateList(data: List<ClassContentItem>) {
@@ -250,7 +287,6 @@ class TeacherClassPageActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    // 🌟 FULLY IMPLEMENTED UX LOCK LOGIC
     private fun showCreateAssessmentDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_create_assessment, null)
         val etNum = dialogView.findViewById<TextInputEditText>(R.id.etAssessmentNumber)
