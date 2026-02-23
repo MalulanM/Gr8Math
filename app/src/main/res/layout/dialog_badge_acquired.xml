@@ -75,6 +75,7 @@
             android:layout_marginTop="4dp"
             android:fontFamily="@font/lexend"
             android:text="Perfect Escape! Badge!"
+            android:textAlignment="center"
             android:textColor="@color/colorDarkCyan"
             android:textSize="20sp"
             android:textStyle="bold"

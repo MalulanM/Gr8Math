@@ -40,9 +40,9 @@ class StudentClassPageActivity : AppCompatActivity() {
         setContentView(R.layout.activity_classpage_student)
 
         initViews()
-        handleIntentData()
+        handleIntentData() // 🌟 Sets up ID and triggers Name Fetch
         setupBottomNav()
-        setupObservers()
+        setupObservers() // 🌟 Listens for the Name Fetch to finish
 
         viewModel.loadContent()
         handleNotificationIntent(intent)
@@ -61,6 +61,7 @@ class StudentClassPageActivity : AppCompatActivity() {
         bottomNav.selectedItemId = R.id.nav_class
         setupBottomNavListeners(bottomNav)
     }
+
     private fun setupBottomNav() {
         val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
         bottomNav.selectedItemId = R.id.nav_class
@@ -86,34 +87,9 @@ class StudentClassPageActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleIntentData() {
-        val incomingCourseId = intent.getIntExtra("courseId", -1)
-        val incomingSectionName = intent.getStringExtra("sectionName")
-        val incomingRole = intent.getStringExtra("role")
-        val incomingUserId = intent.getIntExtra("id", -1)
-
-        if (incomingCourseId != -1) {
-            CurrentCourse.courseId = incomingCourseId
-            CurrentCourse.currentRole = incomingRole ?: "student"
-
-
-            if (incomingUserId != -1) CurrentCourse.userId = incomingUserId
-
-            if (incomingSectionName.isNullOrEmpty()) {
-                viewModel.fetchSectionName(incomingCourseId)
-            } else {
-                CurrentCourse.sectionName = incomingSectionName
-                toolbar.title = incomingSectionName
-            }
-        }
-        val toastMsg = intent.getStringExtra("toast_msg")
-        if (!toastMsg.isNullOrEmpty()) ShowToast.showMessage(this, toastMsg)
-    }
-
     private fun initViews() {
         parentLayout = findViewById(R.id.parentLayout)
         toolbar = findViewById(R.id.toolbar)
-        toolbar.title = CurrentCourse.sectionName
         toolbar.setNavigationOnClickListener { finish() }
 
         findViewById<View>(R.id.btnParticipants).setOnClickListener {
@@ -125,10 +101,39 @@ class StudentClassPageActivity : AppCompatActivity() {
         gameCard.setOnClickListener { /* Intent to Game Activity */ }
     }
 
+    private fun handleIntentData() {
+        val incomingCourseId = intent.getIntExtra("courseId", -1)
+        val incomingSectionName = intent.getStringExtra("sectionName")
+        val incomingRole = intent.getStringExtra("role")
+        val incomingUserId = intent.getIntExtra("id", -1)
+
+        if (incomingCourseId != -1) {
+            CurrentCourse.courseId = incomingCourseId
+            CurrentCourse.currentRole = incomingRole ?: "student"
+
+            if (incomingUserId != -1) CurrentCourse.userId = incomingUserId
+
+            if (incomingSectionName.isNullOrEmpty()) {
+                // CASE: Push Notification (We only have the ID)
+                toolbar.title = "..." // Temporary loading state
+                viewModel.fetchSectionName(incomingCourseId)
+            } else {
+                // CASE: Normal navigation (Name passed from list)
+                CurrentCourse.sectionName = incomingSectionName
+                toolbar.title = incomingSectionName
+            }
+        }
+        val toastMsg = intent.getStringExtra("toast_msg")
+        if (!toastMsg.isNullOrEmpty()) ShowToast.showMessage(this, toastMsg)
+    }
+
     private fun setupObservers() {
+        // This snaps the real name into the toolbar once the DB fetch finishes
         viewModel.sectionName.observe(this) { name ->
-            toolbar.title = name
-            CurrentCourse.sectionName = name
+            if (!name.isNullOrEmpty()) {
+                toolbar.title = name
+                CurrentCourse.sectionName = name
+            }
         }
 
         viewModel.contentState.observe(this) { state ->
@@ -167,7 +172,6 @@ class StudentClassPageActivity : AppCompatActivity() {
         val directLessonId = intent.getIntExtra("lessonId", -1)
         val directAssessmentId = intent.getIntExtra("assessmentId", -1)
 
-        // --- CASE A: Handle Push Notif ---
         if (type != null && !metaString.isNullOrEmpty()) {
             try {
                 val metaJson = org.json.JSONObject(metaString)
@@ -178,10 +182,7 @@ class StudentClassPageActivity : AppCompatActivity() {
                     }
                     "assessment" -> {
                         val id = metaJson.optInt("assessment_id", -1)
-                        if (id > 0) {
-                            // 🌟 RESTORED: Uses your original secure checker!
-                            viewModel.onAssessmentClicked(id)
-                        }
+                        if (id > 0) viewModel.onAssessmentClicked(id)
                     }
                     "arrival" -> ShowToast.showMessage(this, "Welcome to class!")
                 }
@@ -189,14 +190,10 @@ class StudentClassPageActivity : AppCompatActivity() {
 
             intent.removeExtra("notif_type")
             intent.removeExtra("notif_meta")
-        }
-        // --- CASE B: Handle Internal Notification Page Click ---
-        else if (directLessonId > 0) {
+        } else if (directLessonId > 0) {
             openLessonDetail(directLessonId)
             intent.removeExtra("lessonId")
-        }
-        else if (directAssessmentId > 0) {
-            // 🌟 RESTORED: Uses your original secure checker!
+        } else if (directAssessmentId > 0) {
             viewModel.onAssessmentClicked(directAssessmentId)
             intent.removeExtra("assessmentId")
         }
@@ -227,7 +224,6 @@ class StudentClassPageActivity : AppCompatActivity() {
                     val view = layoutInflater.inflate(R.layout.item_class_assessment_card, parentLayout, false)
                     view.findViewById<TextView>(R.id.tvTitle).text = "Assessment ${item.assessmentNumber}"
                     view.findViewById<ImageView>(R.id.ivArrow).setOnClickListener {
-                        // 🌟 Same secure checker here
                         viewModel.onAssessmentClicked(item.id)
                     }
                     parentLayout.addView(view)
@@ -235,6 +231,4 @@ class StudentClassPageActivity : AppCompatActivity() {
             }
         }
     }
-
-
 }

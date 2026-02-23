@@ -124,7 +124,6 @@ class StudentNotificationsActivity : AppCompatActivity() {
         }
     }
 
-    // 🌟 FIX: Safely detach, update highlight, and reattach when pressing "Back"
     override fun onResume() {
         super.onResume()
         if (::bottomNav.isInitialized) {
@@ -176,10 +175,31 @@ class StudentNotificationsActivity : AppCompatActivity() {
 
     private fun showSettingsDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_student_notification_settings, null)
-        val dialog = MaterialAlertDialogBuilder(this)
-            .setView(dialogView)
-            .setCancelable(true)
-            .create()
+        val dialog = MaterialAlertDialogBuilder(this).setView(dialogView).setCancelable(true).create()
+
+        val swArrival = dialogView.findViewById<androidx.appcompat.widget.AppCompatCheckBox>(R.id.switchClassSchedule)
+        val swLesson = dialogView.findViewById<androidx.appcompat.widget.AppCompatCheckBox>(R.id.switchPostedLesson)
+        val swAssessment = dialogView.findViewById<androidx.appcompat.widget.AppCompatCheckBox>(R.id.switchPostedAssessment)
+
+        // Load saved preferences (Default to true if never set)
+        val prefs = getSharedPreferences("NotificationPrefs", MODE_PRIVATE)
+        swArrival.isChecked = prefs.getBoolean("arrival_enabled", true)
+        swLesson.isChecked = prefs.getBoolean("lesson_enabled", true)
+        swAssessment.isChecked = prefs.getBoolean("assessment_enabled", true)
+
+        val savePrefs = {
+            prefs.edit().apply {
+                putBoolean("arrival_enabled", swArrival.isChecked)
+                putBoolean("lesson_enabled", swLesson.isChecked)
+                putBoolean("assessment_enabled", swAssessment.isChecked)
+                apply()
+            }
+        }
+
+        swArrival.setOnClickListener { savePrefs() }
+        swLesson.setOnClickListener { savePrefs() }
+        swAssessment.setOnClickListener { savePrefs() }
+
         dialogView.findViewById<ImageView>(R.id.btnBackSettings).setOnClickListener { dialog.dismiss() }
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()

@@ -140,12 +140,27 @@ class TeacherNotificationsActivity : AppCompatActivity() {
     }
 
     private fun showSettingsDialog() {
-        val dialogView = LayoutInflater.from(this)
-            .inflate(R.layout.dialog_teacher_notification_settings, null)
-        val dialog = MaterialAlertDialogBuilder(this)
-            .setView(dialogView)
-            .setCancelable(true)
-            .create()
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_teacher_notification_settings, null)
+        val dialog = MaterialAlertDialogBuilder(this).setView(dialogView).setCancelable(true).create()
+
+        val swArrival = dialogView.findViewById<androidx.appcompat.widget.AppCompatCheckBox>(R.id.switchClassSchedule)
+        val swSubmission = dialogView.findViewById<androidx.appcompat.widget.AppCompatCheckBox>(R.id.switchStudentSubmission)
+
+        val prefs = getSharedPreferences("NotificationPrefs", MODE_PRIVATE)
+        swArrival.isChecked = prefs.getBoolean("arrival_enabled", true)
+        swSubmission.isChecked = prefs.getBoolean("submission_enabled", true)
+
+        val savePrefs = {
+            prefs.edit().apply {
+                putBoolean("arrival_enabled", swArrival.isChecked)
+                putBoolean("submission_enabled", swSubmission.isChecked)
+                apply()
+            }
+        }
+
+        swArrival.setOnClickListener { savePrefs() }
+        swSubmission.setOnClickListener { savePrefs() }
+
         dialogView.findViewById<ImageView>(R.id.btnBackSettings).setOnClickListener { dialog.dismiss() }
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()

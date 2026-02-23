@@ -84,4 +84,18 @@ class ClassRepository {
             }
         }
     }
+
+    suspend fun getSectionNameByCourseId(courseId: Int): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val result = db.from("course_content").select(columns = Columns.raw("class(class_name)")) {
+                    filter { eq("id", courseId) }
+                }.decodeSingleOrNull<Map<String, Map<String, String>>>()
+
+                result?.get("class")?.get("class_name")
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
 }
