@@ -61,6 +61,68 @@ class AssessmentRepository {
         }
     }
 
+    suspend fun getAssessmentQuestions(assessmentId: Int): Result<List<UiQuestion>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val columns = Columns.raw("id, question_text, assessment_choices(id, choice_text, is_correct)")
+                val questions = db.from("assessment_questions").select(columns = columns) {
+                    filter { eq("assessment_id", assessmentId) }
+                }.decodeList<QuestionFullDetails>()
+
+                val uiQuestions = questions.map { q ->
+                    UiQuestion(
+                        text = q.questionText,
+                        choices = q.choices.map { c -> UiChoice(c.choiceText, c.isCorrect) }
+                    )
+                }
+                Result.success(uiQuestions)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun updateAssessment(
+        assessmentId: Int,
+        updateData: AssessmentUpdate,
+        questions: List<UiQuestion>
+    ): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                // 1. Wipe Student Records to force retake
+                db.from("assessment_record").delete { filter { eq("assessment_id", assessmentId) } }
+                db.from("student_answers").delete { filter { eq("assessment_id", assessmentId) } }
+
+                // 2. Delete old questions (Cascade handles choices)
+                db.from("assessment_questions").delete { filter { eq("assessment_id", assessmentId) } }
+
+                // 3. Update Assessment Details
+                db.from("assessment_created").update(updateData) { filter { eq("id", assessmentId) } }
+
+                // 4. Insert New Questions
+                insertQuestionsAndChoices(assessmentId, questions)
+
+                Result.success(Unit)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Result.failure(e)
+            }
+        }
+    }
+
+    private suspend fun insertQuestionsAndChoices(assessmentId: Int, questions: List<UiQuestion>) {
+        for (q in questions) {
+            val qInsert = QuestionInsert(assessmentId = assessmentId, questionText = q.text)
+            val savedQuestion = db.from("assessment_questions").insert(qInsert) { select() }.decodeSingle<QuestionEntity>()
+
+            val choicesToInsert = q.choices.map { c ->
+                ChoiceInsert(questionId = savedQuestion.id, choiceText = c.text, isCorrect = c.isCorrect)
+            }
+            db.from("assessment_choices").insert(choicesToInsert)
+        }
+    }
+
     // --- Notification Logic ---
     private suspend fun notifyStudents(courseId: Int, assessmentId: Int) {
         try {

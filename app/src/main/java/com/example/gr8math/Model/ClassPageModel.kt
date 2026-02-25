@@ -60,7 +60,11 @@ sealed class ClassContentItem {
     data class AssessmentItem(
         override val id: Int,
         override val createdAt: String,
-        val assessmentNumber: Int
+        val assessmentNumber: Int,
+        val title: String = "",
+        val quarter: Int = 0,
+        val startTime: String = "",
+        val endTime: String = ""
     ) : ClassContentItem()
 }
 

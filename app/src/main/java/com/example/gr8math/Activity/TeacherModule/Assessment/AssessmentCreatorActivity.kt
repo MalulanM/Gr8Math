@@ -24,6 +24,7 @@ import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
+import com.example.gr8math.ViewModel.AssessmentFetchState
 import com.example.gr8math.ViewModel.AssessmentState
 import com.example.gr8math.ViewModel.AssessmentViewModel
 import com.google.android.material.appbar.MaterialToolbar
@@ -44,11 +45,11 @@ class AssessmentCreatorActivity : AppCompatActivity() {
     private lateinit var btnPublishAssessmentTest: Button
     private lateinit var toolbar: MaterialToolbar
 
-    // Logic Managers
     private val questionManagers = mutableListOf<QuestionCardManager>()
     private var hasUnsavedChanges = false
 
-    // Data passed from Intent
+    // 🌟 Editing ID
+    private var editAssessmentId: Int = -1
     private var assessmentNumber: Int = 0
     private var assessmentQuarter: Int = 0
     private var assessmentTitle: String = ""
@@ -65,13 +66,18 @@ class AssessmentCreatorActivity : AppCompatActivity() {
         setupListeners()
         setupObservers()
 
-        // Add first question
-        addNewQuestion()
-        hasUnsavedChanges = false
-        updatePublishButtonState()
+        // 🌟 Start Fetching or Start Blank
+        if (editAssessmentId != -1) {
+            viewModel.loadExistingAssessment(editAssessmentId)
+        } else {
+            addNewQuestion(null)
+            hasUnsavedChanges = false
+            updatePublishButtonState()
+        }
     }
 
     private fun initData() {
+        editAssessmentId = intent.getIntExtra("EXTRA_EDIT_ASSESSMENT_ID", -1)
         assessmentNumber = intent.getStringExtra("EXTRA_ASSESSMENT_NUMBER")?.toIntOrNull() ?: 0
         assessmentTitle = intent.getStringExtra("EXTRA_ASSESSMENT_TITLE") ?: ""
         availableFrom = intent.getStringExtra("EXTRA_AVAILABLE_FROM") ?: ""
@@ -89,7 +95,9 @@ class AssessmentCreatorActivity : AppCompatActivity() {
         loadingProgress = findViewById(R.id.loadingProgressBg)
         loadingText = findViewById(R.id.loadingText)
 
-        toolbar.title = assessmentTitle.ifEmpty { "Create Assessment" }
+        val titlePrefix = if (editAssessmentId != -1) "Edit" else "Create"
+        toolbar.title = assessmentTitle.ifEmpty { "$titlePrefix Assessment" }
+        btnPublishAssessmentTest.text = if (editAssessmentId != -1) "Update Assessment" else "Publish Assessment"
     }
 
     private fun setupListeners() {
@@ -100,29 +108,25 @@ class AssessmentCreatorActivity : AppCompatActivity() {
         })
 
         btnAddQuestion.setOnClickListener {
-            addNewQuestion()
+            addNewQuestion(null)
             hasUnsavedChanges = true
             updatePublishButtonState()
         }
 
         btnPublishAssessmentTest.setOnClickListener {
-            if (validateAllQuestions()) {
-                showSaveConfirmationDialog()
-            } else {
-                ShowToast.showMessage(this, "Please check for errors.")
-            }
+            if (validateAllQuestions()) showSaveConfirmationDialog()
+            else ShowToast.showMessage(this, "Please check for errors.")
         }
     }
 
     private fun setupObservers() {
+        // Save/Update Observer
         viewModel.state.observe(this) { state ->
             when (state) {
-                is AssessmentState.Loading -> {
-                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
-                }
+                is AssessmentState.Loading -> UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
                 is AssessmentState.Success -> {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                    ShowToast.showMessage(this, "Assessment published successfully!")
+                    ShowToast.showMessage(this, if (editAssessmentId != -1) "Assessment updated!" else "Assessment published!")
                     setResult(RESULT_OK)
                     finish()
                 }
@@ -133,46 +137,67 @@ class AssessmentCreatorActivity : AppCompatActivity() {
                 is AssessmentState.Idle -> {}
             }
         }
+
+        // 🌟 Fetch Existing Observer
+        viewModel.fetchState.observe(this) { state ->
+            when (state) {
+                is AssessmentFetchState.Loading -> UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+                is AssessmentFetchState.Success -> {
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                    populateExistingQuestions(state.questions)
+                    hasUnsavedChanges = false
+                    updatePublishButtonState()
+                }
+                is AssessmentFetchState.Error -> {
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                    ShowToast.showMessage(this, state.message)
+                    if (questionManagers.isEmpty()) addNewQuestion(null)
+                }
+            }
+        }
     }
 
-    // --- LOGIC: Extract Data from UI and Send to ViewModel ---
+    private fun populateExistingQuestions(existingQuestions: List<UiQuestion>) {
+        questionsContainer.removeAllViews()
+        questionManagers.clear()
+
+        existingQuestions.forEach { uiQuestion ->
+            val correctIndex = uiQuestion.choices.indexOfFirst { it.isCorrect }
+            val questionData = AssessmentQuestion(
+                questionText = uiQuestion.text,
+                choices = uiQuestion.choices.map { it.text }.toMutableList(),
+                correctAnswerIndex = correctIndex
+            )
+            addNewQuestion(questionData)
+        }
+    }
+
     private fun saveAssessment() {
-        // 1. Convert Managers to UI Models
         val uiQuestions = questionManagers.map { manager ->
             val qData = manager.question
             UiQuestion(
                 text = qData.questionText,
                 choices = qData.choices.mapIndexed { index, text ->
-                    UiChoice(
-                        text = text,
-                        isCorrect = (index == qData.correctAnswerIndex)
-                    )
+                    UiChoice(text = text, isCorrect = (index == qData.correctAnswerIndex))
                 }
             )
         }
 
-        // 2. Call ViewModel
-        viewModel.publishAssessment(
-            courseId = courseId,
-            title = assessmentTitle,
-            rawStartTime = availableFrom,
-            rawEndTime = availableUntil,
-            assessmentNumber = assessmentNumber,
-            assessmentQuarter = assessmentQuarter,
-            questions = uiQuestions
-        )
+        if (editAssessmentId != -1) {
+            viewModel.updateAssessment(editAssessmentId, assessmentTitle, availableFrom, availableUntil, assessmentNumber, assessmentQuarter, uiQuestions)
+        } else {
+            viewModel.publishAssessment(courseId, assessmentTitle, availableFrom, availableUntil, assessmentNumber, assessmentQuarter, uiQuestions)
+        }
     }
 
-    // --- UI HELPERS ---
-
-    private fun addNewQuestion() {
-        val newQuestion = AssessmentQuestion()
+    private fun addNewQuestion(existingData: AssessmentQuestion?) {
+        val questionData = existingData ?: AssessmentQuestion()
         lateinit var questionManager: QuestionCardManager
 
         questionManager = QuestionCardManager(
             context = this,
             container = questionsContainer,
-            question = newQuestion,
+            question = questionData,
             onQuestionChanged = {
                 hasUnsavedChanges = true
                 updatePublishButtonState()
@@ -230,7 +255,7 @@ class AssessmentCreatorActivity : AppCompatActivity() {
 }
 
 // =========================================================================
-// HELPER CLASSES (These must be in the file or separate files)
+// HELPER CLASSES
 // =========================================================================
 
 data class AssessmentQuestion(
@@ -246,8 +271,7 @@ class QuestionCardManager(
     private val onQuestionChanged: () -> Unit,
     private val onRemove: () -> Unit
 ) {
-    val cardView: View = LayoutInflater.from(context)
-        .inflate(R.layout.layout_assessment_question_card, container, false)
+    val cardView: View = LayoutInflater.from(context).inflate(R.layout.layout_assessment_question_card, container, false)
     private val etQuestion: TextInputEditText = cardView.findViewById(R.id.etQuestion)
     private val tilQuestion: TextInputLayout = cardView.findViewById(R.id.tilQuestion)
     private val choicesContainer: LinearLayout = cardView.findViewById(R.id.choicesContainer)
@@ -268,7 +292,10 @@ class QuestionCardManager(
             onQuestionChanged()
         })
 
-        question.choices.forEach { addChoiceItem(it) }
+        // Fix to prevent duplicating choices when loading from database
+        val initialChoices = question.choices.toList()
+        question.choices.clear()
+        initialChoices.forEach { addChoiceItem(it) }
 
         btnAddChoices.setOnClickListener {
             addChoiceItem("")
@@ -276,9 +303,7 @@ class QuestionCardManager(
         }
 
         tvAnswerKey.setOnClickListener {
-            if (question.choices.isNotEmpty()) {
-                showAnswerKeySelectionDialog()
-            }
+            if (question.choices.isNotEmpty()) showAnswerKeySelectionDialog()
         }
 
         ibRemoveQuestion.setOnClickListener { onRemove() }
@@ -295,7 +320,6 @@ class QuestionCardManager(
         choiceManagers.add(newChoiceManager)
         question.choices.add(initialText)
         updateAnswerKeyVisibility()
-        onQuestionChanged()
     }
 
     private fun updateAnswerKeyVisibility() {

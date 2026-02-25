@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gr8math.Data.Model.AssessmentInsert
+import com.example.gr8math.Data.Model.AssessmentUpdate
 import com.example.gr8math.Data.Model.UiQuestion
 import com.example.gr8math.Data.Repository.AssessmentRepository
 import kotlinx.coroutines.launch
@@ -19,24 +20,39 @@ sealed class AssessmentState {
     data class Error(val message: String) : AssessmentState()
 }
 
+sealed class AssessmentFetchState {
+    object Loading : AssessmentFetchState()
+    data class Success(val questions: List<UiQuestion>) : AssessmentFetchState()
+    data class Error(val message: String) : AssessmentFetchState()
+}
+
 class AssessmentViewModel : ViewModel() {
 
     private val repository = AssessmentRepository()
+
     private val _state = MutableLiveData<AssessmentState>(AssessmentState.Idle)
     val state: LiveData<AssessmentState> = _state
 
+    private val _fetchState = MutableLiveData<AssessmentFetchState>()
+    val fetchState: LiveData<AssessmentFetchState> = _fetchState
+
+    fun loadExistingAssessment(assessmentId: Int) {
+        _fetchState.value = AssessmentFetchState.Loading
+        viewModelScope.launch {
+            val result = repository.getAssessmentQuestions(assessmentId)
+            result.onSuccess {
+                _fetchState.value = AssessmentFetchState.Success(it)
+            }.onFailure {
+                _fetchState.value = AssessmentFetchState.Error(it.message ?: "Failed to load")
+            }
+        }
+    }
+
     fun publishAssessment(
-        courseId: Int,
-        title: String,
-        rawStartTime: String,
-        rawEndTime: String,
-        assessmentNumber: Int,
-        assessmentQuarter: Int,
-        questions: List<UiQuestion>
+        courseId: Int, title: String, rawStartTime: String, rawEndTime: String,
+        assessmentNumber: Int, assessmentQuarter: Int, questions: List<UiQuestion>
     ) {
         _state.value = AssessmentState.Loading
-
-        // 1. Format Dates to ISO 8601 (Supabase strict requirement)
         val startTime = convertToIso(rawStartTime)
         val endTime = convertToIso(rawEndTime)
 
@@ -45,45 +61,45 @@ class AssessmentViewModel : ViewModel() {
             return
         }
 
-        // 2. Prepare Data
-        val metaData = AssessmentInsert(
-            courseId = courseId,
-            title = title,
-            startTime = startTime,
-            endTime = endTime,
-            assessmentItems = questions.size,
-            assessmentNumber = assessmentNumber,
-            assessmentQuarter = assessmentQuarter
-        )
+        val metaData = AssessmentInsert(courseId, title, startTime, endTime, questions.size, assessmentNumber, assessmentQuarter)
 
-        // 3. Launch Repository Call
         viewModelScope.launch {
             val result = repository.createAssessment(metaData, questions)
-            result.onSuccess {
-                _state.value = AssessmentState.Success
-            }.onFailure {
-                _state.value = AssessmentState.Error(it.message ?: "Failed to publish")
-            }
+            if (result.isSuccess) _state.value = AssessmentState.Success
+            else _state.value = AssessmentState.Error("Failed to publish")
         }
     }
 
-    // 🌟 FULLY IMPLEMENTED ISO FORMATTER
+
+    fun updateAssessment(
+        assessmentId: Int, title: String, rawStartTime: String, rawEndTime: String,
+        assessmentNumber: Int, assessmentQuarter: Int, questions: List<UiQuestion>
+    ) {
+        _state.value = AssessmentState.Loading
+        val startTime = convertToIso(rawStartTime)
+        val endTime = convertToIso(rawEndTime)
+
+        if (startTime == null || endTime == null) {
+            _state.value = AssessmentState.Error("Invalid date format.")
+            return
+        }
+
+        val updateData = AssessmentUpdate(title, startTime, endTime, questions.size, assessmentNumber, assessmentQuarter)
+
+        viewModelScope.launch {
+            val result = repository.updateAssessment(assessmentId, updateData, questions)
+            if (result.isSuccess) _state.value = AssessmentState.Success
+            else _state.value = AssessmentState.Error("Failed to update")
+        }
+    }
+
     private fun convertToIso(raw: String): String? {
         return try {
-            // Read the exact format from your UI text boxes
             val inputFormat = SimpleDateFormat("MM/dd/yy - hh:mm a", Locale.US)
             val date = inputFormat.parse(raw) ?: return null
-
-            // Format precisely to Supabase JSON requirements (adding 'T' and 'Z')
             val outputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-
-            // Convert to UTC time so Supabase saves it accurately
             outputFormat.timeZone = TimeZone.getTimeZone("UTC")
-
             outputFormat.format(date)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
+        } catch (e: Exception) { null }
     }
 }

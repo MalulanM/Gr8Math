@@ -24,6 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.gr8math.Activity.LoginAndRegister.AppLoginActivity
 import com.example.gr8math.Activity.PrivacyPolicyActivity
+import com.example.gr8math.Activity.StudentModule.Notification.StudentNotificationsActivity
 import com.example.gr8math.Activity.StudentModule.Profile.ProfileActivity
 import com.example.gr8math.Activity.StudentModule.StudentAddClassActivity
 import com.example.gr8math.Activity.TermsAndConditionsActivity
@@ -35,6 +36,7 @@ import com.example.gr8math.Utils.UIUtils
 import com.example.gr8math.ViewModel.ClassManagerViewModel
 import com.example.gr8math.ViewModel.ClassState
 import com.google.android.material.appbar.MaterialToolbar
+import org.json.JSONObject
 
 class StudentClassManagerActivity : AppCompatActivity() {
 
@@ -71,7 +73,6 @@ class StudentClassManagerActivity : AppCompatActivity() {
         setupListeners()
         setupObservers()
         NotificationMethods.handleNotificationIntent(this, intent, id, role)
-
 
         if (id > 0) {
             viewModel.loadClasses(id, role)
@@ -117,7 +118,6 @@ class StudentClassManagerActivity : AppCompatActivity() {
 
         addClassLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                // Refresh list on return
                 viewModel.loadClasses(id, role, forceReload = true)
             }
         }
@@ -143,7 +143,10 @@ class StudentClassManagerActivity : AppCompatActivity() {
                         } catch (e: Exception) { e.printStackTrace() }
                     }
 
-                    state.data.forEach { item ->
+                    var autoNavigated = false // Prevents multiple jumps
+
+                    // Changed from forEach to a standard for-loop so we can control it better
+                    for (item in state.data) {
                         val itemView = layoutInflater.inflate(R.layout.item_student_class_card, parentLayout, false)
 
                         itemView.findViewById<TextView>(R.id.tvSectionName).text = item.sectionName
@@ -157,20 +160,35 @@ class StudentClassManagerActivity : AppCompatActivity() {
                             nextIntent.putExtra("courseId", item.courseId)
                             nextIntent.putExtra("sectionName", item.sectionName)
 
-                            this.intent.extras?.let { nextIntent.putExtras(it) }
-
                             startActivity(nextIntent)
                         }
+
                         parentLayout.addView(itemView)
 
 
-                        if (targetCourseId == item.courseId) {
+                        if (targetCourseId == item.courseId && !autoNavigated) {
+                            autoNavigated = true // Ensure it only jumps once
+
+                            val pushIntent = Intent(this, StudentNotificationsActivity::class.java)
+                            pushIntent.putExtra("id", id)
+                            pushIntent.putExtra("role", role)
+                            pushIntent.putExtra("courseId", item.courseId)
+                            pushIntent.putExtra("sectionName", item.sectionName)
+
+                            this.intent.extras?.let { pushIntent.putExtras(it) }
+
+                            // Clean up the intent so it doesn't jump again if you press "Back"
                             intent.removeExtra("courseId")
                             intent.removeExtra("notif_meta")
                             intent.removeExtra("notif_type")
 
-                            itemView.performClick()
+                            // Fire the jump immediately!
+                            startActivity(pushIntent)
                         }
+                    }
+
+                    if (targetCourseId != -1 && !autoNavigated) {
+                        ShowToast.showMessage(this, "Push Notif target (Course ID: $targetCourseId) not found in list.")
                     }
                 }
                 is ClassState.Empty -> {
@@ -186,7 +204,6 @@ class StudentClassManagerActivity : AppCompatActivity() {
         }
     }
 
-    // --- Menu & Logout (Kept exactly as is) ---
     private fun showFacultyMenu() {
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -226,7 +243,6 @@ class StudentClassManagerActivity : AppCompatActivity() {
             UIUtils.performLogout(this, CurrentCourse.courseId)
         }
 
-
         val window = dialog.window
         if (window != null) {
             window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -238,5 +254,4 @@ class StudentClassManagerActivity : AppCompatActivity() {
         }
         dialog.show()
     }
-
 }

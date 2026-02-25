@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.gr8math.Activity.LoginAndRegister.AppLoginActivity
 import com.example.gr8math.Activity.PrivacyPolicyActivity
+import com.example.gr8math.Activity.TeacherModule.Notification.TeacherNotificationsActivity
 import com.example.gr8math.Activity.TeacherModule.Profile.TeacherProfileActivity
 import com.example.gr8math.Activity.TermsAndConditionsActivity
 import com.example.gr8math.Adapter.ClassAdapter
@@ -189,24 +190,41 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                         }.toMutableList()
                         classAdapter.updateData(adapterList)
                     } else {
+                        // 1. Load the manual cards
                         populateLinearLayout(state.data)
 
+                        // 2. Resolve Course ID for Push Notifications
                         var targetCourseId = intent.getIntExtra("courseId", -1)
                         val metaString = intent.getStringExtra("notif_meta")
 
                         if (targetCourseId == -1 && !metaString.isNullOrEmpty()) {
                             try {
                                 val metaJson = org.json.JSONObject(metaString)
-                                targetCourseId = metaJson.optInt("course_id", -1) // Unlocking the JSON!
+                                targetCourseId = metaJson.optInt("course_id", -1)
                             } catch (e: Exception) { e.printStackTrace() }
                         }
 
+                        // 🌟 3. DIRECT JUMP LOGIC
                         if (targetCourseId != -1) {
-                            state.data.find { it.courseId == targetCourseId }?.let {
-                                openClass(it.courseId, it.sectionName)
+                            val targetClass = state.data.find { it.courseId == targetCourseId }
+                            if (targetClass != null) {
+                                // Go directly to TeacherNotificationsActivity
+                                val pushIntent = Intent(this, TeacherNotificationsActivity::class.java)
+                                pushIntent.putExtra("id", id)
+                                pushIntent.putExtra("role", role)
+                                pushIntent.putExtra("courseId", targetClass.courseId)
+                                pushIntent.putExtra("sectionName", targetClass.sectionName)
+
+                                this.intent.extras?.let { pushIntent.putExtras(it) }
+
+                                // Clean up the intent
                                 intent.removeExtra("courseId")
                                 intent.removeExtra("notif_meta")
                                 intent.removeExtra("notif_type")
+
+                                startActivity(pushIntent)
+                            } else {
+                                ShowToast.showMessage(this, "Push Notif target (Course ID: $targetCourseId) not found.")
                             }
                         }
                     }
@@ -257,7 +275,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         this.intent.extras?.let { extras ->
             if (extras.containsKey("lessonId")) intent.putExtra("lessonId", extras.getInt("lessonId"))
             if (extras.containsKey("assessmentId")) intent.putExtra("assessmentId", extras.getInt("assessmentId"))
-            if (extras.containsKey("studentId")) intent.putExtra("studentId", extras.getInt("studentId")) // 🌟 Added
+            if (extras.containsKey("studentId")) intent.putExtra("studentId", extras.getInt("studentId"))
             if (extras.containsKey("notif_type")) intent.putExtra("notif_type", extras.getString("notif_type"))
             if (extras.containsKey("notif_meta")) intent.putExtra("notif_meta", extras.getString("notif_meta"))
         }
@@ -358,5 +376,4 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         }
         dialog.show()
     }
-
 }

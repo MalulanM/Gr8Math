@@ -38,13 +38,15 @@ class TeacherNotificationsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_notifications)
 
+        // 🌟 FOCUS ON THE CLASS SENT BY THE CLASS MANAGER
+        val focusedCourseId = intent.getIntExtra("courseId", CurrentCourse.courseId)
+
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<ImageView>(R.id.btnSettings).setOnClickListener { showSettingsDialog() }
 
         btnMarkAllRead = findViewById(R.id.btnMarkAllRead)
-
-
         btnMarkAllRead.visibility = View.GONE
+
         bottomNav = findViewById(R.id.bottom_navigation)
         bottomNav.selectedItemId = R.id.nav_notifications
         setupBottomNav()
@@ -89,7 +91,8 @@ class TeacherNotificationsActivity : AppCompatActivity() {
             ShowToast.showMessage(this, "All notifications marked as read")
         }
 
-        viewModel.loadTeacherNotifications(CurrentCourse.userId, CurrentCourse.courseId)
+        // 🌟 TRIGGER TARGETED LOAD
+        viewModel.loadTeacherNotifications(CurrentCourse.userId, focusedCourseId)
 
         viewModel.teacherState.observe(this) { state ->
             when(state) {
@@ -108,6 +111,15 @@ class TeacherNotificationsActivity : AppCompatActivity() {
         }
     }
 
+    // 🌟 ADDED ONDESUME TO FIX BOTTOM NAV GLITCHES
+    override fun onResume() {
+        super.onResume()
+        if (::bottomNav.isInitialized) {
+            bottomNav.setOnItemSelectedListener(null)
+            bottomNav.selectedItemId = R.id.nav_notifications
+            setupBottomNav()
+        }
+    }
 
     private fun updateMarkAllButtonVisibility() {
         val hasUnread = adapter.getList().any { !it.isRead }

@@ -27,7 +27,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class StudentNotificationsActivity : AppCompatActivity() {
 
-    // Using the Shared ViewModel
     private val viewModel: NotificationsViewModel by viewModels()
 
     private lateinit var rvNotifications: RecyclerView
@@ -38,6 +37,9 @@ class StudentNotificationsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_student_notifications)
+
+        // 🌟 FOCUS ON THE CLASS SENT BY THE CLASS MANAGER
+        val focusedCourseId = intent.getIntExtra("courseId", CurrentCourse.courseId)
 
         // Init Views
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
@@ -53,63 +55,45 @@ class StudentNotificationsActivity : AppCompatActivity() {
         rvNotifications.layoutManager = LinearLayoutManager(this)
 
         adapter = StudentNotificationAdapter(mutableListOf()) { item, position ->
-            // --- ON CLICK ---
             if (!item.isRead) {
-                // 1. Visual Update
                 item.isRead = true
                 adapter.notifyItemChanged(position)
                 updateMarkAllButton()
-
-                // 2. Backend Update
                 viewModel.markRead(item.id)
-
-                // 3. Badge Update
                 NotificationHelper.fetchUnreadCount(bottomNav)
             }
 
-            // 4. Navigation (FIXED)
-            val intent = Intent(this, StudentClassPageActivity::class.java).apply {
-                // Pass Content IDs
+            val nextIntent = Intent(this, StudentClassPageActivity::class.java).apply {
                 putExtra("courseId", item.courseId)
                 putExtra("lessonId", item.lessonId)
                 putExtra("assessmentId", item.assessmentId)
                 putExtra("studentId", item.studentId)
-
-                // FIX: Pass User Context so logic works!
                 putExtra("id", CurrentCourse.userId)
                 putExtra("role", CurrentCourse.currentRole)
-                // Note: We use the current section name as fallback,
-                // though it might change if the notif is for a different class.
                 putExtra("sectionName", CurrentCourse.sectionName)
-
                 putExtra("fromNotification", true)
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
-            startActivity(intent)
+            startActivity(nextIntent)
         }
         rvNotifications.adapter = adapter
 
-        // --- Mark All Read Logic ---
         btnMarkAllRead.setOnClickListener {
             val list = adapter.getList()
             if (list.isEmpty()) return@setOnClickListener
-
             val ids = list.map { it.id }
-
-            // Optimistic Update
             list.forEach { it.isRead = true }
             adapter.notifyDataSetChanged()
             updateMarkAllButton()
-
-            // Backend Update
             viewModel.markAllRead(ids)
             NotificationHelper.fetchUnreadCount(bottomNav)
             ShowToast.showMessage(this, "All notifications marked as read")
         }
 
-        // --- Observer ---
-        viewModel.loadStudentNotifications(CurrentCourse.userId, CurrentCourse.courseId)
+        // 🌟 TRIGGER TARGETED LOAD
+        viewModel.loadStudentNotifications(CurrentCourse.userId, focusedCourseId)
 
+        // --- Observer ---
         viewModel.studentState.observe(this) { state ->
             when (state) {
                 is StudentNotifState.Loading -> { }
@@ -127,17 +111,10 @@ class StudentNotificationsActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (::bottomNav.isInitialized) {
-            // Remove listener so it doesn't trigger a fake click
             bottomNav.setOnItemSelectedListener(null)
-
-            // Force highlight the Notifications icon
             bottomNav.selectedItemId = R.id.nav_notifications
-
-            // Re-attach the listener
             setupBottomNavListeners(bottomNav)
         }
-
-        // Refresh unread count in case it changed while away
         NotificationHelper.fetchUnreadCount(bottomNav)
     }
 
@@ -152,7 +129,6 @@ class StudentNotificationsActivity : AppCompatActivity() {
         setupBottomNavListeners(bottomNav)
     }
 
-    // Extracted so we can safely reuse it in onResume
     private fun setupBottomNavListeners(navView: BottomNavigationView) {
         navView.setOnItemSelectedListener { item ->
             if (item.itemId == navView.selectedItemId) return@setOnItemSelectedListener true
@@ -161,7 +137,7 @@ class StudentNotificationsActivity : AppCompatActivity() {
                 R.id.nav_class -> Intent(this, StudentClassPageActivity::class.java)
                 R.id.nav_badges -> Intent(this, StudentBadgesActivity::class.java)
                 R.id.nav_grades -> Intent(this, StudentGradesActivity::class.java)
-                R.id.nav_notifications -> null // Already here
+                R.id.nav_notifications -> null
                 else -> null
             }
 
@@ -181,7 +157,6 @@ class StudentNotificationsActivity : AppCompatActivity() {
         val swLesson = dialogView.findViewById<androidx.appcompat.widget.AppCompatCheckBox>(R.id.switchPostedLesson)
         val swAssessment = dialogView.findViewById<androidx.appcompat.widget.AppCompatCheckBox>(R.id.switchPostedAssessment)
 
-        // Load saved preferences (Default to true if never set)
         val prefs = getSharedPreferences("NotificationPrefs", MODE_PRIVATE)
         swArrival.isChecked = prefs.getBoolean("arrival_enabled", true)
         swLesson.isChecked = prefs.getBoolean("lesson_enabled", true)

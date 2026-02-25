@@ -1,7 +1,6 @@
 package com.example.gr8math.Data.Repository
 
 import android.util.Log
-import com.example.gr8math.Data.Model.AssessmentEntity
 import com.example.gr8math.Data.Model.AssessmentRecordCheck
 import com.example.gr8math.Data.Model.AssessmentRecordInsert
 import com.example.gr8math.Data.Model.AssessmentStatus
@@ -26,7 +25,22 @@ class ClassPageRepository {
 
     private val db = SupabaseService.client
 
-    // ... [getClassContent stays exactly the same as your previous code] ...
+    // Helper to format ISO dates to readable text
+    private fun formatIsoToReadable(isoDate: String?): String {
+        if (isoDate.isNullOrEmpty()) return ""
+        return try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
+            inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+            val date = inputFormat.parse(isoDate) ?: return ""
+
+            val outputFormat = SimpleDateFormat("MM/dd/yy - hh:mm a", Locale.US)
+            outputFormat.timeZone = TimeZone.getDefault()
+            outputFormat.format(date)
+        } catch (e: Exception) {
+            isoDate
+        }
+    }
+
     suspend fun getClassContent(courseId: Int): Result<List<ClassContentItem>> {
         return withContext(Dispatchers.IO) {
             try {
@@ -36,12 +50,15 @@ class ClassPageRepository {
                         order("created_at", Order.DESCENDING)
                     }.decodeList<LessonEntity>()
                 }
+
+                // Decode into our strictly typed AssessmentContentEntity instead of Any
                 val assessmentsDeferred = async {
                     db.from("assessment_created").select {
                         filter { eq("course_id", courseId) }
                         order("created_at", Order.DESCENDING)
-                    }.decodeList<AssessmentEntity>()
+                    }.decodeList<AssessmentContentEntity>()
                 }
+
                 val lessons = lessonsDeferred.await()
                 val assessments = assessmentsDeferred.await()
 
@@ -56,21 +73,28 @@ class ClassPageRepository {
                         fullContent = l.lessonContent
                     )
                 }
+
+                // Map the fields directly from the data class
                 val assessmentItems = assessments.map { a ->
                     ClassContentItem.AssessmentItem(
                         id = a.id,
-                        createdAt = a.createdAt,
-                        assessmentNumber = a.assessmentNumber
+                        createdAt = a.createdAt ?: "",
+                        assessmentNumber = a.assessmentNumber,
+                        title = a.title ?: "",
+                        quarter = a.assessmentQuarter ?: 0,
+                        startTime = formatIsoToReadable(a.startTime),
+                        endTime = formatIsoToReadable(a.endTime)
                     )
                 }
+
                 val combinedList = (lessonItems + assessmentItems).sortedByDescending { it.createdAt }
                 Result.success(combinedList)
             } catch (e: Exception) {
+                e.printStackTrace()
                 Result.failure(e)
             }
         }
     }
-
 
     suspend fun checkAssessmentAvailability(studentId: Int, assessmentId: Int): Result<AssessmentStatus> {
         return withContext(Dispatchers.IO) {
@@ -114,8 +138,6 @@ class ClassPageRepository {
         }
     }
 
-    // --- NEW FUNCTIONS REQUIRED FOR VIEWMODEL ---
-
     // 1. Get Student ID from User ID
     suspend fun getStudentIdByUserId(userId: Int): Int? {
         return withContext(Dispatchers.IO) {
@@ -155,6 +177,7 @@ class ClassPageRepository {
             }
         }
     }
+
     // --- Helper Logic (Keep as is) ---
     private fun checkIsLate(endTimeIso: String): Boolean {
         val formats = arrayOf(
@@ -191,7 +214,6 @@ class ClassPageRepository {
         val firstLine = lines[0]
         val periodIndex = firstLine.indexOf(".")
 
-        // Return only the first sentence or the first line
         return if (periodIndex != -1) {
             firstLine.substring(0, periodIndex + 1)
         } else {
@@ -203,14 +225,11 @@ class ClassPageRepository {
     suspend fun getSectionNameByCourseId(courseId: Int): String? {
         return withContext(Dispatchers.IO) {
             try {
-                // Note: Adjust table name ('classes') and column name ('section_name')
-                // to match your Supabase schema exactly.
-                val response = db.from("classes")
-                    .select(columns = Columns.list("section_name")) {
-                        filter { eq("id", courseId) }
-                    }
-                    .decodeSingleOrNull<SectionNameWrapper>()
-                response?.sectionName
+                val result = db.from("course_content").select(columns = Columns.raw("class(class_name)")) {
+                    filter { eq("id", courseId) }
+                }.decodeSingleOrNull<SectionNameResult>()
+
+                result?.classObj?.className
             } catch (e: Exception) {
                 e.printStackTrace()
                 null
@@ -218,11 +237,26 @@ class ClassPageRepository {
         }
     }
 
-    // Data Wrapper for serialization
-    @Serializable
-    data class SectionNameWrapper(@SerialName("section_name") val sectionName: String)
+    // --- DATA WRAPPERS ---
 
-    // --- DATA WRAPPER FOR SIMPLE ID FETCHING ---
     @Serializable
     data class StudentIdWrapper(@SerialName("id") val id: Int)
+
+    // Data wrappers for nested query
+    @Serializable
+    data class SectionNameResult(@SerialName("class") val classObj: ClassNameWrapper?)
+    @Serializable
+    data class ClassNameWrapper(@SerialName("class_name") val className: String)
+
+    // Strictly Typed Model for fetching Assessment Content to prevent 'Any' Crash
+    @Serializable
+    data class AssessmentContentEntity(
+        val id: Int,
+        @SerialName("created_at") val createdAt: String? = null,
+        @SerialName("assessment_number") val assessmentNumber: Int,
+        val title: String? = null,
+        @SerialName("Assessment_quarter") val assessmentQuarter: Int? = null,
+        @SerialName("start_time") val startTime: String? = null,
+        @SerialName("end_time") val endTime: String? = null
+    )
 }

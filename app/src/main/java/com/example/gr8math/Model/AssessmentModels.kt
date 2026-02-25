@@ -129,3 +129,14 @@ data class AssessmentResultUiModel(
     val assessmentNumber: Int,
     val assessmentItems: Int
 )
+
+
+@Serializable
+data class AssessmentUpdate(
+    val title: String,
+    @SerialName("start_time") val startTime: String,
+    @SerialName("end_time") val endTime: String,
+    @SerialName("assessment_items") val assessmentItems: Int,
+    @SerialName("assessment_number") val assessmentNumber: Int,
+    @SerialName("assessment_quarter") val assessmentQuarter: Int
+)
