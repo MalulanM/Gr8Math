@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorLight"
-    tools:context=".Activity.StudentModule.TakeAssessmentActivity">
+    tools:context=".Activity.TakeAssessmentActivity">
 
     <View
         android:id="@+id/loadingLayout"
@@ -17,24 +17,20 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="gone" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/loadingProgressBg"
         android:layout_width="180dp"
         android:layout_height="80dp"
-        android:alpha="1"
         android:background="#ECF1F4"
         android:elevation="8dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="gone">
+        app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Circular progress indicator centered inside the box -->
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/loadingSpinner"
             android:layout_width="50dp"
@@ -42,15 +38,12 @@
             android:layout_marginStart="10dp"
             android:indeterminate="true"
             app:indicatorColor="#8C78F6"
-            app:indicatorInset="0dp"
             app:indicatorSize="50dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:trackColor="#E2E5E6"
-            app:trackCornerRadius="3dp"
             app:trackThickness="6dp" />
-
 
         <TextView
             android:id="@+id/loadingText"
@@ -59,12 +52,10 @@
             android:layout_marginEnd="25dp"
             android:fontFamily="@font/lexend"
             android:text="Loading"
-            android:typeface="normal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/loadingSpinner"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="HardcodedText" />
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -116,24 +107,20 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnPrevious"
-            style="@style/Gr8ButtonStyle"
             android:layout_width="0dp"
             android:layout_height="52dp"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:text="@string/previous_button"
-            android:visibility="gone"
-            tools:visibility="visible" />
+            android:text="Previous"
+            android:visibility="gone" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNext"
-            style="@style/Gr8ButtonStyle"
             android:layout_width="0dp"
             android:layout_height="52dp"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="@string/next_button" />
-
+            android:text="Next" />
     </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView
@@ -158,22 +145,19 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/tvQuestion"
+                <LinearLayout
+                    android:id="@+id/questionHeaderContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/lexend"
-                    android:textColor="@color/colorText"
-                    android:textSize="18sp"
-                    tools:text="Lorem ipsum dolor sit amet." />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingBottom="16dp"/>
 
-                <RadioGroup
-                    android:id="@+id/rgChoices"
+                <LinearLayout
+                    android:id="@+id/dynamicAnswerContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp">
-
-                </RadioGroup>
+                    android:orientation="vertical" />
             </LinearLayout>
         </ScrollView>
     </com.google.android.material.card.MaterialCardView>

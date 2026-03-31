@@ -4,7 +4,6 @@ import android.util.Log
 import com.example.gr8math.Data.Model.AssessmentRecordCheck
 import com.example.gr8math.Data.Model.AssessmentRecordInsert
 import com.example.gr8math.Data.Model.AssessmentStatus
-import com.example.gr8math.Data.Model.AssessmentTimeCheck
 import com.example.gr8math.Data.Model.ClassContentItem
 import com.example.gr8math.Data.Model.LessonEntity
 import com.example.gr8math.Services.SupabaseService
@@ -111,24 +110,35 @@ class ClassPageRepository {
                     return@withContext Result.success(AssessmentStatus.HAS_RECORD)
                 }
 
+                // FIX: Fetch both start_time and end_time to check opening and closing dates
                 val assessmentInfo = db.from("assessment_created")
-                    .select(columns = Columns.list("end_time")) {
+                    .select(columns = Columns.list("start_time", "end_time")) {
                         filter { eq("id", assessmentId) }
-                    }.decodeSingleOrNull<AssessmentTimeCheck>()
+                    }.decodeSingleOrNull<AssessmentTimeBounds>()
 
                 if (assessmentInfo != null) {
-                    val isLate = checkIsLate(assessmentInfo.endTime)
-                    if (isLate) {
-                        try {
-                            val failRecord = AssessmentRecordInsert(
-                                studentId = studentId,
-                                assessmentId = assessmentId,
-                                score = 0.0,
-                                dateAccomplished = assessmentInfo.endTime
-                            )
-                            db.from("assessment_record").insert(failRecord)
-                        } catch (e: Exception) { }
-                        return@withContext Result.success(AssessmentStatus.DEADLINE_PASSED)
+
+                    // 1. CHECK IF EARLY (Not yet open)
+                    if (assessmentInfo.startTime != null && checkIsEarly(assessmentInfo.startTime)) {
+                        val readableDate = formatIsoToReadable(assessmentInfo.startTime)
+                        return@withContext Result.failure(Exception("Assessment opens on: $readableDate"))
+                    }
+
+                    // 2. CHECK IF LATE (Deadline passed)
+                    if (assessmentInfo.endTime != null) {
+                        val isLate = checkIsLate(assessmentInfo.endTime)
+                        if (isLate) {
+                            try {
+                                val failRecord = AssessmentRecordInsert(
+                                    studentId = studentId,
+                                    assessmentId = assessmentId,
+                                    score = 0.0,
+                                    dateAccomplished = assessmentInfo.endTime
+                                )
+                                db.from("assessment_record").insert(failRecord)
+                            } catch (e: Exception) { }
+                            return@withContext Result.success(AssessmentStatus.DEADLINE_PASSED)
+                        }
                     }
                 }
                 Result.success(AssessmentStatus.AVAILABLE)
@@ -179,6 +189,27 @@ class ClassPageRepository {
     }
 
     // --- Helper Logic (Keep as is) ---
+
+    // NEW Helper: Checks if current time is before the start time
+    private fun checkIsEarly(startTimeIso: String): Boolean {
+        val formats = arrayOf(
+            "yyyy-MM-dd'T'HH:mm:ssXXX",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+            "yyyy-MM-dd'T'HH:mm:ss"
+        )
+        for (pattern in formats) {
+            try {
+                val sdf = SimpleDateFormat(pattern, Locale.getDefault())
+                val startDate = sdf.parse(startTimeIso)
+                if (startDate != null) {
+                    val now = Date()
+                    return now.before(startDate)
+                }
+            } catch (e: Exception) { continue }
+        }
+        return false
+    }
+
     private fun checkIsLate(endTimeIso: String): Boolean {
         val formats = arrayOf(
             "yyyy-MM-dd'T'HH:mm:ssXXX",
@@ -247,6 +278,13 @@ class ClassPageRepository {
     data class SectionNameResult(@SerialName("class") val classObj: ClassNameWrapper?)
     @Serializable
     data class ClassNameWrapper(@SerialName("class_name") val className: String)
+
+    // NEW: Local wrapper to fetch both Start and End Time
+    @Serializable
+    private data class AssessmentTimeBounds(
+        @SerialName("start_time") val startTime: String? = null,
+        @SerialName("end_time") val endTime: String? = null
+    )
 
     // Strictly Typed Model for fetching Assessment Content to prevent 'Any' Crash
     @Serializable

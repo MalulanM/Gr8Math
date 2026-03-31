@@ -265,4 +265,5 @@
 
     <string name="select_badges_title">Select badges to display</string>
     <string name="select_badges_subtitle">(Maximum of 3)</string>
+    <string name="empty_class_message"><![CDATA[Tap the <b><font color="#1A4C8B">\'Add\'</font></b> button below to write your first lesson or create an assessment.]]></string>
 </resources>

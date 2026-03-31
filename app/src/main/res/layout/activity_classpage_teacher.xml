@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="@color/colorLight">
 
-    <!-- Top bar: back + centered title -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
@@ -21,7 +20,6 @@
         app:titleTextAppearance="@style/TextAppearance.Gr8.ToolbarTitle"
         app:titleTextColor="@color/colorText" />
 
-    <!-- Bottom Navigation Bar -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
         android:layout_width="0dp"
@@ -33,10 +31,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-
         app:menu="@menu/bottom_nav_menu_teacher" />
 
-    <!-- Scrollable content area -->
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="0dp"
@@ -54,32 +50,57 @@
             android:id="@+id/parentLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <!-- "Lesson Title" Card (Teacher Version) -->
-<!--            <include-->
-<!--                android:id="@+id/lesson_card"-->
-<!--                layout="@layout/item_class_lesson_card"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_marginTop="8dp" />-->
-
-            <!-- "Assessment" Card -->
-<!--            <include-->
-<!--                android:id="@+id/assessment_card"-->
-<!--                layout="@layout/item_class_assessment_card"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_marginTop="8dp" />-->
-
+            android:orientation="vertical"
+            android:visibility="visible">
         </LinearLayout>
     </ScrollView>
 
-    <!--
-      FIX: This is the floating "Add" button.
-      It's a MaterialButton, not a FloatingActionButton
-      It is constrained to the bottom-right, just above the nav bar.
-    -->
+    <LinearLayout
+        android:id="@+id/emptyStateLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingVertical="80dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:background="@drawable/bg_dashed_empty_state"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="40dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="NO CONTENT POSTED YET."
+                android:textColor="#222222"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/lexend"
+                android:letterSpacing="0.05"
+                android:layout_marginBottom="12dp"
+                android:textAlignment="center"/>
+
+            <TextView
+                android:id="@+id/tvEmptySubtext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/empty_class_message"
+                android:textColor="#666666"
+                android:textSize="14sp"
+                android:lineSpacingExtra="6dp"
+                android:textAlignment="center"
+                android:fontFamily="@font/lexend" />
+
+        </LinearLayout>
+    </LinearLayout>
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAdd"
         style="@style/Gr8ButtonStyle"

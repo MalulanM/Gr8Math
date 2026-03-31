@@ -34,7 +34,8 @@ class TakeAssessmentViewModel : ViewModel() {
     val currentIndex: LiveData<Int> = _currentIndex
 
     // Answers: Map<QuestionID, ChoiceID>
-    private val _selectedAnswers = mutableMapOf<Int, Int>()
+    private val _selectedAnswers = mutableMapOf<Int, Any>()
+
 
     // Initialize from Intent JSON
     fun parseAssessmentData(json: String) {
@@ -66,14 +67,13 @@ class TakeAssessmentViewModel : ViewModel() {
     }
 
     // Answer Selection
-    fun selectAnswer(questionId: Int, choiceId: Int) {
-        _selectedAnswers[questionId] = choiceId
+    fun selectAnswer(questionId: Int, answer: Any) {
+        _selectedAnswers[questionId] = answer
     }
 
-    fun getSelectedAnswer(questionId: Int): Int? {
+    fun getSelectedAnswer(questionId: Int): Any? {
         return _selectedAnswers[questionId]
     }
-
     // Submission
     fun submitAssessment() {
         val currentAssessment = assessment ?: return

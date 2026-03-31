@@ -14,6 +14,7 @@ import com.example.gr8math.ViewModel.AssessmentDetailState
 import com.example.gr8math.ViewModel.AssessmentDetailViewModel
 import com.google.android.material.appbar.MaterialToolbar
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
@@ -77,11 +78,9 @@ class AssessmentDetailActivity : AppCompatActivity() {
                 is AssessmentDetailState.Loading -> {
                     btnStartAssessment.isEnabled = false
                     btnStartAssessment.text = "Loading..."
+                    btnStartAssessment.alpha = 0.5f
                 }
                 is AssessmentDetailState.Success -> {
-                    btnStartAssessment.isEnabled = true
-                    btnStartAssessment.text = "Start Assessment"
-
                     val a = state.assessment
                     fullAssessmentJson = state.jsonString
 
@@ -92,12 +91,25 @@ class AssessmentDetailActivity : AppCompatActivity() {
                     // SAFE FORMATTING
                     tvStartsAt.text = "Starts: ${formatTimestamp(a.startTime)}"
                     tvEndsAt.text = "Ends: ${formatTimestamp(a.endTime)}"
+
+                    // --- NEW LOGIC: CHECK IF ASSESSMENT IS EARLY ---
+                    if (isEarly(a.startTime)) {
+                        btnStartAssessment.isEnabled = false
+                        btnStartAssessment.text = "Not Yet Started"
+                        btnStartAssessment.alpha = 0.5f // Make it look disabled visually
+                    } else {
+                        btnStartAssessment.isEnabled = true
+                        btnStartAssessment.text = "Start Assessment"
+                        btnStartAssessment.alpha = 1.0f
+                    }
                 }
                 is AssessmentDetailState.Error -> {
                     // Prevent Blank Screen by showing error
                     ShowToast.showMessage(this, "Error: ${state.message}")
                     tvAssessmentTitle.text = "Error Loading Data"
                     btnStartAssessment.text = "Retry"
+                    btnStartAssessment.alpha = 1.0f
+                    btnStartAssessment.isEnabled = true
                     btnStartAssessment.setOnClickListener {
                         viewModel.loadAssessment(assessmentId)
                     }
@@ -106,18 +118,40 @@ class AssessmentDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun formatTimestamp(dateString: String): String {
-        // Must handle "+00:00" from Supabase using 'XXX'
-        val formats = arrayOf("yyyy-MM-dd'T'HH:mm:ssXXX", "yyyy-MM-dd HH:mm:ss")
+    // --- NEW HELPER METHOD ---
+    private fun isEarly(dateString: String?): Boolean {
+        if (dateString.isNullOrEmpty()) return false
+
+        // Match the same formats used by Supabase
+        val formats = arrayOf("yyyy-MM-dd'T'HH:mm:ssXXX", "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss")
         for (format in formats) {
             try {
-                val sdf = java.text.SimpleDateFormat(format, java.util.Locale.getDefault())
+                val sdf = SimpleDateFormat(format, Locale.getDefault())
+                val startDate = sdf.parse(dateString)
+                if (startDate != null) {
+                    val now = Date()
+                    // Returns true if current time is BEFORE the start time
+                    return now.before(startDate)
+                }
+            } catch (e: Exception) { continue }
+        }
+        return false
+    }
+
+    private fun formatTimestamp(dateString: String?): String {
+        if (dateString == null) return ""
+        // Must handle "+00:00" from Supabase using 'XXX'
+        val formats = arrayOf("yyyy-MM-dd'T'HH:mm:ssXXX", "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss")
+        for (format in formats) {
+            try {
+                val sdf = SimpleDateFormat(format, Locale.getDefault())
                 val date = sdf.parse(dateString)
-                if (date != null) return java.text.SimpleDateFormat("M/d/yy - h:mm a", java.util.Locale.getDefault()).format(date)
+                if (date != null) return SimpleDateFormat("M/d/yy - h:mm a", Locale.getDefault()).format(date)
             } catch (e: Exception) { continue }
         }
         return dateString
     }
+
     private fun navigateBack() {
         val intent = Intent(this, StudentClassPageActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP

@@ -31,6 +31,7 @@ data class StudentInfoSide(
     @SerialName("last_name") val lastName: String,
     @SerialName("profile_pic") val profilePic: String?,
     @SerialName("grade_level") val gradeLevel: Int?,
+    @SerialName("learners_ref_number") val lrn:String?,
     val birthdate: String?,
     val badges: List<ProfileDisplayItem> = emptyList() // 🌟 UPDATED
 )

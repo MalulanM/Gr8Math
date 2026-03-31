@@ -16,6 +16,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
+
 class TakeAssessmentRepository {
 
     private val db = SupabaseService.client
@@ -23,7 +24,8 @@ class TakeAssessmentRepository {
     suspend fun submitAssessment(
         userId: Int,
         assessment: AssessmentFullDetails,
-        selectedAnswers: Map<Int, Int>
+        // 1. FIX: Changed from Map<Int, Int> to Map<Int, Any>
+        selectedAnswers: Map<Int, Any>
     ): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
@@ -34,22 +36,67 @@ class TakeAssessmentRepository {
                     }.decodeSingleOrNull<StudentIdHelper>()
 
                 val realStudentId = studentRes?.id ?: throw Exception("Student profile not found")
-
                 val timestamp = getCurrentIsoTime()
 
-                // 2. SAVE ANSWERS
-                // We use standard insert here. (Assuming you don't have constraints on answers either)
-                if (selectedAnswers.isNotEmpty()) {
-                    val answerList = selectedAnswers.map { (qId, cId) ->
-                        StudentAnswerInsert(
-                            studentId = realStudentId,
-                            assessmentId = assessment.id,
-                            questionId = qId,
-                            choiceId = cId,
-                            timestamp = timestamp
-                        )
+                // 2. COMBINED SAVE ANSWERS & CALCULATE SCORE
+                var correctCount = 0.0
+                val answerList = mutableListOf<StudentAnswerInsert>()
+
+                selectedAnswers.forEach { (qId, answerData) ->
+                    val question = assessment.questions.find { it.id == qId } ?: return@forEach
+
+                    // Extract question type
+                    val match = Regex("^\\[(.*?)\\]\\s*(.*)$").find(question.questionText)
+                    val qType = match?.groupValues?.get(1) ?: "Multiple Choice"
+
+                    when (answerData) {
+                        is Int -> {
+                            // --- MULTIPLE CHOICE / DROPDOWN ---
+                            answerList.add(StudentAnswerInsert(realStudentId, assessment.id, qId, choiceId = answerData, timestamp = timestamp))
+                            val choice = question.choices.find { it.id == answerData }
+                            if (choice?.isCorrect == true) correctCount++
+                        }
+
+                        is Set<*> -> {
+                            // --- CHECKBOXES ---
+                            val correctDbChoices = question.choices.filter { it.isCorrect }.map { it.id }.toSet()
+                            val studentSelections = answerData.mapNotNull { it as? Int }.toSet()
+
+                            answerData.forEach { cId ->
+                                answerList.add(StudentAnswerInsert(realStudentId, assessment.id, qId, choiceId = cId as Int, timestamp = timestamp))
+                            }
+
+                            // Only give a point if they selected exactly the correct combination
+                            if (studentSelections.isNotEmpty() && studentSelections == correctDbChoices) {
+                                correctCount++
+                            }
+                        }
+
+                        is String -> {
+                            // --- TEXT OR IMAGE UPLOAD ---
+                            if (qType == "Short Answer") {
+                                // Auto-grade: Check if typed text matches the DB choice (ignoring [X pts])
+                                val matchingChoice = question.choices.find { dbChoice ->
+                                    val cleanDbText = dbChoice.choiceText.replace(Regex("^\\[\\d+\\s*pts\\]\\s*"), "").trim()
+                                    cleanDbText.equals(answerData.trim(), ignoreCase = true)
+                                }
+
+                                if (matchingChoice != null) {
+                                    answerList.add(StudentAnswerInsert(realStudentId, assessment.id, qId, choiceId = matchingChoice.id, textAnswer = answerData, timestamp = timestamp))
+                                    if (matchingChoice.isCorrect) correctCount++
+                                } else {
+                                    answerList.add(StudentAnswerInsert(realStudentId, assessment.id, qId, choiceId = null, textAnswer = answerData, timestamp = timestamp))
+                                }
+                            } else if (qType == "Upload Image" || qType == "Paragraph") {
+                                // Manual Grade: Save URL/Paragraph, do not award points automatically
+                                answerList.add(StudentAnswerInsert(realStudentId, assessment.id, qId, choiceId = null, textAnswer = answerData, timestamp = timestamp))
+                            }
+                        }
                     }
-                    // Try to delete old answers first to prevent duplicates (since we are doing "insert")
+                }
+
+                // Delete old answers to prevent duplicates
+                if (answerList.isNotEmpty()) {
                     try {
                         db.from("student_answers").delete {
                             filter {
@@ -57,26 +104,12 @@ class TakeAssessmentRepository {
                                 eq("assessment_id", assessment.id)
                             }
                         }
-                    } catch (e: Exception) { /* Ignore if fails, just proceed to insert */ }
+                    } catch (e: Exception) { /* Ignore */ }
 
                     db.from("student_answers").insert(answerList)
                 }
 
-                // 3. CALCULATE SCORE
-                var correctCount = 0
-                assessment.questions.forEach { question ->
-                    val selectedChoiceId = selectedAnswers[question.id]
-                    if (selectedChoiceId != null) {
-                        val choice = question.choices.find { it.id == selectedChoiceId }
-                        if (choice != null && choice.isCorrect) {
-                            correctCount++
-                        }
-                    }
-                }
-
-                // 4. SAVE SCORE RECORD (The Fix: Manual Check + Insert)
-
-                // A. Check if record already exists
+                // 4. SAVE SCORE RECORD
                 val existingRecord = db.from("assessment_record")
                     .select(columns = Columns.list("id")) {
                         filter {
@@ -85,12 +118,11 @@ class TakeAssessmentRepository {
                         }
                     }.decodeSingleOrNull<RecordIdHelper>()
 
-                // B. Only Insert if it DOES NOT exist
                 if (existingRecord == null) {
                     val record = AssessmentRecordInsert(
                         studentId = realStudentId,
                         assessmentId = assessment.id,
-                        score = correctCount.toDouble(),
+                        score = correctCount,
                         dateAccomplished = timestamp
                     )
 
@@ -187,7 +219,8 @@ class TakeAssessmentRepository {
         @SerialName("student_id") val studentId: Int,
         @SerialName("assessment_id") val assessmentId: Int,
         @SerialName("question_id") val questionId: Int,
-        @SerialName("choice_id") val choiceId: Int,
+        @SerialName("choice_id") val choiceId: Int? = null,
+        @SerialName("text_answer") val textAnswer: String? = null,
         @SerialName("timestamp") val timestamp: String
     )
 

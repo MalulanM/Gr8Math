@@ -28,7 +28,6 @@ class StudentParticipantsRepository {
 
                 val sectionId = sectionRes?.sectionId ?: throw Exception("Invalid Course")
 
-
                 val teacherDeferred = async {
                     val adviserUser = db.from("class")
                         .select(columns = Columns.raw("adviser:user!inner(id, first_name, last_name, profile_pic, roles, birthdate)")) {
@@ -36,7 +35,7 @@ class StudentParticipantsRepository {
                         }.decodeSingleOrNull<ClassAdviserRes>()?.adviser
 
                     if (adviserUser != null) {
-                        // Get Teacher ID
+                        // Get Teacher ID & Position
                         val teacherRow = db.from("teacher").select { filter { eq("user_id", adviserUser.id) } }.decodeSingleOrNull<TeacherRow>()
 
                         // Get Achievements
@@ -58,7 +57,7 @@ class StudentParticipantsRepository {
                             firstName = adviserUser.firstName,
                             lastName = adviserUser.lastName,
                             profilePic = adviserUser.profilePic,
-                            roles = adviserUser.roles,
+                            roles = teacherRow?.teachingPosition ?: adviserUser.roles,
                             birthdate = adviserUser.birthdate,
                             achievements = achievements
                         )
@@ -70,7 +69,7 @@ class StudentParticipantsRepository {
                     val rawStudents = db.from("student_class")
                         .select(columns = Columns.raw("""
                             student!inner (
-                                id, grade_level,
+                                id, grade_level, learners_ref_number, 
                                 user!inner (id, first_name, last_name, profile_pic, birthdate),
                                 badges:student_badges(rank, badge_id, date_rewarded)
                             )
@@ -101,6 +100,7 @@ class StudentParticipantsRepository {
                             profilePic = wrapper.student.user.profilePic,
                             gradeLevel = wrapper.student.gradeLevel,
                             birthdate = wrapper.student.user.birthdate,
+                            lrn = wrapper.student.learnersRefNumber,
                             badges = topBadges
                         )
                     }
@@ -138,7 +138,10 @@ class StudentParticipantsRepository {
     data class ClassAdviserRes(@kotlinx.serialization.SerialName("adviser") val adviser: UserRes)
 
     @kotlinx.serialization.Serializable
-    data class TeacherRow(val id: Int)
+    data class TeacherRow(
+        val id: Int,
+        @kotlinx.serialization.SerialName("teaching_position") val teachingPosition: String? = null // Fetches the actual position
+    )
 
     @kotlinx.serialization.Serializable
     data class AchRes(
@@ -155,6 +158,7 @@ class StudentParticipantsRepository {
     data class StudentRes(
         val id: Int,
         @kotlinx.serialization.SerialName("grade_level") val gradeLevel: Int?,
+        @kotlinx.serialization.SerialName("learners_ref_number") val learnersRefNumber: String?,
         @kotlinx.serialization.SerialName("user") val user: UserRes,
         val badges: List<StudentBadgeRes> = emptyList()
     )

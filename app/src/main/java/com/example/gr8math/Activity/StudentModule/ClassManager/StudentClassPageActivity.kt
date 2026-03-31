@@ -35,6 +35,8 @@ class StudentClassPageActivity : AppCompatActivity() {
     private lateinit var parentLayout: LinearLayout
     private lateinit var toolbar: MaterialToolbar
 
+    private lateinit var emptyStateLayout: LinearLayout
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_classpage_student)
@@ -90,6 +92,7 @@ class StudentClassPageActivity : AppCompatActivity() {
     private fun initViews() {
         parentLayout = findViewById(R.id.parentLayout)
         toolbar = findViewById(R.id.toolbar)
+        emptyStateLayout = findViewById(R.id.emptyStateLayout)
         toolbar.setNavigationOnClickListener { finish() }
 
         findViewById<View>(R.id.btnParticipants).setOnClickListener {
@@ -128,7 +131,6 @@ class StudentClassPageActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
-        // This snaps the real name into the toolbar once the DB fetch finishes
         viewModel.sectionName.observe(this) { name ->
             if (!name.isNullOrEmpty()) {
                 toolbar.title = name
@@ -138,9 +140,27 @@ class StudentClassPageActivity : AppCompatActivity() {
 
         viewModel.contentState.observe(this) { state ->
             when (state) {
-                is ContentState.Loading -> parentLayout.removeAllViews()
-                is ContentState.Success -> populateList(state.data)
-                is ContentState.Error -> ShowToast.showMessage(this, state.message)
+                is ContentState.Loading -> {
+                    emptyStateLayout.visibility = View.GONE
+                }
+                is ContentState.Success -> {
+                    // 🌟 CHECK IF EMPTY
+                    if (state.data.isEmpty()) {
+                        emptyStateLayout.visibility = View.VISIBLE
+
+                        // Safely remove old lessons but KEEP the game card (which is at index 0)
+                        if (parentLayout.childCount > 1) {
+                            parentLayout.removeViews(1, parentLayout.childCount - 1)
+                        }
+                    } else {
+                        emptyStateLayout.visibility = View.GONE
+                        populateList(state.data)
+                    }
+                }
+                is ContentState.Error -> {
+                    ShowToast.showMessage(this, state.message)
+                    emptyStateLayout.visibility = View.VISIBLE
+                }
             }
         }
 
@@ -206,7 +226,11 @@ class StudentClassPageActivity : AppCompatActivity() {
     }
 
     private fun populateList(data: List<ClassContentItem>) {
-        parentLayout.removeAllViews()
+        // 🌟 Safely remove old lessons but KEEP the game card (index 0)
+        if (parentLayout.childCount > 1) {
+            parentLayout.removeViews(1, parentLayout.childCount - 1)
+        }
+
         for (item in data) {
             when (item) {
                 is ClassContentItem.LessonItem -> {

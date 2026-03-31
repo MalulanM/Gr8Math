@@ -113,7 +113,6 @@ class AppLoginActivity : AppCompatActivity() {
                 }
 
                 is LoginState.InputError -> {
-                    // CASE 1: Empty Fields -> Show RED TEXT on fields (No Toast)
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     btnLogin.isEnabled = true
 

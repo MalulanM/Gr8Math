@@ -142,7 +142,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
 
 
         if (!isValidPassword(newPass)) {
-            ShowToast.showMessage(this, "Password must have 1 Upper, 1 Lower, 1 Number, and 1 Special Char")
+            ShowToast.showMessage(this, "Password invalid")
             return
         }
 

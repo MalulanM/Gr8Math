@@ -54,10 +54,7 @@ class StudentParticipantsActivity : AppCompatActivity() {
 
                 }
                 is StudentParticipantsState.Success -> {
-
                     val data = state.data
-
-
                     setupTeacherCard(data.teacher)
                     setupStudentList(data.students)
                 }
@@ -99,7 +96,8 @@ class StudentParticipantsActivity : AppCompatActivity() {
                 putExtra("EXTRA_NAME", fullName)
                 putExtra("EXTRA_USER_ID", teacher.userId)
                 putExtra("EXTRA_PROFILE_PIC", profilePicUrl)
-                putExtra("EXTRA_TEACHING_POSITION", teacher.roles ?: "Teacher I")
+                // FIX: Ensure the teacher's actual position/role is passed, defaulting to "Teacher" if null
+                putExtra("EXTRA_TEACHING_POSITION", teacher.roles ?: "Teacher")
                 putExtra("EXTRA_ACHIEVEMENTS_HEADER", "Teaching Achievements")
                 putExtra("EXTRA_BIRTHDATE", teacher.birthdate)
                 putExtra("EXTRA_ITEMS_JSON", Gson().toJson(teacher.achievements))
@@ -118,13 +116,21 @@ class StudentParticipantsActivity : AppCompatActivity() {
             intent.putExtra("EXTRA_NAME", fullName)
             intent.putExtra("EXTRA_ROLE", "Student")
             intent.putExtra("EXTRA_USER_ID", student.userId)
-            intent.putExtra("EXTRA_LRN", student.userId.toString())
+
+            // FIX: Pass the actual LRN string from the student model, NOT the userId.
+            // Assuming your StudentInfoSide data class has an 'lrn' or 'studentLrn' field.
+            // If the field is named differently (e.g., student.lrnNumber), update it here.
+            val lrnToDisplay = student.lrn ?: "Not Available"
+            intent.putExtra("EXTRA_LRN", lrnToDisplay)
+
             intent.putExtra("EXTRA_GRADE_LEVEL", student.gradeLevel?.toString() ?: "N/A")
             intent.putExtra("EXTRA_PROFILE_PIC", student.profilePic ?: "")
             intent.putExtra("EXTRA_BIRTHDATE", student.birthdate)
             intent.putExtra("EXTRA_BADGE_HEADER", "Badges")
+            // Note: EXTRA_BADGE_LIST isn't used in ParticipantProfileActivity, but keeping it as is
             intent.putExtra("EXTRA_BADGE_LIST", Gson().toJson(student.badges))
             intent.putExtra("EXTRA_ITEMS_JSON", Gson().toJson(student.badges))
+
             startActivity(intent)
         }
     }

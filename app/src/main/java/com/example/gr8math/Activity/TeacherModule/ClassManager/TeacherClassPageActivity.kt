@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.Log
+import androidx.core.text.HtmlCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
@@ -41,6 +42,8 @@ class TeacherClassPageActivity : AppCompatActivity() {
     private val viewModel: TeacherClassPageViewModel by viewModels()
     private lateinit var parentLayout: LinearLayout
     private lateinit var toolbar: MaterialToolbar
+    private lateinit var emptyStateLayout: LinearLayout
+    private lateinit var btnAdd: Button
 
     // Launchers for refreshing
     private val lessonContentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -77,8 +80,16 @@ class TeacherClassPageActivity : AppCompatActivity() {
         toolbar = findViewById(R.id.toolbar)
 
         toolbar.setNavigationOnClickListener { finish() }
+        emptyStateLayout = findViewById(R.id.emptyStateLayout)
+        btnAdd = findViewById(R.id.btnAdd)
 
-        findViewById<Button>(R.id.btnAdd).setOnClickListener { showAddOptionsDialog() }
+        val tvEmptySubtext = findViewById<TextView>(R.id.tvEmptySubtext)
+        tvEmptySubtext?.text = HtmlCompat.fromHtml(
+            getString(R.string.empty_class_message),
+            HtmlCompat.FROM_HTML_MODE_COMPACT
+        )
+
+        btnAdd.setOnClickListener { showAddOptionsDialog() }
     }
 
     private fun setupCurrentCourse() {
@@ -91,14 +102,16 @@ class TeacherClassPageActivity : AppCompatActivity() {
             CurrentCourse.courseId = incomingCourseId
             CurrentCourse.currentRole = incomingRole ?: "teacher"
             if (incomingUserId != -1) CurrentCourse.userId = incomingUserId
-
-            if (incomingSectionName.isNullOrEmpty()) {
-                toolbar.title = "Loading..."
-                viewModel.fetchSectionName(incomingCourseId)
-            } else {
+            if (!incomingSectionName.isNullOrEmpty()) {
                 CurrentCourse.sectionName = incomingSectionName
-                toolbar.title = incomingSectionName
             }
+        }
+
+        if (CurrentCourse.sectionName.isEmpty()) {
+            toolbar.title = "Loading..."
+            viewModel.fetchSectionName(CurrentCourse.courseId)
+        } else {
+            toolbar.title = CurrentCourse.sectionName
         }
     }
 
@@ -111,9 +124,27 @@ class TeacherClassPageActivity : AppCompatActivity() {
         }
         viewModel.state.observe(this) { state ->
             when (state) {
-                is ContentState.Loading -> parentLayout.removeAllViews()
-                is ContentState.Success -> populateList(state.data)
-                is ContentState.Error -> ShowToast.showMessage(this, state.message)
+                is ContentState.Loading -> {
+                    parentLayout.removeAllViews()
+                    emptyStateLayout.visibility = View.GONE
+                }
+                is ContentState.Success -> {
+                    if (state.data.isEmpty()) {
+                        parentLayout.visibility = View.GONE
+                        emptyStateLayout.visibility = View.VISIBLE
+                        btnAdd.visibility = View.VISIBLE
+                    } else {
+                        parentLayout.visibility = View.VISIBLE
+                        emptyStateLayout.visibility = View.GONE
+                        btnAdd.visibility = View.VISIBLE
+                        populateList(state.data)
+                    }
+                }
+                is ContentState.Error -> {
+                    ShowToast.showMessage(this, state.message)
+                    parentLayout.visibility = View.GONE
+                    emptyStateLayout.visibility = View.VISIBLE
+                }
             }
         }
     }
