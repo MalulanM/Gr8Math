@@ -24,7 +24,11 @@ data class LessonEntity(
 data class AssessmentEntity(
     val id: Int,
     @SerialName("course_id") val courseId: Int,
+    @SerialName("title") val title: String? = "", // Add this
     @SerialName("assessment_number") val assessmentNumber: Int,
+    @SerialName("assessment_quarter") val assessmentQuarter: Int? = 1, // Add this
+    @SerialName("start_time") val startTime: String? = "", // Add this
+    @SerialName("end_time") val endTime: String? = "", // Add this
     @SerialName("created_at") val createdAt: String
 )
 

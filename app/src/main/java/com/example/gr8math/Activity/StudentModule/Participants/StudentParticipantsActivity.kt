@@ -108,30 +108,30 @@ class StudentParticipantsActivity : AppCompatActivity() {
 
     private fun setupStudentList(students: List<StudentInfoSide>) {
         val rv = findViewById<RecyclerView>(R.id.rvStudentParticipants)
+        val emptyLayout = findViewById<View>(R.id.emptyStateLayout)
 
-        rv.adapter = StudentListAdapter(students) { student ->
-            val intent = Intent(this, ParticipantProfileActivity::class.java)
-            val fullName = "${student.lastName}, ${student.firstName}"
+        if (students.isEmpty()) {
+            rv.visibility = View.GONE
+            emptyLayout.visibility = View.VISIBLE
+        } else {
+            rv.visibility = View.VISIBLE
+            emptyLayout.visibility = View.GONE
 
-            intent.putExtra("EXTRA_NAME", fullName)
-            intent.putExtra("EXTRA_ROLE", "Student")
-            intent.putExtra("EXTRA_USER_ID", student.userId)
-
-            // FIX: Pass the actual LRN string from the student model, NOT the userId.
-            // Assuming your StudentInfoSide data class has an 'lrn' or 'studentLrn' field.
-            // If the field is named differently (e.g., student.lrnNumber), update it here.
-            val lrnToDisplay = student.lrn ?: "Not Available"
-            intent.putExtra("EXTRA_LRN", lrnToDisplay)
-
-            intent.putExtra("EXTRA_GRADE_LEVEL", student.gradeLevel?.toString() ?: "N/A")
-            intent.putExtra("EXTRA_PROFILE_PIC", student.profilePic ?: "")
-            intent.putExtra("EXTRA_BIRTHDATE", student.birthdate)
-            intent.putExtra("EXTRA_BADGE_HEADER", "Badges")
-            // Note: EXTRA_BADGE_LIST isn't used in ParticipantProfileActivity, but keeping it as is
-            intent.putExtra("EXTRA_BADGE_LIST", Gson().toJson(student.badges))
-            intent.putExtra("EXTRA_ITEMS_JSON", Gson().toJson(student.badges))
-
-            startActivity(intent)
+            rv.adapter = StudentListAdapter(students) { student ->
+                val intent = Intent(this, ParticipantProfileActivity::class.java).apply {
+                    val fullName = "${student.lastName}, ${student.firstName}"
+                    putExtra("EXTRA_NAME", fullName)
+                    putExtra("EXTRA_ROLE", "Student")
+                    putExtra("EXTRA_USER_ID", student.userId)
+                    putExtra("EXTRA_LRN", student.lrn ?: "Not Available")
+                    putExtra("EXTRA_GRADE_LEVEL", student.gradeLevel?.toString() ?: "N/A")
+                    putExtra("EXTRA_PROFILE_PIC", student.profilePic ?: "")
+                    putExtra("EXTRA_BIRTHDATE", student.birthdate)
+                    putExtra("EXTRA_BADGE_HEADER", "Badges")
+                    putExtra("EXTRA_ITEMS_JSON", Gson().toJson(student.badges))
+                }
+                startActivity(intent)
+            }
         }
     }
 

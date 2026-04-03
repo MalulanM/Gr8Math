@@ -92,32 +92,32 @@ class DLLObjectivesFragment : Fragment() {
         // Initial Load
         refreshView()
 
-        btnEdit.setOnClickListener {
-            if (dailyEntryData == null) return@setOnClickListener
-
-            val intent = Intent(requireContext(), DailyLessonLogActivity::class.java).apply {
-                // 1. Tell the activity it's in EDIT MODE
-                putExtra(DLLEditActivity.EXTRA_MODE_EDIT, true)
-                // 2. Tell the activity WHAT SECTION it is editing
-                putExtra(DLLEditActivity.EXTRA_SECTION_TITLE, DLLEditActivity.EDIT_SECTION_OBJECTIVES)
-
-                // Pass the specific date of this entry
-                val convertedDate = convertDbDateToUiDate(dailyEntryData?.entryDate)
-                putExtra("EXTRA_ENTRY_DATE", convertedDate)
-
-                // Pass the actual data for pre-filling
-                putExtra("EXTRA_CONTENT_STD", dailyEntryData?.contentStandard)
-                putExtra("EXTRA_PERF_STD", dailyEntryData?.performanceStandard)
-                putExtra("EXTRA_COMPETENCIES", dailyEntryData?.learningComp)
-
-                // Pass IDs so the Edit Activity knows what to update in the database
-                putExtra("EXTRA_DAILY_ENTRY_ID", dailyEntryData?.id)
-                putExtra(DLLEditActivity.EXTRA_DLL_MAIN_ID, dailyEntryData?.mainId)
-            }
-
-            // Launch the intent
-            editLauncher.launch(intent)
-        }
+//        btnEdit.setOnClickListener {
+//            if (dailyEntryData == null) return@setOnClickListener
+//
+//            val intent = Intent(requireContext(), DailyLessonLogActivity::class.java).apply {
+//                // 1. Tell the activity it's in EDIT MODE
+//                putExtra(DLLEditActivity.EXTRA_MODE_EDIT, true)
+//                // 2. Tell the activity WHAT SECTION it is editing
+//                putExtra(DLLEditActivity.EXTRA_SECTION_TITLE, DLLEditActivity.EDIT_SECTION_OBJECTIVES)
+//
+//                // Pass the specific date of this entry
+//                val convertedDate = convertDbDateToUiDate(dailyEntryData?.entryDate)
+//                putExtra("EXTRA_ENTRY_DATE", convertedDate)
+//
+//                // Pass the actual data for pre-filling
+//                putExtra("EXTRA_CONTENT_STD", dailyEntryData?.contentStandard)
+//                putExtra("EXTRA_PERF_STD", dailyEntryData?.performanceStandard)
+//                putExtra("EXTRA_COMPETENCIES", dailyEntryData?.learningComp)
+//
+//                // Pass IDs so the Edit Activity knows what to update in the database
+//                putExtra("EXTRA_DAILY_ENTRY_ID", dailyEntryData?.id)
+//                putExtra(DLLEditActivity.EXTRA_DLL_MAIN_ID, dailyEntryData?.mainId)
+//            }
+//
+//            // Launch the intent
+//            editLauncher.launch(intent)
+//        }
     }
 
     private fun convertDbDateToUiDate(dbDate: String?): String? {

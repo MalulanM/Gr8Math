@@ -15,22 +15,105 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilQuestion"
-            style="@style/Gr8TextInputStyle"
+        <Spinner
+            android:id="@+id/spinnerQuestionType"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_white_rounded_24dp"
+            android:entries="@array/question_types" />
+
+        <TextView
+            android:id="@+id/tvPreviewLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PREVIEW:"
+            android:textColor="#0A7F93"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:layout_marginBottom="4dp"/>
+
+        <LinearLayout
+            android:id="@+id/llMathPreview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/question_hint"
-            app:boxBackgroundColor="@color/colorAccent">
+            android:layout_marginBottom="12dp"
+            android:orientation="horizontal"
+            android:visibility="gone" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etQuestion"
-                android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilQuestion"
+                style="@style/Gr8TextInputStyle"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/lexend"
-                android:inputType="textCapSentences|textMultiLine"
-                android:textColor="@color/colorText" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:hint="Question Text (use $...$ for math)"
+                app:boxBackgroundColor="@color/colorAccent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etQuestion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:inputType="textCapSentences|textMultiLine"
+                    android:textColor="@color/colorText" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <ImageButton
+                android:id="@+id/btnUploadImage"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/add_media"
+                app:tint="@color/colorDarkCyan" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/rlImagePreviewContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/ivUploadedImage"
+                android:layout_width="wrap_content"
+                android:layout_height="150dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter" />
+
+            <FrameLayout
+                android:id="@+id/ibRemoveImage"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:background="@drawable/bg_red_circle"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="2dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="✕"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:includeFontPadding="false" />
+            </FrameLayout>
+        </RelativeLayout>
 
         <LinearLayout
             android:id="@+id/choicesContainer"
@@ -38,7 +121,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:orientation="vertical">
-
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
@@ -81,12 +163,11 @@
                 android:paddingTop="8dp"
                 android:paddingEnd="4dp"
                 android:paddingBottom="8dp"
-                android:text="@string/answer_key"
+                android:text="Answer Key"
                 android:textColor="@color/colorMatisse"
                 android:textStyle="bold"
                 android:visibility="gone"
                 tools:visibility="visible" />
-
         </RelativeLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

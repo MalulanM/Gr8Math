@@ -38,7 +38,6 @@ class TeacherNotificationsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher_notifications)
 
-        // 🌟 FOCUS ON THE CLASS SENT BY THE CLASS MANAGER
         val focusedCourseId = intent.getIntExtra("courseId", CurrentCourse.courseId)
 
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
@@ -91,17 +90,27 @@ class TeacherNotificationsActivity : AppCompatActivity() {
             ShowToast.showMessage(this, "All notifications marked as read")
         }
 
-        // 🌟 TRIGGER TARGETED LOAD
         viewModel.loadTeacherNotifications(CurrentCourse.userId, focusedCourseId)
 
         viewModel.teacherState.observe(this) { state ->
+            val rv = findViewById<RecyclerView>(R.id.rvNotifications)
+            val emptyLayout = findViewById<View>(R.id.emptyStateLayout)
+
             when(state) {
                 is NotifState.Loading -> {
                     btnMarkAllRead.visibility = View.GONE
                 }
                 is NotifState.Success -> {
-                    adapter.updateList(state.data)
-                    updateMarkAllButtonVisibility()
+                    if (state.data.isEmpty()) {
+                        rv.visibility = View.GONE
+                        emptyLayout.visibility = View.VISIBLE
+                        btnMarkAllRead.visibility = View.GONE
+                    } else {
+                        rv.visibility = View.VISIBLE
+                        emptyLayout.visibility = View.GONE
+                        adapter.updateList(state.data)
+                        updateMarkAllButtonVisibility()
+                    }
                 }
                 is NotifState.Error -> {
                     btnMarkAllRead.visibility = View.GONE
@@ -111,7 +120,6 @@ class TeacherNotificationsActivity : AppCompatActivity() {
         }
     }
 
-    // 🌟 ADDED ONDESUME TO FIX BOTTOM NAV GLITCHES
     override fun onResume() {
         super.onResume()
         if (::bottomNav.isInitialized) {

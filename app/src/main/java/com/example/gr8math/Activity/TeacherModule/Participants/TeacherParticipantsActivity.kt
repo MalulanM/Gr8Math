@@ -2,6 +2,7 @@ package com.example.gr8math.Activity.TeacherModule.Participants
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -45,6 +46,10 @@ class TeacherParticipantsActivity : AppCompatActivity() {
 
     private fun setupObservers() {
         viewModel.state.observe(this) { state ->
+
+            val scrollView = findViewById<View>(R.id.scrollView)
+            val emptyLayout = findViewById<View>(R.id.emptyStateLayout)
+
             when (state) {
                 is ParticipantsState.Loading -> {
                     // Optional: Show loading
@@ -52,8 +57,11 @@ class TeacherParticipantsActivity : AppCompatActivity() {
                 is ParticipantsState.Success -> {
                     val students = state.data
                     if (students.isEmpty()) {
-                        ShowToast.showMessage(this, "No students found.")
+                        scrollView.visibility = View.GONE
+                        emptyLayout.visibility = View.VISIBLE
                     } else {
+                        scrollView.visibility = View.VISIBLE
+                        emptyLayout.visibility = View.GONE
                         setupPodium(students)
                         setupRecyclerView(students)
                     }

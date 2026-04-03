@@ -16,7 +16,7 @@ import java.util.TimeZone
 sealed class AssessmentState {
     object Idle : AssessmentState()
     object Loading : AssessmentState()
-    object Success : AssessmentState()
+    data class Success(val isFlagged: Boolean) : AssessmentState() // 🌟 Contains flag
     data class Error(val message: String) : AssessmentState()
 }
 
@@ -49,6 +49,7 @@ class AssessmentViewModel : ViewModel() {
     }
 
     fun publishAssessment(
+        userId: Int,
         courseId: Int, title: String, rawStartTime: String, rawEndTime: String,
         assessmentNumber: Int, assessmentQuarter: Int, questions: List<UiQuestion>
     ) {
@@ -64,14 +65,14 @@ class AssessmentViewModel : ViewModel() {
         val metaData = AssessmentInsert(courseId, title, startTime, endTime, questions.size, assessmentNumber, assessmentQuarter)
 
         viewModelScope.launch {
-            val result = repository.createAssessment(metaData, questions)
-            if (result.isSuccess) _state.value = AssessmentState.Success
+            val result = repository.createAssessment(userId, metaData, questions)
+            if (result.isSuccess) _state.value = AssessmentState.Success(result.getOrDefault(false))
             else _state.value = AssessmentState.Error("Failed to publish")
         }
     }
 
-
     fun updateAssessment(
+        userId: Int,
         assessmentId: Int, title: String, rawStartTime: String, rawEndTime: String,
         assessmentNumber: Int, assessmentQuarter: Int, questions: List<UiQuestion>
     ) {
@@ -87,8 +88,8 @@ class AssessmentViewModel : ViewModel() {
         val updateData = AssessmentUpdate(title, startTime, endTime, questions.size, assessmentNumber, assessmentQuarter)
 
         viewModelScope.launch {
-            val result = repository.updateAssessment(assessmentId, updateData, questions)
-            if (result.isSuccess) _state.value = AssessmentState.Success
+            val result = repository.updateAssessment(userId, assessmentId, updateData, questions)
+            if (result.isSuccess) _state.value = AssessmentState.Success(result.getOrDefault(false))
             else _state.value = AssessmentState.Error("Failed to update")
         }
     }

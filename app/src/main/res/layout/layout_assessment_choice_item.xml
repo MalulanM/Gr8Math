@@ -6,6 +6,25 @@
     android:orientation="vertical"
     android:layout_marginBottom="8dp">
 
+    <TextView
+        android:id="@+id/tvChoicePreviewLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="PREVIEW:"
+        android:textColor="#0A7F93"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        android:layout_marginBottom="4dp"/>
+
+    <LinearLayout
+        android:id="@+id/llChoiceMathPreview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:orientation="horizontal"
+        android:visibility="gone" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilAnswerChoice"
         style="@style/Gr8TextInputStyle"
@@ -24,5 +43,4 @@
             android:inputType="textCapSentences|textMultiLine"
             android:textColor="@color/colorText" />
     </com.google.android.material.textfield.TextInputLayout>
-
 </LinearLayout>

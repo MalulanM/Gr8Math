@@ -102,7 +102,6 @@ class DailyLessonLogActivity : AppCompatActivity() {
         }
     }
 
-    // 🌟 SUPABASE UPDATE LOGIC 🌟
     private fun updateObjectivesInSupabase(btnSave: Button) {
         if (dailyEntryId == -1) {
             Toast.makeText(this, "Error: Daily Entry ID is missing.", Toast.LENGTH_LONG).show()

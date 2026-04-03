@@ -64,32 +64,32 @@ class DLLReflectionFragment : Fragment() {
 
         refreshView()
 
-        btnEdit.setOnClickListener {
-            if (dailyEntryData == null) {
-                Toast.makeText(context, "No reflection to edit.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            // Launch DLLStep4Activity for single-step edit
-            val intent = Intent(requireContext(), DLLStep4Activity::class.java).apply {
-
-                // --- A. EDIT FLAGS & CONTEXT ---
-                putExtra(DLLEditActivity.EXTRA_MODE_EDIT, true)
-                putExtra(DLLEditActivity.EXTRA_SECTION_TITLE, DLLEditActivity.SECTION_REFLECTION)
-
-                // --- B. CRITICAL IDs (Passed for API) ---
-                putExtra(DLLEditActivity.EXTRA_DLL_MAIN_ID, dailyEntryData!!.mainId)
-                putExtra("EXTRA_DAILY_ENTRY_ID", dailyEntryData!!.id)
-
-                val convertedDate = convertDbDateToUiDate(dailyEntryData!!.entryDate)
-                putExtra("EXTRA_ENTRY_DATE", convertedDate)
-
-                // --- C. PREFILL DATA (Fields needed by DLLStep4Activity) ---
-                putExtra("Remarks", dailyEntryData!!.remark ?: "")
-                putExtra("Reflection", dailyEntryData!!.reflection ?: "")
-            }
-            reflectionEditLauncher.launch(intent)
-        }
+//        btnEdit.setOnClickListener {
+//            if (dailyEntryData == null) {
+//                Toast.makeText(context, "No reflection to edit.", Toast.LENGTH_SHORT).show()
+//                return@setOnClickListener
+//            }
+//
+//            // Launch DLLStep4Activity for single-step edit
+//            val intent = Intent(requireContext(), DLLStep4Activity::class.java).apply {
+//
+//                // --- A. EDIT FLAGS & CONTEXT ---
+//                putExtra(DLLEditActivity.EXTRA_MODE_EDIT, true)
+//                putExtra(DLLEditActivity.EXTRA_SECTION_TITLE, DLLEditActivity.SECTION_REFLECTION)
+//
+//                // --- B. CRITICAL IDs (Passed for API) ---
+//                putExtra(DLLEditActivity.EXTRA_DLL_MAIN_ID, dailyEntryData!!.mainId)
+//                putExtra("EXTRA_DAILY_ENTRY_ID", dailyEntryData!!.id)
+//
+//                val convertedDate = convertDbDateToUiDate(dailyEntryData!!.entryDate)
+//                putExtra("EXTRA_ENTRY_DATE", convertedDate)
+//
+//                // --- C. PREFILL DATA (Fields needed by DLLStep4Activity) ---
+//                putExtra("Remarks", dailyEntryData!!.remark ?: "")
+//                putExtra("Reflection", dailyEntryData!!.reflection ?: "")
+//            }
+//            reflectionEditLauncher.launch(intent)
+//        }
     }
 
     private fun refreshView() {

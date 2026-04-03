@@ -79,7 +79,6 @@ class LessonContentActivity : AppCompatActivity() {
     private var currentFontSize = 16
     private lateinit var tvFontSize: TextView
 
-    // 🌟 DEFERRED UPLOAD QUEUE
     data class PendingMedia(val localUri: Uri, val mimeType: String, val fileName: String)
     private val mediaQueue = mutableMapOf<String, PendingMedia>()
     // Views
@@ -144,9 +143,6 @@ class LessonContentActivity : AppCompatActivity() {
         })
     }
 
-    // =========================================================================
-    // 🌟 RICH TEXT EDITOR TOOLBAR LOGIC
-    // =========================================================================
     private fun setupEditorToolbar() {
         findViewById<View>(R.id.action_add_media).setOnClickListener { pickMediaLauncher.launch("*/*") }
 
@@ -300,10 +296,6 @@ class LessonContentActivity : AppCompatActivity() {
             etLessonContent.text.setSpan(TypefaceSpan("size_$htmlSize"), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
     }
-
-    // =========================================================================
-    // 🌟 DEFERRED TIGRIS UPLOAD, HTML GENERATION & SAVING
-    // =========================================================================
 
     private fun queueMediaForLater(uri: Uri) {
         val mimeType = contentResolver.getType(uri) ?: "application/octet-stream"
@@ -582,8 +574,8 @@ class LessonContentActivity : AppCompatActivity() {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.discard_title)
             .setMessage(R.string.discard_message)
-            .setNegativeButton(R.string.discard_action) { _, _ -> goBackToStep1() }
-            .setPositiveButton(R.string.cancel_action) { dialog, _ -> dialog.dismiss() }
+            .setNegativeButton("Yes") { _, _ -> goBackToStep1() }
+            .setPositiveButton("No") { dialog, _ -> dialog.dismiss() }
             .show()
     }
 

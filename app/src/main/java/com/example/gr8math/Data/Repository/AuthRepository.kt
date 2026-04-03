@@ -13,11 +13,50 @@ import io.github.jan.supabase.postgrest.query.Count
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import io.github.jan.supabase.auth.OtpType
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class AuditTrailInsert(
+    val user_id: Int?,
+    val resource: String,
+    val action: String,
+    val status: String,
+    val details: String
+)
 
 class AuthRepository {
 
     private val auth = SupabaseService.client.auth
     private val db = SupabaseService.client
+
+    // --- NEW: REUSABLE AUDIT TRAIL HELPER ---
+    private suspend fun logAuditTrail(
+        userId: Int?,
+        resource: String,
+        action: String,
+        status: String,
+        details: String
+    ) {
+        try {
+            val auditEntry = AuditTrailInsert(userId, resource, action, status, details)
+            db.from("audit_trails").insert(auditEntry)
+        } catch (e: Exception) {
+            Log.e("AUTH_DEBUG", "Failed to log audit trail: ${e.message}")
+        }
+    }
+
+    // --- NEW: Helper to safely fetch user ID by email for logging ---
+    private suspend fun getUserIdByEmailSafe(email: String): Int? {
+        return try {
+            val users = db.from("user")
+                .select(columns = Columns.list("id")) {
+                    filter { eq("email_add", email) }
+                }.decodeList<UserProfile>()
+            users.firstOrNull()?.id
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     suspend fun login(emailInput: String, passwordInput: String): Result<UserProfile> {
         return withContext(Dispatchers.IO) {
@@ -38,11 +77,15 @@ class AuthRepository {
                     }
                     .decodeSingle<UserProfile>()
 
+                // --- NEW: Log Successful Login ---
+                logAuditTrail(user.id, "Authentication", "LOGIN", "SUCCESS", "Successful Login.")
+
                 Result.success(user)
 
             } catch (e: Exception) {
-
-                Log.e("AUTH_DEBUG", "Login Failed: ${e.message}")
+                // --- NEW: Log Failed Login ---
+                val targetUserId = getUserIdByEmailSafe(emailInput)
+                logAuditTrail(targetUserId, "Authentication", "LOGIN", "FAILED", "Failed login attempt for $emailInput.")
                 Result.failure(Exception("Email or Password not found"))
             }
         }
@@ -62,7 +105,6 @@ class AuthRepository {
         }
     }
 
-
     suspend fun registerStudent(
         emailInput: String, passInput: String, firstName: String, lastName: String,
         gender: String, birthDate: String, lrn: String
@@ -70,7 +112,6 @@ class AuthRepository {
         return registerUserGeneric(
             emailInput, passInput, firstName, lastName, gender, birthDate, "Student"
         ) { userId ->
-            // Insert specific Student Data
             val student = StudentProfile(userId = userId, lrn = lrn, gradeLevel = 8)
             db.from("student").insert(student)
         }
@@ -119,6 +160,9 @@ class AuthRepository {
 
             insertRoleData(newUserId)
 
+            // --- NEW: Log Successful Registration ---
+            logAuditTrail(newUserId, "Authentication", "REGISTER", "SUCCESS", "New $role account created for $emailInput.")
+
             Result.success(insertedUser)
 
         } catch (e: Exception) {
@@ -132,7 +176,6 @@ class AuthRepository {
     suspend fun checkEmailExists(email: String): Boolean {
         return withContext(Dispatchers.IO) {
             try {
-                // Check public 'user' table for this email
                 val count = db.from("user").select(columns = Columns.list("id")) {
                     filter {
                         eq("email_add", email)
@@ -140,11 +183,10 @@ class AuthRepository {
                     count(Count.EXACT)
                 }.countOrNull()
 
-                // If count is greater than 0, email exists
                 (count ?: 0) > 0
             } catch (e: Exception) {
                 e.printStackTrace()
-                false // If error, assume it doesn't exist so flow isn't blocked (or handle error strictly)
+                false
             }
         }
     }
@@ -169,10 +211,19 @@ class AuthRepository {
 
     suspend fun sendPasswordResetCode(email: String): Result<Unit> {
         return withContext(Dispatchers.IO) {
+            // Grab ID for logging
+            val targetUserId = getUserIdByEmailSafe(email)
+
             try {
                 auth.resetPasswordForEmail(email)
+
+                // --- NEW: Log Successful Request ---
+                logAuditTrail(targetUserId, "Authentication", "REQUEST_RESET", "SUCCESS", "Requested password reset OTP.")
+
                 Result.success(Unit)
             } catch (e: Exception) {
+                // --- NEW: Log Failed Request ---
+                logAuditTrail(targetUserId, "Authentication", "REQUEST_RESET", "FAILED", "Failed OTP request: ${e.message}")
                 Result.failure(e)
             }
         }
@@ -180,6 +231,8 @@ class AuthRepository {
 
     suspend fun verifyRecoveryCode(email: String, code: String): Result<Unit> {
         return withContext(Dispatchers.IO) {
+            val targetUserId = getUserIdByEmailSafe(email)
+
             try {
                 auth.verifyEmailOtp(
                     type = OtpType.Email.RECOVERY,
@@ -188,6 +241,8 @@ class AuthRepository {
                 )
                 Result.success(Unit)
             } catch (e: Exception) {
+                // --- NEW: Log Failed Verification ---
+                logAuditTrail(targetUserId, "Authentication", "VERIFY_RESET", "FAILED", "Failed OTP verification.")
                 Result.failure(e)
             }
         }
@@ -195,15 +250,22 @@ class AuthRepository {
 
     suspend fun updateUserPassword(newPass: String): Result<Unit> {
         return withContext(Dispatchers.IO) {
+            // Find current logged in user's email to get their ID for logging
+            val currentEmail = auth.currentUserOrNull()?.email
+            val targetUserId = if (currentEmail != null) getUserIdByEmailSafe(currentEmail) else null
+
             try {
                 auth.updateUser {
                     password = newPass
                 }
+                // --- NEW: Log Successful Password Update ---
+                logAuditTrail(targetUserId, "Authentication", "UPDATE_PASSWORD", "SUCCESS", "Password updated successfully.")
                 Result.success(Unit)
             } catch (e: Exception) {
+                // --- NEW: Log Failed Password Update ---
+                logAuditTrail(targetUserId, "Authentication", "UPDATE_PASSWORD", "FAILED", "Password update failed: ${e.message}")
                 Result.failure(e)
             }
         }
     }
-
 }

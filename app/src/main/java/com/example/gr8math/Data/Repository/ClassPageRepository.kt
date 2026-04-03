@@ -95,6 +95,48 @@ class ClassPageRepository {
         }
     }
 
+    // --- MODERATION METHODS ---
+
+    suspend fun getUserProfile(userId: Int): UserProfile? {
+        return withContext(Dispatchers.IO) {
+            try {
+                db.from("user").select {
+                    filter { eq("id", userId) }
+                }.decodeSingleOrNull<UserProfile>()
+            } catch (e: Exception) { null }
+        }
+    }
+
+    suspend fun getUnreadFlashWarning(userId: Int): FlashNotification? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val notices = db.from("notifications")
+                    .select {
+                        filter {
+                            eq("user_id", userId)
+                            eq("is_read", false)
+                            eq("type", "warning")
+                        }
+                    }.decodeList<FlashNotification>()
+
+                notices.find { it.meta?.flashUi == true }
+            } catch (e: Exception) { null }
+        }
+    }
+
+    suspend fun markNotificationRead(notifId: Int) {
+        withContext(Dispatchers.IO) {
+            try {
+                // FIXED Syntax for 'eq' and update
+                db.from("notifications").update(
+                    { set("is_read", true) }
+                ) {
+                    filter { eq("id", notifId) }
+                }
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
     suspend fun checkAssessmentAvailability(studentId: Int, assessmentId: Int): Result<AssessmentStatus> {
         return withContext(Dispatchers.IO) {
             try {
@@ -266,7 +308,13 @@ class ClassPageRepository {
                 null
             }
         }
+
+
     }
+
+
+
+
 
     // --- DATA WRAPPERS ---
 
@@ -293,8 +341,31 @@ class ClassPageRepository {
         @SerialName("created_at") val createdAt: String? = null,
         @SerialName("assessment_number") val assessmentNumber: Int,
         val title: String? = null,
-        @SerialName("Assessment_quarter") val assessmentQuarter: Int? = null,
+        @SerialName("assessment_quarter") val assessmentQuarter: Int? = null,
         @SerialName("start_time") val startTime: String? = null,
         @SerialName("end_time") val endTime: String? = null
     )
+
+
+    @Serializable
+    data class UserProfile(
+        val id: Int,
+        @SerialName("is_restricted") val isRestricted: Boolean = false,
+        @SerialName("warning_count") val warningCount: Int = 0,
+        @SerialName("restricted_at") val restrictedAt: String? = null
+    )
+
+    @Serializable
+    data class FlashNotification(
+        val id: Int,
+        val message: String,
+        val meta: FlashMeta? = null
+    )
+
+    @Serializable
+    data class FlashMeta(
+        @SerialName("flash_ui") val flashUi: Boolean = false,
+        @SerialName("warning_count") val warningCount: Int = 0
+    )
+
 }

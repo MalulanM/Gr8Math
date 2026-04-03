@@ -250,6 +250,10 @@
             android:exported="false"
             android:theme="@style/Theme.Gr8Math" />
 
+        <activity
+            android:name=".Activity.TeacherModule.DLL.DllMasterEditorActivity"
+            android:exported="false" />
+
         <service
             android:name=".Services.MyFirebaseMessagingService"
             android:exported="false">

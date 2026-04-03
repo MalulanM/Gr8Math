@@ -21,6 +21,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 class DLLViewActivityMain : AppCompatActivity() {
@@ -41,6 +42,11 @@ class DLLViewActivityMain : AppCompatActivity() {
         loadDllData(CurrentCourse.courseId)
     }
 
+    override fun onResume() {
+        super.onResume()
+        loadDllData(CurrentCourse.courseId)
+    }
+
     private fun initViews() {
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
@@ -48,8 +54,6 @@ class DLLViewActivityMain : AppCompatActivity() {
         loadingLayout = findViewById(R.id.loadingLayout)
         loadingProgress = findViewById(R.id.loadingProgressBg)
         loadingText = findViewById(R.id.loadingText)
-
-        // Find the empty container from your XML
         dllContainer = findViewById(R.id.dllContainer)
     }
 
@@ -58,7 +62,6 @@ class DLLViewActivityMain : AppCompatActivity() {
 
         lifecycleScope.launch {
             val result = repository.getDllMains(courseId)
-
             UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
 
             result.onSuccess { dllList ->
@@ -70,55 +73,72 @@ class DLLViewActivityMain : AppCompatActivity() {
     }
 
     private fun populateDllList(dllList: List<DllMainEntity>) {
-        dllContainer.removeAllViews() // Clear any old views first
+        dllContainer.removeAllViews()
 
         if (dllList.isEmpty()) {
-            ShowToast.showMessage(this, "No DLLs found.")
+            val emptyView = layoutInflater.inflate(R.layout.item_dll_empty_state, dllContainer, false)
+            dllContainer.addView(emptyView)
             return
         }
 
         for (dll in dllList) {
             val cardView = layoutInflater.inflate(R.layout.item_class_assessment_card, dllContainer, false)
 
-
             val tvTitle = cardView.findViewById<TextView>(R.id.tvTitle)
-            val ivIcon = cardView.findViewById<ImageView>(R.id.ivIcon)
-            val formattedFrom = formatDate(dll.availableFrom)
-            val formattedUntil = formatDate(dll.availableUntil)
 
+            // 🌟 Use the new range formatter
+            val dateRange = formatDateRange(dll.availableFrom, dll.availableUntil)
 
-            tvTitle.text = "DLL ($formattedFrom - $formattedUntil)"
+            tvTitle.text = "DLL ($dateRange)"
 
-            // 6. ADD CLICK LISTENER TO OPEN DLLViewActivity
             cardView.setOnClickListener {
-                val intent = Intent(this, DLLViewActivity::class.java)
-                // You can pass the specific DLL ID if your DLLViewActivity needs it later
-                intent.putExtra("target_dll_id", dll.id)
+                val intent = Intent(this@DLLViewActivityMain, DllMasterEditorActivity::class.java).apply {
+                    putExtra("EXTRA_IS_EXISTING", true)
+                    putExtra("EXTRA_MODE_EDIT", true)
+                    putExtra("EXTRA_DLL_MAIN_ID", dll.id)
+                    putExtra("EXTRA_COURSE_ID", dll.courseId)
+                    putExtra("EXTRA_QUARTER", dll.quarterNumber ?: 1)
+                    putExtra("EXTRA_WEEK", dll.weekNumber ?: 1)
+                    putExtra("EXTRA_FROM", dll.availableFrom)
+                    putExtra("EXTRA_UNTIL", dll.availableUntil)
+                }
                 startActivity(intent)
             }
 
-            // 7. ADD MARGIN TO SEPARATE CARDS
             val layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = 24 // Adds space below each card
-            }
-            cardView.layoutParams = layoutParams
+            ).apply { bottomMargin = 24 }
 
-            // 8. ADD TO CONTAINER
+            cardView.layoutParams = layoutParams
             dllContainer.addView(cardView)
         }
     }
 
-    // Helper: Converts "YYYY-MM-DD" into "MMM d" (e.g., "Dec 2")
-    private fun formatDate(dateString: String?): String {
-        if (dateString.isNullOrEmpty()) return "TBD"
+    // 🌟 SMART DATE FORMATTER
+    private fun formatDateRange(fromDateStr: String?, untilDateStr: String?): String {
+        if (fromDateStr.isNullOrEmpty() || untilDateStr.isNullOrEmpty()) return "TBD"
+
         return try {
             val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val outputFormat = SimpleDateFormat("MMM d", Locale.getDefault())
-            val date = inputFormat.parse(dateString)
-            if (date != null) outputFormat.format(date) else "Unknown"
+            val fromDate = inputFormat.parse(fromDateStr)
+            val untilDate = inputFormat.parse(untilDateStr)
+
+            if (fromDate == null || untilDate == null) return "Unknown"
+
+            val calFrom = Calendar.getInstance().apply { time = fromDate }
+            val calUntil = Calendar.getInstance().apply { time = untilDate }
+
+            if (calFrom.get(Calendar.YEAR) == calUntil.get(Calendar.YEAR)) {
+                // Same year: "May 12 - May 17, 2026"
+                val fromFormat = SimpleDateFormat("MMM d", Locale.getDefault())
+                val untilFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+                "${fromFormat.format(fromDate)} - ${untilFormat.format(untilDate)}"
+            } else {
+                // Different years: "Dec 28, 2025 - Jan 3, 2026"
+                val fullFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+                "${fullFormat.format(fromDate)} - ${fullFormat.format(untilDate)}"
+            }
         } catch (e: Exception) {
             "Unknown"
         }
@@ -130,22 +150,16 @@ class DLLViewActivityMain : AppCompatActivity() {
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_class -> {
-                    startActivity(Intent(this, TeacherClassPageActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
+                    startActivity(Intent(this, TeacherClassPageActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
+                    finish(); true
                 }
                 R.id.nav_participants -> {
-                    startActivity(Intent(this, TeacherParticipantsActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
+                    startActivity(Intent(this, TeacherParticipantsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
+                    finish(); true
                 }
                 R.id.nav_notifications -> {
-                    startActivity(Intent(this, TeacherNotificationsActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
-                    finish()
-                    true
+                    startActivity(Intent(this, TeacherNotificationsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK))
+                    finish(); true
                 }
                 R.id.nav_dll -> true
                 else -> false

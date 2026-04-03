@@ -36,6 +36,10 @@ import com.google.android.material.textfield.TextInputLayout
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import androidx.lifecycle.lifecycleScope
+import com.example.gr8math.Data.Repository.ClassPageRepository
+import kotlinx.coroutines.launch
+import java.util.TimeZone
 
 class TeacherClassPageActivity : AppCompatActivity() {
 
@@ -44,6 +48,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
     private lateinit var toolbar: MaterialToolbar
     private lateinit var emptyStateLayout: LinearLayout
     private lateinit var btnAdd: Button
+
 
     // Launchers for refreshing
     private val lessonContentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -56,12 +61,16 @@ class TeacherClassPageActivity : AppCompatActivity() {
         if (it.resultCode == RESULT_OK) viewModel.loadContent(forceReload = true)
     }
 
+    private val repository = ClassPageRepository()
+    private var userProfile: ClassPageRepository.UserProfile? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_classpage_teacher)
 
         initViews()
         setupCurrentCourse()
+        checkUserModerationStatus()
         setupBottomNav()
         setupObservers()
 
@@ -89,7 +98,13 @@ class TeacherClassPageActivity : AppCompatActivity() {
             HtmlCompat.FROM_HTML_MODE_COMPACT
         )
 
-        btnAdd.setOnClickListener { showAddOptionsDialog() }
+        btnAdd.setOnClickListener {
+            if (userProfile?.isRestricted == true) {
+                showRestrictionModal()
+            } else {
+                showAddOptionsDialog()
+            }
+        }
     }
 
     private fun setupCurrentCourse() {
@@ -221,7 +236,8 @@ class TeacherClassPageActivity : AppCompatActivity() {
                         startActivity(i)
                     }
                     view.findViewById<ImageButton>(R.id.ibEditLesson).setOnClickListener {
-                        showEditALessonDialog(item.weekNumber.toString(), item.title, item.id)
+                        if (userProfile?.isRestricted == true) showRestrictionModal()
+                        else showEditALessonDialog(item.weekNumber.toString(), item.title, item.id)
                     }
                     view
                 }
@@ -231,9 +247,12 @@ class TeacherClassPageActivity : AppCompatActivity() {
 
                     val btnEditAssessment = view.findViewById<ImageView>(R.id.ivArrow)
                     if (btnEditAssessment != null) {
-                        btnEditAssessment.setImageResource(R.drawable.ic_edit)
                         btnEditAssessment.setOnClickListener {
-                            showEditAssessmentWarning(item)
+                            if (userProfile?.isRestricted == true) {
+                                showRestrictionModal()
+                            } else {
+                                showCreateAssessmentDialog(item)
+                            }
                         }
                     }
                     view
@@ -243,6 +262,66 @@ class TeacherClassPageActivity : AppCompatActivity() {
         }
     }
 
+    private fun checkUserModerationStatus() {
+        lifecycleScope.launch {
+            // 1. Get user status (is_restricted, warning_count, etc)
+            userProfile = repository.getUserProfile(CurrentCourse.userId)
+
+            // 2. Check for notifications where meta.flash_ui = true
+            val flashNotif = repository.getUnreadFlashWarning(CurrentCourse.userId)
+            if (flashNotif != null) {
+                showFlashWarningOverlay(flashNotif)
+            }
+        }
+    }
+
+    private fun showFlashWarningOverlay(notif: ClassPageRepository.FlashNotification) {
+        val overlay = findViewById<FrameLayout>(R.id.flashWarningOverlay)
+        val tvMsg = findViewById<TextView>(R.id.tvFlashMessage)
+        val btnDismiss = findViewById<Button>(R.id.btnDismissFlash)
+
+        tvMsg.text = "${notif.message}\nWarning Strike: ${notif.meta?.warningCount ?: 0}/3"
+        overlay.visibility = View.VISIBLE
+
+        btnDismiss.setOnClickListener {
+            lifecycleScope.launch {
+                repository.markNotificationRead(notif.id) // Update is_read in DB
+                overlay.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun showRestrictionModal() {
+        val overlay = findViewById<FrameLayout>(R.id.restrictionOverlay)
+        val tvTimer = findViewById<TextView>(R.id.tvRestrictionTimer)
+        val btnClose = findViewById<ImageButton>(R.id.btnCloseRestriction)
+
+        val restrictedAt = userProfile?.restrictedAt
+        if (!restrictedAt.isNullOrEmpty()) {
+            try {
+                val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
+                sdf.timeZone = TimeZone.getTimeZone("UTC")
+                val date = sdf.parse(restrictedAt.replace("Z", ""))?.time ?: 0L
+
+                val diffMs = System.currentTimeMillis() - date
+                val totalDayMs = 24 * 60 * 60 * 1000
+                val remainingMs = totalDayMs - diffMs
+
+                if (remainingMs <= 0) {
+                    overlay.visibility = View.GONE
+                    userProfile = userProfile?.copy(isRestricted = false) // Lift locally
+                    return
+                }
+
+                val hours = remainingMs / (1000 * 60 * 60)
+                val minutes = (remainingMs / (1000 * 60)) % 60
+                tvTimer.text = "${hours}h ${minutes}m"
+            } catch (e: Exception) { tvTimer.text = "24h 00m" }
+        }
+
+        overlay.visibility = View.VISIBLE
+        btnClose.setOnClickListener { overlay.visibility = View.GONE }
+    }
     private fun setupBottomNav() {
         val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
         bottomNav.selectedItemId = R.id.nav_class
@@ -328,14 +407,6 @@ class TeacherClassPageActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun showEditAssessmentWarning(item: ClassContentItem.AssessmentItem) {
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Edit Assessment?")
-            .setMessage("Editing deletes all current student scores. Proceed?")
-            .setPositiveButton("Proceed") { _, _ -> showCreateAssessmentDialog(item) }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
 
     private fun showCreateAssessmentDialog(existingItem: ClassContentItem.AssessmentItem? = null) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_create_assessment, null)

@@ -73,35 +73,35 @@ class DLLResourcesFragment : Fragment() {
 
         fetchReferences()
 
-        btnEdit.setOnClickListener {
-            if (dailyEntryData == null) return@setOnClickListener
-
-            val resourceToEdit = resourcesList.firstOrNull()
-
-            // Collect resource texts into an array (links/pages)
-            val resourceTexts = resourcesList.map { it.referenceText ?: "" }.toTypedArray()
-
-            // Use the reference title (sub-lesson) or fallback to daily entry content
-            val currentRefTitle = resourceToEdit?.referenceTitle ?: dailyEntryData?.contentStandard ?: ""
-
-            val intent = Intent(requireContext(), DLLStep2Activity::class.java).apply {
-                putExtra(DLLEditActivity.EXTRA_MODE_EDIT, true)
-                putExtra(DLLEditActivity.EXTRA_SECTION_TITLE, DLLEditActivity.SECTION_RESOURCES)
-
-                putExtra(DLLEditActivity.EXTRA_DLL_MAIN_ID, dailyEntryData!!.mainId)
-                putExtra("EXTRA_DAILY_ENTRY_ID", dailyEntryData!!.id)
-                putExtra(DLLEditActivity.KEY_RECORD_ID, resourceToEdit?.id ?: -1)
-
-                // Date is taken from the main daily entry record
-                val convertedDate = convertDbDateToUiDate(dailyEntryData!!.entryDate)
-                putExtra("EXTRA_ENTRY_DATE", convertedDate)
-
-                // Prefill Data
-                putExtra("EXTRA_STEP2_CONTENT", currentRefTitle)
-                putExtra("EXTRA_PREFILL_RESOURCES_ARRAY", resourceTexts)
-            }
-            resourcesEditLauncher.launch(intent)
-        }
+//        btnEdit.setOnClickListener {
+//            if (dailyEntryData == null) return@setOnClickListener
+//
+//            val resourceToEdit = resourcesList.firstOrNull()
+//
+//            // Collect resource texts into an array (links/pages)
+//            val resourceTexts = resourcesList.map { it.referenceText ?: "" }.toTypedArray()
+//
+//            // Use the reference title (sub-lesson) or fallback to daily entry content
+//            val currentRefTitle = resourceToEdit?.referenceTitle ?: dailyEntryData?.contentStandard ?: ""
+//
+//            val intent = Intent(requireContext(), DLLStep2Activity::class.java).apply {
+//                putExtra(DLLEditActivity.EXTRA_MODE_EDIT, true)
+//                putExtra(DLLEditActivity.EXTRA_SECTION_TITLE, DLLEditActivity.SECTION_RESOURCES)
+//
+//                putExtra(DLLEditActivity.EXTRA_DLL_MAIN_ID, dailyEntryData!!.mainId)
+//                putExtra("EXTRA_DAILY_ENTRY_ID", dailyEntryData!!.id)
+//                putExtra(DLLEditActivity.KEY_RECORD_ID, resourceToEdit?.id ?: -1)
+//
+//                // Date is taken from the main daily entry record
+//                val convertedDate = convertDbDateToUiDate(dailyEntryData!!.entryDate)
+//                putExtra("EXTRA_ENTRY_DATE", convertedDate)
+//
+//                // Prefill Data
+//                putExtra("EXTRA_STEP2_CONTENT", currentRefTitle)
+//                putExtra("EXTRA_PREFILL_RESOURCES_ARRAY", resourceTexts)
+//            }
+//            resourcesEditLauncher.launch(intent)
+//        }
     }
 
     private fun fetchReferences() {

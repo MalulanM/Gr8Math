@@ -38,7 +38,6 @@ class StudentNotificationsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_student_notifications)
 
-        // 🌟 FOCUS ON THE CLASS SENT BY THE CLASS MANAGER
         val focusedCourseId = intent.getIntExtra("courseId", CurrentCourse.courseId)
 
         // Init Views
@@ -90,16 +89,27 @@ class StudentNotificationsActivity : AppCompatActivity() {
             ShowToast.showMessage(this, "All notifications marked as read")
         }
 
-        // 🌟 TRIGGER TARGETED LOAD
+
         viewModel.loadStudentNotifications(CurrentCourse.userId, focusedCourseId)
 
         // --- Observer ---
         viewModel.studentState.observe(this) { state ->
+            val rv = findViewById<RecyclerView>(R.id.rvNotifications)
+            val emptyLayout = findViewById<View>(R.id.emptyStateLayout)
+
             when (state) {
                 is StudentNotifState.Loading -> { }
                 is StudentNotifState.Success -> {
-                    adapter.updateList(state.data)
-                    updateMarkAllButton()
+                    if (state.data.isEmpty()) {
+                        rv.visibility = View.GONE
+                        emptyLayout.visibility = View.VISIBLE
+                        btnMarkAllRead.visibility = View.GONE
+                    } else {
+                        rv.visibility = View.VISIBLE
+                        emptyLayout.visibility = View.GONE
+                        adapter.updateList(state.data)
+                        updateMarkAllButton()
+                    }
                 }
                 is StudentNotifState.Error -> {
                     ShowToast.showMessage(this, state.message)

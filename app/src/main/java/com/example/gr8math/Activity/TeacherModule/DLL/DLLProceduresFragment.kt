@@ -64,39 +64,39 @@ class DLLProceduresFragment : Fragment() {
 
         refreshView()
 
-        btnEdit.setOnClickListener {
-            if (dailyEntryData == null) {
-                Toast.makeText(context, "No procedures to edit.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            val intent = Intent(requireContext(), DLLStep3Activity::class.java).apply {
-                // 1. EDIT FLAGS
-                putExtra(DLLEditActivity.EXTRA_MODE_EDIT, true)
-                putExtra(DLLEditActivity.EXTRA_SECTION_TITLE, DLLEditActivity.SECTION_PROCEDURES)
-
-                // 2. CRITICAL IDs & DATES
-                putExtra(DLLEditActivity.EXTRA_DLL_MAIN_ID, dailyEntryData!!.mainId)
-                putExtra("EXTRA_DAILY_ENTRY_ID", dailyEntryData!!.id)
-
-                val convertedDate = convertDbDateToUiDate(dailyEntryData!!.entryDate)
-                putExtra("EXTRA_ENTRY_DATE", convertedDate)
-
-                // 3. PASS ALL FIELDS FOR PREFILL
-                // Ensure these keys match what DLLStep3Activity expects!
-                putExtra("Review", dailyEntryData!!.review ?: "")
-                putExtra("Purpose", dailyEntryData!!.purpose ?: "")
-                putExtra("Example", dailyEntryData!!.example ?: "")
-                putExtra("Discussion Proper", dailyEntryData!!.discussionProper ?: "")
-                putExtra("Developing Mastery", dailyEntryData!!.developingMastery ?: "")
-                putExtra("Application", dailyEntryData!!.application ?: "")
-                putExtra("Generalization", dailyEntryData!!.generalization ?: "")
-                putExtra("Evaluation", dailyEntryData!!.evaluation ?: "")
-                putExtra("Additional Activities", dailyEntryData!!.additionalAct ?: "")
-            }
-
-            proceduresEditLauncher.launch(intent)
-        }
+//        btnEdit.setOnClickListener {
+//            if (dailyEntryData == null) {
+//                Toast.makeText(context, "No procedures to edit.", Toast.LENGTH_SHORT).show()
+//                return@setOnClickListener
+//            }
+//
+//            val intent = Intent(requireContext(), DLLStep3Activity::class.java).apply {
+//                // 1. EDIT FLAGS
+//                putExtra(DLLEditActivity.EXTRA_MODE_EDIT, true)
+//                putExtra(DLLEditActivity.EXTRA_SECTION_TITLE, DLLEditActivity.SECTION_PROCEDURES)
+//
+//                // 2. CRITICAL IDs & DATES
+//                putExtra(DLLEditActivity.EXTRA_DLL_MAIN_ID, dailyEntryData!!.mainId)
+//                putExtra("EXTRA_DAILY_ENTRY_ID", dailyEntryData!!.id)
+//
+//                val convertedDate = convertDbDateToUiDate(dailyEntryData!!.entryDate)
+//                putExtra("EXTRA_ENTRY_DATE", convertedDate)
+//
+//                // 3. PASS ALL FIELDS FOR PREFILL
+//                // Ensure these keys match what DLLStep3Activity expects!
+//                putExtra("Review", dailyEntryData!!.review ?: "")
+//                putExtra("Purpose", dailyEntryData!!.purpose ?: "")
+//                putExtra("Example", dailyEntryData!!.example ?: "")
+//                putExtra("Discussion Proper", dailyEntryData!!.discussionProper ?: "")
+//                putExtra("Developing Mastery", dailyEntryData!!.developingMastery ?: "")
+//                putExtra("Application", dailyEntryData!!.application ?: "")
+//                putExtra("Generalization", dailyEntryData!!.generalization ?: "")
+//                putExtra("Evaluation", dailyEntryData!!.evaluation ?: "")
+//                putExtra("Additional Activities", dailyEntryData!!.additionalAct ?: "")
+//            }
+//
+//            proceduresEditLauncher.launch(intent)
+//        }
     }
 
     private fun refreshView() {

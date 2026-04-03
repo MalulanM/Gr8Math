@@ -14,7 +14,8 @@ data class AssessmentInsert(
     @SerialName("end_time") val endTime: String,
     @SerialName("assessment_items") val assessmentItems: Int,
     @SerialName("assessment_number") val assessmentNumber: Int,
-    @SerialName("assessment_quarter") val assessmentQuarter: Int
+    @SerialName("assessment_quarter") val assessmentQuarter: Int,
+    var status: String = "approved"
 )
 
 @Serializable
@@ -138,5 +139,6 @@ data class AssessmentUpdate(
     @SerialName("end_time") val endTime: String,
     @SerialName("assessment_items") val assessmentItems: Int,
     @SerialName("assessment_number") val assessmentNumber: Int,
-    @SerialName("assessment_quarter") val assessmentQuarter: Int
+    @SerialName("assessment_quarter") val assessmentQuarter: Int,
+    var status: String = "approved"
 )

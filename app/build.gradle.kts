@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity)
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
     
     // Compose
     implementation(libs.androidx.lifecycle.runtime.ktx)

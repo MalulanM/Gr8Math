@@ -68,32 +68,33 @@ class StudentGradesActivity : AppCompatActivity() {
         viewModel.loadGrades()
     }
 
-    // 🌟 FIX: Safely detach, update highlight, and reattach when pressing "Back"
     override fun onResume() {
         super.onResume()
         if (::bottomNav.isInitialized) {
-            // Remove listener so it doesn't trigger a fake click
             bottomNav.setOnItemSelectedListener(null)
-
-            // Force highlight the Grades icon
             bottomNav.selectedItemId = R.id.nav_grades
-
-            // Re-attach the listener
             setupBottomNavListeners(bottomNav)
         }
     }
 
     private fun setupObservers() {
         viewModel.state.observe(this) { state ->
+            val rv = findViewById<RecyclerView>(R.id.rvGrades)
+            val emptyLayout = findViewById<View>(R.id.emptyStateLayout)
+
             when (state) {
                 is GradesState.Loading -> {
-                    // Optional: Show loading bar if you have one in XML
+
                 }
                 is GradesState.Success -> {
                     if (state.data.isEmpty()) {
-                        ShowToast.showMessage(this, "No assessments found.")
+                        rv.visibility = View.GONE
+                        emptyLayout.visibility = View.VISIBLE
+                    } else {
+                        rv.visibility = View.VISIBLE
+                        emptyLayout.visibility = View.GONE
+                        adapter.updateList(state.data)
                     }
-                    adapter.updateList(state.data)
                 }
                 is GradesState.Error -> {
                     ShowToast.showMessage(this, state.message)
