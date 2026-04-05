@@ -189,6 +189,9 @@ class TeacherClassPageActivity : AppCompatActivity() {
                         if (aId > 0) navigateToScores(aId, sId)
                     }
                     "arrival" -> ShowToast.showMessage(this, "Class is starting!")
+                    "warning", "strike", "moderation" -> {
+                        checkUserModerationStatus()
+                    }
                 }
             } catch (e: Exception) { e.printStackTrace() }
 
