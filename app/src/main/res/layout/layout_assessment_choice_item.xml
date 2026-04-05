@@ -25,22 +25,49 @@
         android:orientation="horizontal"
         android:visibility="gone" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilAnswerChoice"
-        style="@style/Gr8TextInputStyle"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/answer_choice_hint"
-        app:boxBackgroundColor="@color/colorAccent"
-        app:startIconDrawable="@drawable/radio_button_selector"
-        app:startIconCheckable="true">
+        android:orientation="horizontal">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etAnswerChoice"
-            android:layout_width="match_parent"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilAnswerChoice"
+            style="@style/Gr8TextInputStyle"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/lexend"
-            android:inputType="textCapSentences|textMultiLine"
-            android:textColor="@color/colorText" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:hint="@string/answer_choice_hint"
+            app:boxBackgroundColor="@color/colorAccent"
+            app:startIconDrawable="@drawable/radio_button_selector"
+            app:startIconCheckable="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etAnswerChoice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/lexend"
+                android:inputType="textCapSentences|textMultiLine"
+                android:textColor="@color/colorText" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilPoints"
+            style="@style/Gr8TextInputStyle"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:hint="Pts"
+            android:visibility="gone"
+            app:boxBackgroundColor="@color/colorAccent">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPoints"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/lexend"
+                android:inputType="numberDecimal"
+                android:textColor="@color/colorText"
+                android:text="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
 </LinearLayout>

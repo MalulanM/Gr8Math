@@ -52,15 +52,15 @@ class StudentScoresActivity : AppCompatActivity() {
         // 🌟 FIX: Switched to Monthly Report Logic
         val btnMonthlyReport = findViewById<Button>(R.id.btnMonthlyReport)
         btnMonthlyReport.setOnClickListener {
-            // Get the CURRENT month and year automatically
             val calendar = Calendar.getInstance()
-            val currentMonth = calendar.get(Calendar.MONTH) + 1 // Calendar.MONTH starts at 0 (Jan), so we add 1
+            val currentMonth = calendar.get(Calendar.MONTH) + 1
             val currentYear = calendar.get(Calendar.YEAR)
 
             val intent = Intent(this, MonthlyReportActivity::class.java)
             intent.putExtra("EXTRA_STUDENT_ID", studentId)
-            intent.putExtra("EXTRA_MONTH", currentMonth) // Pass the month (e.g., 2 for February)
-            intent.putExtra("EXTRA_YEAR", currentYear)   // Pass the year (e.g., 2026)
+            intent.putExtra("EXTRA_COURSE_ID", CurrentCourse.courseId) // 🌟 ADD THIS
+            intent.putExtra("EXTRA_MONTH", currentMonth)
+            intent.putExtra("EXTRA_YEAR", currentYear)
             startActivity(intent)
         }
 
@@ -115,14 +115,15 @@ class StudentScoresActivity : AppCompatActivity() {
         dialogView.findViewById<TextView>(R.id.tvDetailTitle).text = scoreItem.title
 
         val df = java.text.DecimalFormat("#.##")
+
+
         dialogView.findViewById<TextView>(R.id.tvDetailScore).text = df.format(scoreItem.score)
         dialogView.findViewById<TextView>(R.id.tvDetailItems).text = "${scoreItem.assessmentItems}"
 
-        val percentage = if (scoreItem.assessmentItems > 0) {
-            (scoreItem.score.toDouble() / scoreItem.assessmentItems) * 100
+        val percentage = if (scoreItem.totalPoints > 0) {
+            (scoreItem.score / scoreItem.totalPoints) * 100
         } else 0.0
-
-        dialogView.findViewById<TextView>(R.id.tvDetailPercentage).text = "%.0f%%".format(percentage)
+        dialogView.findViewById<TextView>(R.id.tvDetailPercentage).text = "${percentage.toInt()}%"
 
         // Set Date and Time
         dialogView.findViewById<TextView>(R.id.tvDetailDate).text = formatDate(scoreItem.dateAccomplished)

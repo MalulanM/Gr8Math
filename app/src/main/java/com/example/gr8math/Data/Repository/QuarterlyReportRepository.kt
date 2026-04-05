@@ -14,26 +14,30 @@ class QuarterlyReportRepository {
 
     private val db = SupabaseService.client
 
-    // 🌟 NEW: The Monthly Report Function!
     suspend fun getMonthlyReport(courseId: Int, studentId: Int, month: Int, year: Int): Result<QuarterlyReportData> {
         return withContext(Dispatchers.IO) {
             try {
-                // 1. Figure out the exact start and end dates for the database filter
+
                 val monthStr = month.toString().padStart(2, '0')
-                val startDate = "$year-$monthStr-01" // e.g., "2026-02-01"
+                val startDate = "$year-$monthStr-01"
 
                 val nextMonth = if (month == 12) 1 else month + 1
                 val nextYear = if (month == 12) year + 1 else year
                 val nextMonthStr = nextMonth.toString().padStart(2, '0')
-                val endDate = "$nextYear-$nextMonthStr-01" // e.g., "2026-03-01"
+                val endDate = "$nextYear-$nextMonthStr-01"
 
-                // 2. Fetch Data joined with assessment_created
+
+                // 1. Updated Select to include total_points 🌟
                 val rawList = db.from("assessment_record")
                     .select(
                         columns = Columns.raw("""
                             score,
                             assessment_created!inner (
-                                assessment_number, assessment_items, assessment_quarter, course_id
+                                assessment_number, 
+                                assessment_items, 
+                                total_points,
+                                assessment_quarter, 
+                                course_id
                             )
                         """.trimIndent())
                     ) {
@@ -47,23 +51,29 @@ class QuarterlyReportRepository {
                     }.decodeList<ReportRecordRes>()
 
 
-                var totalScore = 0.0
-                var totalItems = 0
+                var totalScoreSum = 0.0
+                var totalPossiblePointsSum = 0.0 //  This will track overall points for the footer
+                var totalItemsCount = 0
 
                 val uiList = rawList.map { record ->
                     val score = record.score
                     val items = record.assessment.assessmentItems
+                    // Use total_points from DB, fallback to items count if null
+                    val pointsForThisTest = record.assessment.totalPoints ?: items.toDouble()
 
-                    totalScore += score
-                    totalItems += items
+                    totalScoreSum += score
+                    totalPossiblePointsSum += pointsForThisTest
+                    totalItemsCount += items
 
-                    // Calculate Percentage String
-                    val percentVal = if (items > 0) (score.toFloat() / items) * 100 else 0f
+                    //  Percentage is now calculated using Points, not Items
+                    val percentVal = if (pointsForThisTest > 0) (score / pointsForThisTest) * 100 else 0.0
                     val percentStr = "${percentVal.toInt()}%"
 
+                    // 2. Passing all parameters including totalPoints 🌟
                     ReportItem(
                         assessmentNumber = record.assessment.assessmentNumber,
-                        score = score.toInt(),
+                        score = score, // Ensure ReportItem expects Double/Number if you have decimals
+                        totalPoints = pointsForThisTest,
                         items = items,
                         percentString = percentStr
                     )
@@ -72,12 +82,14 @@ class QuarterlyReportRepository {
                 Result.success(
                     QuarterlyReportData(
                         items = uiList,
-                        totalScore = totalScore.toInt(),
-                        totalItems = totalItems
+                        //  Footer: Total Score vs Total Possible Points
+                        totalScore = totalScoreSum.toInt(),
+                        totalItems = totalItemsCount // Keeping this as the literal item count
                     )
                 )
 
             } catch (e: Exception) {
+                e.printStackTrace()
                 Result.failure(e)
             }
         }

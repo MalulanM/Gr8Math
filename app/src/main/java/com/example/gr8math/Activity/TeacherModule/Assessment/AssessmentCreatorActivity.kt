@@ -1,6 +1,7 @@
 package com.example.gr8math.Activity.TeacherModule.Assessment
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
@@ -15,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.lifecycleScope
 import aws.sdk.kotlin.services.s3.model.PutObjectRequest
 import aws.smithy.kotlin.runtime.content.ByteStream
@@ -191,30 +193,40 @@ class AssessmentCreatorActivity : AppCompatActivity() {
         questionManagers.clear()
 
         existingQuestions.forEach { uiQuestion ->
-            // Use DOT_MATCHES_ALL so it handles newlines in the question text properly
             val regex = Regex("^\\[(.*?)\\]\\s*(.*)$", RegexOption.DOT_MATCHES_ALL)
             val match = regex.find(uiQuestion.text)
             val type = match?.groupValues?.get(1) ?: "Multiple Choice"
             val rawContent = match?.groupValues?.get(2) ?: uiQuestion.text
 
-            //  ROBUST SPLIT: Ignores newlines (\n) and spaces around the |||
             val parts = rawContent.split(Regex("\\s*\\|\\|\\|\\s*"))
-            val cleanQuestionText = parts[0].trim()
+
+
+            val allTextToCheck = uiQuestion.text + " " + uiQuestion.choices.joinToString(" ") { it.text }
+            val ptsRegex = Regex("\\[\\s*(\\d+(\\.\\d+)?)\\s*pts?\\s*\\]", RegexOption.IGNORE_CASE)
+            val ptsMatch = ptsRegex.find(allTextToCheck)
+            var questionPoints = ptsMatch?.groupValues?.get(1)?.toIntOrNull() ?: 1
+
+            if (type == "Upload Image" && uiQuestion.choices.isNotEmpty()) {
+                val rawNum = uiQuestion.choices[0].text.trim().toIntOrNull()
+                if (rawNum != null) questionPoints = rawNum
+            }
+
+            // Clean tags out of the UI
+            val stripPts = { s: String -> s.replace(Regex("\\[\\s*\\d+(\\.\\d+)?\\s*pts?\\s*\\]\\s*", RegexOption.IGNORE_CASE), "").trim() }
+            val cleanQuestionText = stripPts(parts[0].trim())
             val imageUrl = if (parts.size > 1) parts[1].trim() else ""
 
             val correctIndex = uiQuestion.choices.indexOfFirst { it.isCorrect }
 
-            val ptsRegex = Regex("^\\[\\d+(\\.\\d+)?\\s*pts\\]\\s*")
-            val cleanedChoices = uiQuestion.choices.map { choice ->
-                choice.text.replace(ptsRegex, "").trim()
-            }.toMutableList()
-
+            // Pass perfectly clean choices to the UI
+            val rawChoiceTexts = if (type == "Upload Image") mutableListOf() else uiQuestion.choices.map { stripPts(it.text) }.filter { it.isNotEmpty() }.toMutableList()
             val questionData = AssessmentQuestion(
                 type = type,
                 questionText = cleanQuestionText,
                 imageUrl = imageUrl,
-                choices = cleanedChoices,
-                correctAnswerIndex = correctIndex
+                choices = rawChoiceTexts,
+                correctAnswerIndex = correctIndex,
+                points = questionPoints
             )
 
             addNewQuestion(questionData)
@@ -253,19 +265,19 @@ class AssessmentCreatorActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val uiQuestions = mutableListOf<UiQuestion>()
+                var totalPoints = 0
 
                 for (manager in questionManagers) {
-                val qData = manager.question
+                    val qData = manager.question
+                    totalPoints += qData.points
 
-                // 1. Upload if pending
-                if (qData.pendingQuestionImageUri.isNotEmpty() && qData.pendingQuestionImageUri.startsWith("content://")) {
-                    val newUrl = uploadUriToTigris(qData.pendingQuestionImageUri)
-                    if (newUrl != null) {
-                        qData.imageUrl = newUrl
-                        qData.pendingQuestionImageUri = ""
+                    if (qData.pendingQuestionImageUri.isNotEmpty() && qData.pendingQuestionImageUri.startsWith("content://")) {
+                        val newUrl = uploadUriToTigris(qData.pendingQuestionImageUri)
+                        if (newUrl != null) {
+                            qData.imageUrl = newUrl
+                            qData.pendingQuestionImageUri = ""
+                        }
                     }
-                }
-
 
                     var formattedText = "[${qData.type}] ${qData.questionText.trim().replace(Regex("\\s+$"), "")}"
 
@@ -274,26 +286,25 @@ class AssessmentCreatorActivity : AppCompatActivity() {
                     }
 
                     val finalChoices = qData.choices.mapIndexed { index, text ->
-                        val isCorrect = if (qData.type == "Short Answer" || qData.type == "Paragraph" || qData.type == "Upload Image") {
-                            true
+                        val isCorrect = if (qData.type == "Short Answer" || qData.type == "Paragraph" || qData.type == "Upload Image") true else index == qData.correctAnswerIndex
+
+                        val formattedChoiceText = if (qData.type == "Upload Image") {
+                            "${qData.points}" // Raw string for Upload Image
+                        } else if (qData.type == "Short Answer" || qData.type == "Paragraph") {
+                            "[${qData.points} pts] ${text.trim()}"
                         } else {
-                            index == qData.correctAnswerIndex
+                            if (isCorrect) "[${qData.points} pts] ${text.trim()}" else text.trim()
                         }
-                        UiChoice(text = text, isCorrect = isCorrect)
+
+                        UiChoice(text = formattedChoiceText, isCorrect = isCorrect)
                     }
                     uiQuestions.add(UiQuestion(text = formattedText, choices = finalChoices))
                 }
 
                 if (editAssessmentId != -1) {
-                    viewModel.updateAssessment(
-                        CurrentCourse.userId, editAssessmentId, assessmentTitle,
-                        availableFrom, availableUntil, assessmentNumber, assessmentQuarter, uiQuestions
-                    )
+                    viewModel.updateAssessment(CurrentCourse.userId, editAssessmentId, assessmentTitle, availableFrom, availableUntil, assessmentNumber, assessmentQuarter, totalPoints, uiQuestions)
                 } else {
-                    viewModel.publishAssessment(
-                        CurrentCourse.userId, courseId, assessmentTitle,
-                        availableFrom, availableUntil, assessmentNumber, assessmentQuarter, uiQuestions
-                    )
+                    viewModel.publishAssessment(CurrentCourse.userId, courseId, assessmentTitle, availableFrom, availableUntil, assessmentNumber, assessmentQuarter, totalPoints, uiQuestions)
                 }
 
             } catch (e: Exception) {
@@ -342,13 +353,11 @@ class AssessmentCreatorActivity : AppCompatActivity() {
 
     fun renderLiveMathPreview(container: LinearLayout, text: String, fontSizeSp: Float) {
         container.removeAllViews()
-        container.gravity = android.view.Gravity.CENTER_VERTICAL // Ensures everything aligns
+        container.gravity = android.view.Gravity.CENTER_VERTICAL
 
-        // Split by single $
         val parts = text.split("(?<=\\$)|(?=\\$)".toRegex())
         var isInsideMath = false
 
-        // 🌟 CALCULATE EXACT HEIGHT IN PIXELS (approx 2x font size to allow for fractions)
         val density = resources.displayMetrics.density
         val heightPx = (fontSizeSp * 2.5f * density).toInt()
 
@@ -361,9 +370,8 @@ class AssessmentCreatorActivity : AppCompatActivity() {
             if (isInsideMath) {
                 val mathImg = ImageView(this).apply {
                     adjustViewBounds = true
-                    scaleType = ImageView.ScaleType.FIT_CENTER // 🌟 Shrink to fit height
+                    scaleType = ImageView.ScaleType.FIT_CENTER
 
-                    // 🌟 APPLY STRICT HEIGHT CONSTRAINT
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         heightPx
@@ -429,8 +437,9 @@ data class AssessmentQuestion(
     var pendingQuestionImageUri: String = "",
     val choices: MutableList<String> = mutableListOf(),
     var correctAnswerIndex: Int = -1,
+    var points: Int = 1, // 🌟 NEW FIELD
     var correctTextAnswer: String = "",
-    var pendingAnswerImageUri: String = "" // Kept for future expandability, but wiped when type changes
+    var pendingAnswerImageUri: String = ""
 ) : Serializable
 
 class QuestionCardManager(
@@ -474,21 +483,21 @@ class QuestionCardManager(
                 if (question.type != newType) {
                     question.type = newType
 
-                    //  TYPE SWITCH CLEANUP: Wipe choices and answers to prevent dirty DB data
                     question.choices.clear()
                     question.correctAnswerIndex = -1
                     question.correctTextAnswer = ""
-                    question.pendingAnswerImageUri = "" // Wipe just like React web
+                    question.pendingAnswerImageUri = ""
                     choiceManagers.clear()
                     choicesContainer.removeAllViews()
 
                     if (newType == "Short Answer" || newType == "Paragraph") {
                         btnAddChoices.visibility = View.GONE
                         tvAnswerKey.visibility = View.GONE
-                        addChoiceItem("Expected answer or grading criteria...")
+                        addChoiceItem("") // 🌟 Empty string, use hint instead
                     } else if (newType == "Upload Image") {
                         btnAddChoices.visibility = View.GONE
                         tvAnswerKey.visibility = View.GONE
+                        addChoiceItem("") // 🌟 Empty string
                     } else {
                         btnAddChoices.visibility = View.VISIBLE
                         addChoiceItem("")
@@ -499,12 +508,10 @@ class QuestionCardManager(
             override fun onNothingSelected(p0: AdapterView<*>?) {}
         }
 
-        // Upload Question Image
         btnUploadImage.setOnClickListener {
             activity.pickImage(this)
         }
 
-        // Remove Question Image
         ibRemoveImage.setOnClickListener {
             question.pendingQuestionImageUri = ""
             question.imageUrl = ""
@@ -524,7 +531,6 @@ class QuestionCardManager(
             tilQuestion.error = null
             tilQuestion.isErrorEnabled = false
 
-            // Use the same split logic as the Student side
             if (text.contains("$")) {
                 tvPreviewLabel.visibility = View.VISIBLE
                 llMathPreview.visibility = View.VISIBLE
@@ -546,13 +552,10 @@ class QuestionCardManager(
         val initialChoices = question.choices.toList()
         question.choices.clear()
 
-        // Only add choices if it's NOT an "Upload Image" type
-        if (question.type != "Upload Image") {
-            if (initialChoices.isEmpty() && (question.type != "Short Answer" && question.type != "Paragraph")) {
-                addChoiceItem("")
-            } else if (initialChoices.isNotEmpty()) {
-                initialChoices.forEach { addChoiceItem(it) }
-            }
+        if (initialChoices.isEmpty() && (question.type == "Short Answer" || question.type == "Paragraph" || question.type == "Upload Image")) {
+            addChoiceItem("")
+        } else if (initialChoices.isNotEmpty()) {
+            initialChoices.forEach { addChoiceItem(it) }
         }
 
         btnAddChoices.setOnClickListener {
@@ -576,26 +579,20 @@ class QuestionCardManager(
     }
 
     private fun addChoiceItem(initialText: String) {
-        val newChoiceManager = ChoiceItemManager(activity, choicesContainer, initialText, question.type) { index, newText ->
+        // 🌟 FIX: Pass question.points in, and receive pts out from the callback
+        val newChoiceManager = ChoiceItemManager(activity, choicesContainer, initialText, question.type, question.points) { index, newText, pts ->
             if (index != -1 && index < question.choices.size) {
                 question.choices[index] = newText
-                if (question.type == "Short Answer" || question.type == "Paragraph") {
+                if (question.type == "Short Answer" || question.type == "Paragraph" || question.type == "Upload Image") {
                     question.correctTextAnswer = newText
+                    question.points = pts // 🌟 Save the points back to the underlying question object!
                 }
             }
             onQuestionChanged()
         }
 
         choiceManagers.add(newChoiceManager)
-
-        // If editing from DB, don't overwrite the existing choice with the dummy string
-        if (initialText == "Expected answer or grading criteria..." && question.correctTextAnswer.isNotEmpty()) {
-            question.choices.add(question.correctTextAnswer)
-            newChoiceManager.etAnswerChoice.setText(question.correctTextAnswer)
-        } else {
-            question.choices.add(initialText)
-        }
-
+        question.choices.add(initialText)
         updateAnswerKeyVisibility()
     }
 
@@ -603,11 +600,12 @@ class QuestionCardManager(
         if (question.type == "Short Answer" || question.type == "Paragraph" || question.type == "Upload Image") {
             tvAnswerKey.visibility = View.GONE
         } else {
+            val label = if (question.correctAnswerIndex != -1) "Key Set (${question.points} pts)" else "Answer Key"
+            tvAnswerKey.text = label
             tvAnswerKey.visibility = if (question.choices.isNotEmpty()) View.VISIBLE else View.GONE
         }
 
         tvAnswerKey.setTextColor(ContextCompat.getColor(activity, R.color.colorMatisse))
-        tvAnswerKey.text = "Answer Key"
     }
 
     private fun showAnswerKeySelectionDialog() {
@@ -615,15 +613,22 @@ class QuestionCardManager(
         val btnCloseDialog = dialogView.findViewById<ImageButton>(R.id.btnCloseDialog)
         val btnProceed = dialogView.findViewById<Button>(R.id.btnProceed)
         val answerKeyChoicesContainer = dialogView.findViewById<LinearLayout>(R.id.answerKeyChoicesContainer)
+        val etDialogPoints = dialogView.findViewById<EditText>(R.id.etDialogPoints)
+
+        etDialogPoints.setText(question.points.toString())
 
         val checkboxes = mutableListOf<CheckBox>()
         question.choices.forEachIndexed { index, choiceText ->
             val checkBox = CheckBox(activity).apply {
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                text = choiceText
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 120)
+                text = choiceText.replace(Regex("^\\[\\d+(\\.\\d+)?\\s*pts\\]\\s*"), "").trim()
                 textSize = 16f
+                typeface = ResourcesCompat.getFont(activity, R.font.lexend)
+                buttonTintList = ColorStateList.valueOf(Color.parseColor("#1A4C8B"))
                 isChecked = (index == question.correctAnswerIndex)
+                setPadding(24, 0, 0, 0)
             }
+
             checkBox.setOnCheckedChangeListener { buttonView, isChecked ->
                 if (isChecked && (question.type == "Multiple Choice" || question.type == "Dropdown")) {
                     checkboxes.forEach { if (it != buttonView) it.isChecked = false }
@@ -633,18 +638,19 @@ class QuestionCardManager(
             checkboxes.add(checkBox)
         }
 
-        val dialog = MaterialAlertDialogBuilder(activity).setView(dialogView).setCancelable(false).create()
+        val dialog = MaterialAlertDialogBuilder(activity).setView(dialogView).create()
         btnCloseDialog.setOnClickListener { dialog.dismiss() }
         btnProceed.setOnClickListener {
             val selectedIndex = checkboxes.indexOfFirst { it.isChecked }
             if (selectedIndex != -1) {
                 question.correctAnswerIndex = selectedIndex
+                question.points = etDialogPoints.text.toString().toIntOrNull() ?: 1
+
                 onQuestionChanged()
-
-                tvAnswerKey.setTextColor(ContextCompat.getColor(activity, R.color.colorMatisse))
-                tvAnswerKey.text = "Answer Key"
-
+                tvAnswerKey.text = "Key Set (${question.points} pts)"
                 dialog.dismiss()
+            } else {
+                Toast.makeText(activity, "Select the correct answer", Toast.LENGTH_SHORT).show()
             }
         }
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -654,7 +660,6 @@ class QuestionCardManager(
     fun isValid(): Boolean {
         var isCardValid = true
 
-        // Validate Question Text or Image
         if (etQuestion.text.isNullOrBlank() && question.pendingQuestionImageUri.isEmpty() && question.imageUrl.isEmpty()) {
             UIUtils.errorDisplay(activity, tilQuestion, etQuestion, true, "Question cannot be empty")
             isCardValid = false
@@ -662,26 +667,23 @@ class QuestionCardManager(
             UIUtils.errorDisplay(activity, tilQuestion, etQuestion, false, "")
         }
 
-        if (question.type != "Upload Image") {
-            if (choiceManagers.isEmpty()) {
-                Toast.makeText(activity, "Please add at least one choice", Toast.LENGTH_SHORT).show()
+        if (choiceManagers.isEmpty()) {
+            Toast.makeText(activity, "Please add at least one choice", Toast.LENGTH_SHORT).show()
+            isCardValid = false
+        }
+
+        choiceManagers.forEach {
+            if (!it.isValid()) isCardValid = false
+        }
+
+        if (question.type != "Short Answer" && question.type != "Paragraph" && question.type != "Upload Image") {
+            if (question.correctAnswerIndex == -1) {
+                tvAnswerKey.setTextColor(Color.parseColor("#ED1F24"))
+                tvAnswerKey.text = "Please set an answer key"
                 isCardValid = false
             }
-
-            // Validate each individual choice UI
-            choiceManagers.forEach {
-                if (!it.isValid()) isCardValid = false
-            }
-
-            // Validate Answer Key
-            if (question.type != "Short Answer" && question.type != "Paragraph") {
-                if (question.correctAnswerIndex == -1) {
-                    tvAnswerKey.setTextColor(Color.parseColor("#ED1F24"))
-                    tvAnswerKey.text = "Please set an answer key"
-                    isCardValid = false
-                }
-            }
         }
+
         return isCardValid
     }
 }
@@ -691,31 +693,47 @@ class ChoiceItemManager(
     private val container: LinearLayout,
     initialText: String,
     private val type: String,
-    private val onChoiceChanged: (index: Int, newText: String) -> Unit
+    private val initialPoints: Int,
+    private val onChoiceChanged: (index: Int, newText: String, points: Int) -> Unit
 ) {
     val itemView: View = LayoutInflater.from(context).inflate(R.layout.layout_assessment_choice_item, container, false)
+
     val etAnswerChoice: TextInputEditText = itemView.findViewById(R.id.etAnswerChoice)
     private val tilAnswerChoice: TextInputLayout = itemView.findViewById(R.id.tilAnswerChoice)
+    private val etPoints: TextInputEditText = itemView.findViewById(R.id.etPoints)
+    private val tilPoints: TextInputLayout = itemView.findViewById(R.id.tilPoints)
 
     private val tvChoicePreviewLabel: TextView = itemView.findViewById(R.id.tvChoicePreviewLabel)
-
     private val llChoiceMathPreview: LinearLayout = itemView.findViewById(R.id.llChoiceMathPreview)
 
     init {
         container.addView(itemView)
-        etAnswerChoice.setText(initialText)
 
-        if (type == "Short Answer" || type == "Paragraph") {
+        // Use the clean data passed directly from the parent
+        etAnswerChoice.setText(initialText)
+        etPoints.setText(initialPoints.toString())
+
+        // TYPE-SPECIFIC UI CONFIGURATION
+        if (type == "Upload Image") {
             tilAnswerChoice.startIconDrawable = null
-            tilAnswerChoice.hint = "Expected answer or grading criteria..."
+            tilPoints.visibility = View.VISIBLE
+            // Mimic the web label by disabling the input and changing the text
+            etAnswerChoice.setText("Answer must be an uploaded image. No key required. Points saved.")
+            etAnswerChoice.isEnabled = false
+            etAnswerChoice.setTextColor(Color.GRAY)
+        } else if (type == "Short Answer" || type == "Paragraph") {
+            tilAnswerChoice.startIconDrawable = null
+            tilAnswerChoice.hint = "Expected answer or grading criteria..." // 🌟 Use hint
+            tilPoints.visibility = View.VISIBLE
+        } else {
+            tilPoints.visibility = View.GONE
         }
 
         etAnswerChoice.addTextChangedListener(AfterTextChangedWatcher { text ->
-            val index = container.indexOfChild(itemView)
-            onChoiceChanged(index, text)
             tilAnswerChoice.error = null
+            syncData()
 
-            if (text.contains("$")) {
+            if (type != "Upload Image" && text.contains("$")) {
                 tvChoicePreviewLabel.visibility = View.VISIBLE
                 llChoiceMathPreview.visibility = View.VISIBLE
                 (context as? AssessmentCreatorActivity)?.renderLiveMathPreview(llChoiceMathPreview, text, 14f)
@@ -725,25 +743,47 @@ class ChoiceItemManager(
             }
         })
 
-        if (initialText.contains("$")) {
+        etPoints.addTextChangedListener(AfterTextChangedWatcher {
+            tilPoints.error = null
+            syncData()
+        })
+
+        if (type != "Upload Image" && initialText.contains("$")) {
             tvChoicePreviewLabel.visibility = View.VISIBLE
             llChoiceMathPreview.visibility = View.VISIBLE
             (context as? AssessmentCreatorActivity)?.renderLiveMathPreview(llChoiceMathPreview, initialText, 14f)
         }
     }
 
+    private fun syncData() {
+        val index = container.indexOfChild(itemView)
+        val currentText = if (type == "Upload Image") "" else etAnswerChoice.text.toString().trim()
+        val currentPoints = etPoints.text.toString().toIntOrNull() ?: 1
+
+        // 🌟 This now perfectly matches the 3-parameter signature above!
+        onChoiceChanged(index, currentText, currentPoints)
+    }
+
     fun isValid(): Boolean {
-        return if (etAnswerChoice.text.isNullOrBlank()) {
-            UIUtils.errorDisplay(context, tilAnswerChoice, etAnswerChoice, true, "Please enter a choice")
-            false
+        var valid = true
+
+        // 🌟 Skip text validation entirely for Upload Image
+        if (type != "Upload Image" && etAnswerChoice.text.isNullOrBlank()) {
+            UIUtils.errorDisplay(context, tilAnswerChoice, etAnswerChoice, true, "Required")
+            valid = false
         } else {
             UIUtils.errorDisplay(context, tilAnswerChoice, etAnswerChoice, false, "")
-            true
         }
+
+        if (tilPoints.visibility == View.VISIBLE && etPoints.text.isNullOrBlank()) {
+            UIUtils.errorDisplay(context, tilPoints, etPoints, true, "!")
+            valid = false
+        } else {
+            UIUtils.errorDisplay(context, tilPoints, etPoints, false, "")
+        }
+        return valid
     }
 }
-
-
 
 class AfterTextChangedWatcher(private val afterTextChanged: (String) -> Unit) : TextWatcher {
     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}

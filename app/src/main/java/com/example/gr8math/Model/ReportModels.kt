@@ -15,13 +15,15 @@ data class ReportRecordRes(
 data class ReportAssessmentInfo(
     @SerialName("assessment_number") val assessmentNumber: Int,
     @SerialName("assessment_items") val assessmentItems: Int,
-    @SerialName("assessment_quarter") val assessmentQuarter: Int
+    @SerialName("assessment_quarter") val assessmentQuarter: Int,
+    @SerialName("total_points") val totalPoints: Double? = null
 )
 
 // 2. UI Model (Processed data for the table)
 data class ReportItem(
     val assessmentNumber: Int,
-    val score: Int,
+    val score: Double,
+    val totalPoints: Double,
     val items: Int,
     val percentString: String
 )

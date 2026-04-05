@@ -19,7 +19,8 @@ data class AssessmentCreatedInfo(
     val id: Int,
     val title: String,
     @SerialName("assessment_number") val assessmentNumber: Int,
-    @SerialName("assessment_items") val assessmentItems: Int
+    @SerialName("assessment_items") val assessmentItems: Int,
+    @SerialName("total_points") val totalPoints: Double? = null,
 )
 
 // ==========================================
@@ -31,5 +32,6 @@ data class StudentScore(
     val title: String,
     val score: Double,
     val dateAccomplished: String,
+    val totalPoints: Double,
     val assessmentItems: Int
 )

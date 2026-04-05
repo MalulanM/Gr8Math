@@ -30,6 +30,7 @@ class ScoreRepository {
                                 title, 
                                 assessment_number, 
                                 assessment_items, 
+                                total_points,
                                 course_id
                             )
                         """.trimIndent())
@@ -52,6 +53,7 @@ class ScoreRepository {
                         title = item.assessment.title,
                         score = item.score,
                         dateAccomplished = item.dateAccomplished,
+                        totalPoints = item.assessment.totalPoints ?: item.assessment.assessmentItems.toDouble(),
                         assessmentItems = item.assessment.assessmentItems
                     )
                 }

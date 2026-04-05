@@ -116,12 +116,10 @@ class StudentGradesActivity : AppCompatActivity() {
 
         dialogView.findViewById<TextView>(R.id.tvDetailItems).text = "${scoreItem.assessmentItems}"
 
-        // Calculate Percentage
-        val percentage = if (scoreItem.assessmentItems > 0) {
-            (scoreItem.score / scoreItem.assessmentItems) * 100
+        val percentage = if (scoreItem.totalPoints > 0) {
+            (scoreItem.score / scoreItem.totalPoints) * 100
         } else 0.0
         dialogView.findViewById<TextView>(R.id.tvDetailPercentage).text = "${percentage.toInt()}%"
-
         // Format Dates
         dialogView.findViewById<TextView>(R.id.tvDetailDate).text = formatDate(scoreItem.dateAccomplished)
         dialogView.findViewById<TextView>(R.id.tvDetailTime).text = formatTime(scoreItem.dateAccomplished)

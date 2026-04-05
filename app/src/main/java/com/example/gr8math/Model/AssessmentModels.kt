@@ -15,6 +15,7 @@ data class AssessmentInsert(
     @SerialName("assessment_items") val assessmentItems: Int,
     @SerialName("assessment_number") val assessmentNumber: Int,
     @SerialName("assessment_quarter") val assessmentQuarter: Int,
+    @SerialName("total_points") var totalPoints: Double? = null,
     var status: String = "approved"
 )
 
@@ -140,5 +141,6 @@ data class AssessmentUpdate(
     @SerialName("assessment_items") val assessmentItems: Int,
     @SerialName("assessment_number") val assessmentNumber: Int,
     @SerialName("assessment_quarter") val assessmentQuarter: Int,
+    @SerialName("total_points") var totalPoints: Double? = null,
     var status: String = "approved"
 )

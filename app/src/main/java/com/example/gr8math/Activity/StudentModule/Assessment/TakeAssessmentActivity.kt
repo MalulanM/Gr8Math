@@ -153,7 +153,9 @@ class TakeAssessmentActivity : AppCompatActivity() {
 
         val match = Regex("^\\[(.*?)\\]\\s*(.*)$").find(rawText)
         val qType = match?.groupValues?.get(1) ?: "Multiple Choice"
-        val actualQuestion = match?.groupValues?.get(2) ?: rawText
+        var actualQuestion = match?.groupValues?.get(2) ?: rawText
+
+        actualQuestion = actualQuestion.replace(Regex("\\[\\d+(\\.\\d+)?\\s*pts\\]\\s*", RegexOption.IGNORE_CASE), "")
 
         renderMathInContainer(questionHeaderContainer, "${index + 1}. $actualQuestion", 18f)
 
@@ -173,7 +175,7 @@ class TakeAssessmentActivity : AppCompatActivity() {
         when (qType) {
             "Multiple Choice", "Checkboxes", "Dropdown" -> {
                 question.choices.forEach { choice ->
-                    val cleanChoiceText = choice.choiceText.replace(Regex("^\\[\\d+\\s*pts\\]\\s*"), "")
+                    val cleanChoiceText = choice.choiceText.replace(Regex("^\\[\\d+(\\.\\d+)?\\s*pts\\]\\s*", RegexOption.IGNORE_CASE), "")
 
                     val choiceRow = LinearLayout(this).apply {
                         orientation = LinearLayout.HORIZONTAL

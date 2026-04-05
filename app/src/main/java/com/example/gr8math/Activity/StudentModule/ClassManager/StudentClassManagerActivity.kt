@@ -202,6 +202,19 @@ class StudentClassManagerActivity : AppCompatActivity() {
                 }
             }
         }
+
+        viewModel.logoutState.observe(this) { state ->
+            when (state) {
+                is com.example.gr8math.ViewModel.LogoutState.Loading -> {
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+                }
+                is com.example.gr8math.ViewModel.LogoutState.Success -> {
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                    UIUtils.performLogout(this, CurrentCourse.courseId)
+                }
+                is com.example.gr8math.ViewModel.LogoutState.Idle -> {}
+            }
+        }
     }
 
     private fun showFacultyMenu() {
@@ -240,7 +253,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
         }
         dialogView.findViewById<View>(R.id.btnLogout).setOnClickListener {
             dialog.dismiss()
-            UIUtils.performLogout(this, CurrentCourse.courseId)
+            viewModel.performLogoutAndClearToken()
         }
 
         val window = dialog.window

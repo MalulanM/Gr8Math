@@ -98,4 +98,31 @@ class ClassRepository {
             }
         }
     }
+
+    // Add this to ClassRepository.kt
+    suspend fun clearDeviceToken() {
+        withContext(Dispatchers.IO) {
+            try {
+                // 1. Get the current token synchronously using Tasks.await()
+                val token = com.google.android.gms.tasks.Tasks.await(
+                    com.google.firebase.messaging.FirebaseMessaging.getInstance().token
+                )
+
+                // 2. Delete from Supabase
+                if (token != null) {
+                    db.from("user_devices").delete {
+                        filter { eq("fcm_token", token) }
+                    }
+                }
+
+                // 3. Delete from Firebase locally
+                com.google.firebase.messaging.FirebaseMessaging.getInstance().deleteToken()
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // We silently catch errors here so the user can still log out
+                // even if they don't have an internet connection.
+            }
+        }
+    }
 }

@@ -19,6 +19,12 @@ sealed class ClassState {
     data class Error(val message: String) : ClassState()
 }
 
+sealed class LogoutState {
+    object Idle : LogoutState()
+    object Loading : LogoutState()
+    object Success : LogoutState()
+}
+
 class ClassManagerViewModel : ViewModel() {
 
     private val repository = ClassRepository()
@@ -30,6 +36,9 @@ class ClassManagerViewModel : ViewModel() {
     val searchHistory: LiveData<List<String>> = _searchHistory
 
     private var searchJob: Job? = null
+
+    private val _logoutState = MutableLiveData<LogoutState>(LogoutState.Idle)
+    val logoutState: LiveData<LogoutState> = _logoutState
 
     fun loadClasses(userId: Int, role: String, forceReload: Boolean = false) {
         if (!forceReload && _classState.value is ClassState.Success) {
@@ -80,6 +89,18 @@ class ClassManagerViewModel : ViewModel() {
         viewModelScope.launch {
             val history = repository.getSearchHistory(userId)
             _searchHistory.value = history
+        }
+    }
+
+    fun performLogoutAndClearToken() {
+        _logoutState.value = LogoutState.Loading
+
+        viewModelScope.launch {
+            // 1. Tell the Repository to handle the database/Firebase work
+            repository.clearDeviceToken()
+
+            // 2. Tell the UI it is safe to log out
+            _logoutState.value = LogoutState.Success
         }
     }
 

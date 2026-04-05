@@ -20,12 +20,12 @@ class QuarterlyReportViewModel : ViewModel() {
     private val repository = QuarterlyReportRepository()
     private val _state = MutableLiveData<ReportState>()
     val state: LiveData<ReportState> = _state
-    fun loadReport(studentId: Int, month: Int, year: Int) {
-        val courseId = CurrentCourse.courseId
+    // Change the function signature
+    fun loadReport(courseId: Int, studentId: Int, month: Int, year: Int) {
+        // val courseId = CurrentCourse.courseId  <-- REMOVE THIS LINE
 
         _state.value = ReportState.Loading
         viewModelScope.launch {
-
             val result = repository.getMonthlyReport(courseId, studentId, month, year)
 
             result.onSuccess { data ->

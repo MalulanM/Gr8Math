@@ -16,15 +16,26 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-
 class TakeAssessmentRepository {
 
     private val db = SupabaseService.client
 
+    private fun extractPoints(choiceText: String?): Double {
+        if (choiceText.isNullOrBlank()) return 1.0
+
+        // 1. Check if it's just a raw number (for Upload Image)
+        val rawNum = choiceText.trim().toDoubleOrNull()
+        if (rawNum != null) return rawNum
+
+        // 2. Otherwise, extract from the [X pts] tag
+        val ptsRegex = Regex("^\\[(\\d+(\\.\\d+)?)\\s*pts?\\]", RegexOption.IGNORE_CASE)
+        val match = ptsRegex.find(choiceText.trim())
+        return match?.groupValues?.get(1)?.toDoubleOrNull() ?: 1.0
+    }
+
     suspend fun submitAssessment(
         userId: Int,
         assessment: AssessmentFullDetails,
-        // 1. FIX: Changed from Map<Int, Int> to Map<Int, Any>
         selectedAnswers: Map<Int, Any>
     ): Result<Unit> {
         return withContext(Dispatchers.IO) {
@@ -54,7 +65,9 @@ class TakeAssessmentRepository {
                             // --- MULTIPLE CHOICE / DROPDOWN ---
                             answerList.add(StudentAnswerInsert(realStudentId, assessment.id, qId, choiceId = answerData, timestamp = timestamp))
                             val choice = question.choices.find { it.id == answerData }
-                            if (choice?.isCorrect == true) correctCount++
+                            if (choice?.isCorrect == true) {
+                                correctCount += extractPoints(choice.choiceText)
+                            }
                         }
 
                         is Set<*> -> {
@@ -66,9 +79,11 @@ class TakeAssessmentRepository {
                                 answerList.add(StudentAnswerInsert(realStudentId, assessment.id, qId, choiceId = cId as Int, timestamp = timestamp))
                             }
 
-                            // Only give a point if they selected exactly the correct combination
+                            // Only give points if they selected exactly the correct combination
                             if (studentSelections.isNotEmpty() && studentSelections == correctDbChoices) {
-                                correctCount++
+                                val correctChoiceObj = question.choices.find { it.isCorrect }
+                                val ptsPerChoice = extractPoints(correctChoiceObj?.choiceText)
+                                correctCount += (ptsPerChoice * correctDbChoices.size)
                             }
                         }
 
@@ -77,19 +92,25 @@ class TakeAssessmentRepository {
                             if (qType == "Short Answer") {
                                 // Auto-grade: Check if typed text matches the DB choice (ignoring [X pts])
                                 val matchingChoice = question.choices.find { dbChoice ->
-                                    val cleanDbText = dbChoice.choiceText.replace(Regex("^\\[\\d+\\s*pts\\]\\s*"), "").trim()
+                                    val cleanDbText = dbChoice.choiceText.replace(Regex("^\\[\\d+(\\.\\d+)?\\s*pts\\]\\s*"), "").trim()
                                     cleanDbText.equals(answerData.trim(), ignoreCase = true)
                                 }
 
                                 if (matchingChoice != null) {
                                     answerList.add(StudentAnswerInsert(realStudentId, assessment.id, qId, choiceId = matchingChoice.id, textAnswer = answerData, timestamp = timestamp))
-                                    if (matchingChoice.isCorrect) correctCount++
+                                    if (matchingChoice.isCorrect) {
+                                        correctCount += extractPoints(matchingChoice.choiceText)
+                                    }
                                 } else {
                                     answerList.add(StudentAnswerInsert(realStudentId, assessment.id, qId, choiceId = null, textAnswer = answerData, timestamp = timestamp))
                                 }
                             } else if (qType == "Upload Image" || qType == "Paragraph") {
-                                // Manual Grade: Save URL/Paragraph, do not award points automatically
                                 answerList.add(StudentAnswerInsert(realStudentId, assessment.id, qId, choiceId = null, textAnswer = answerData, timestamp = timestamp))
+
+                                if (answerData.trim().isNotEmpty()) {
+                                    val ptsToAward = extractPoints(question.choices.firstOrNull()?.choiceText)
+                                    correctCount += ptsToAward
+                                }
                             }
                         }
                     }
@@ -185,10 +206,8 @@ class TakeAssessmentRepository {
                 meta = metaJson
             )
             db.from("notifications").insert(notif)
-            Log.d("NOTIF", "Notification sent to teacher: ${classRes.adviserId}")
 
         } catch (e: Exception) {
-            Log.e("NOTIF_ERR", "Failed to notify teacher", e)
         }
     }
 

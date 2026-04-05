@@ -37,6 +37,7 @@ import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
 import com.example.gr8math.ViewModel.ClassManagerViewModel
 import com.example.gr8math.ViewModel.ClassState
+import com.example.gr8math.ViewModel.LogoutState
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -247,6 +248,19 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         viewModel.searchHistory.observe(this) { history ->
             inflatePastSearches(history)
         }
+
+        viewModel.logoutState.observe(this) { state ->
+            when (state) {
+                is LogoutState.Loading -> {
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+                }
+                is LogoutState.Success -> {
+                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+                    UIUtils.performLogout(this, CurrentCourse.courseId)
+                }
+                is LogoutState.Idle -> {}
+            }
+        }
     }
 
     private fun populateLinearLayout(data: List<ClassUiModel>) {
@@ -362,7 +376,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
 
         dialogView.findViewById<View>(R.id.btnLogout).setOnClickListener {
             dialog.dismiss()
-            UIUtils.performLogout(this, CurrentCourse.courseId)
+            viewModel.performLogoutAndClearToken()
         }
 
         val window = dialog.window

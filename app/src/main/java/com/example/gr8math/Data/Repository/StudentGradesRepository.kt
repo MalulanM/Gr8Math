@@ -30,7 +30,7 @@ class StudentGradesRepository {
                         columns = Columns.raw("""
                             score, date_accomplished,
                             assessment_created!inner (
-                                id, title, assessment_number, assessment_items, course_id
+                                id, title, assessment_number, assessment_items,total_points, course_id
                             )
                         """.trimIndent())
                     ) {
@@ -49,6 +49,7 @@ class StudentGradesRepository {
                         score = record.score,
                         assessmentNumber = record.assessment.assessmentNumber,
                         dateAccomplished = record.dateAccomplished,
+                        totalPoints = record.assessment.totalPoints ?: record.assessment.assessmentItems.toDouble(),
                         assessmentItems = record.assessment.assessmentItems
                     )
                 }

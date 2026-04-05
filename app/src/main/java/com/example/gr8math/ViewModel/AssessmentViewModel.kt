@@ -16,7 +16,7 @@ import java.util.TimeZone
 sealed class AssessmentState {
     object Idle : AssessmentState()
     object Loading : AssessmentState()
-    data class Success(val isFlagged: Boolean) : AssessmentState() // 🌟 Contains flag
+    data class Success(val isFlagged: Boolean) : AssessmentState()
     data class Error(val message: String) : AssessmentState()
 }
 
@@ -49,9 +49,8 @@ class AssessmentViewModel : ViewModel() {
     }
 
     fun publishAssessment(
-        userId: Int,
-        courseId: Int, title: String, rawStartTime: String, rawEndTime: String,
-        assessmentNumber: Int, assessmentQuarter: Int, questions: List<UiQuestion>
+        userId: Int, courseId: Int, title: String, rawStartTime: String, rawEndTime: String,
+        assessmentNumber: Int, assessmentQuarter: Int, totalPoints: Int, questions: List<UiQuestion>
     ) {
         _state.value = AssessmentState.Loading
         val startTime = convertToIso(rawStartTime)
@@ -62,7 +61,16 @@ class AssessmentViewModel : ViewModel() {
             return
         }
 
-        val metaData = AssessmentInsert(courseId, title, startTime, endTime, questions.size, assessmentNumber, assessmentQuarter)
+        val metaData = AssessmentInsert(
+            courseId = courseId,
+            title = title,
+            startTime = startTime,
+            endTime = endTime,
+            assessmentItems = questions.size,
+            assessmentNumber = assessmentNumber,
+            assessmentQuarter = assessmentQuarter,
+            totalPoints = totalPoints.toDouble()
+        )
 
         viewModelScope.launch {
             val result = repository.createAssessment(userId, metaData, questions)
@@ -72,9 +80,8 @@ class AssessmentViewModel : ViewModel() {
     }
 
     fun updateAssessment(
-        userId: Int,
-        assessmentId: Int, title: String, rawStartTime: String, rawEndTime: String,
-        assessmentNumber: Int, assessmentQuarter: Int, questions: List<UiQuestion>
+        userId: Int, assessmentId: Int, title: String, rawStartTime: String, rawEndTime: String,
+        assessmentNumber: Int, assessmentQuarter: Int, totalPoints: Int, questions: List<UiQuestion>
     ) {
         _state.value = AssessmentState.Loading
         val startTime = convertToIso(rawStartTime)
@@ -85,7 +92,15 @@ class AssessmentViewModel : ViewModel() {
             return
         }
 
-        val updateData = AssessmentUpdate(title, startTime, endTime, questions.size, assessmentNumber, assessmentQuarter)
+        val updateData = AssessmentUpdate(
+            title = title,
+            startTime = startTime,
+            endTime = endTime,
+            assessmentItems = questions.size,
+            assessmentNumber = assessmentNumber,
+            assessmentQuarter = assessmentQuarter,
+            totalPoints = totalPoints.toDouble()
+        )
 
         viewModelScope.launch {
             val result = repository.updateAssessment(userId, assessmentId, updateData, questions)

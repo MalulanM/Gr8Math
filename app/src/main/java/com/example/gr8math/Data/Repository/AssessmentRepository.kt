@@ -30,7 +30,7 @@ class AssessmentRepository {
                 val modCheck = checkContentModeration(allTextToCheck)
                 metaData.status = if (modCheck.isSafe) "approved" else "pending"
 
-                // 2. Insert Assessment
+
                 val assessment = db.from("assessment_created")
                     .insert(metaData) { select() }
                     .decodeSingle<AssessmentCreated>()
@@ -92,7 +92,7 @@ class AssessmentRepository {
                 val modCheck = checkContentModeration(allTextToCheck)
                 updateData.status = if (modCheck.isSafe) "approved" else "pending"
 
-                // 2. Time Extension Check
+
                 val existing = db.from("assessment_created")
                     .select(columns = Columns.list("end_time")) {
                         filter { eq("id", assessmentId) }
@@ -207,6 +207,7 @@ class AssessmentRepository {
             ModerationResult(isSafe = true)
         }
     }
+
 
     private fun parseIsoDate(dateStr: String?): Long {
         if (dateStr.isNullOrEmpty()) return 0L
