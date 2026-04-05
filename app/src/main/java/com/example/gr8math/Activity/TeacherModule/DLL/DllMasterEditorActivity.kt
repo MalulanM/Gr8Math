@@ -155,7 +155,7 @@ class DllMasterEditorActivity : AppCompatActivity() {
         if (isEditable) {
             val dialog = MaterialAlertDialogBuilder(this)
                 .setTitle("Discard Changes?")
-                .setMessage("Are you sure you want to go back? Unsaved changes will be lost.")
+                .setMessage("You have unsaved content. If you go back, your changes will be lost.")
                 .setNegativeButton("Yes") { _, _ -> finish() }
                 .setPositiveButton("No", null)
                 .show()

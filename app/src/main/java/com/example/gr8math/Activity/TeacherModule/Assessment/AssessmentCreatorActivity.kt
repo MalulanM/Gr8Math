@@ -319,7 +319,7 @@ class AssessmentCreatorActivity : AppCompatActivity() {
     private fun showSaveConfirmationDialog() {
         val isEdit = editAssessmentId != -1
         MaterialAlertDialogBuilder(this)
-            .setTitle("Confirm ${if (isEdit) "Update" else "Save"}?")
+            .setTitle("Are you sure you want to save this assessment?")
             .setNegativeButton("Yes") { _, _ -> executePublishProcess() }
             .setPositiveButton("No") { dialog, _ -> dialog.dismiss() }
             .show()

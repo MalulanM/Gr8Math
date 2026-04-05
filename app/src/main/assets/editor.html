@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <style>
+        @font-face { font-family: 'Lexend'; src: url('file:///android_asset/font/lexend.ttf'); }
+        body {
+            font-family: 'Lexend', sans-serif;
+            margin: 0; padding: 15px;
+            font-size: 16px; color: #333;
+            outline: none; min-height: 100vh;
+        }
+        [contenteditable] { outline: none; }
+        img { max-width: 100%; height: auto; border-radius: 8px; }
+        iframe { width: 100%; border-radius: 8px; border: none; }
+    </style>
+</head>
+<body contenteditable="true" id="editor">
+</body>
+<script>
+    var editor = document.getElementById('editor');
+    function setHtml(html) { editor.innerHTML = html; }
+    function getHtml() { return editor.innerHTML; }
+    function insertHtml(html) {
+        document.execCommand('insertHTML', false, html);
+    }
+    // Listen for changes
+    editor.oninput = function() {
+        Android.onContentChanged();
+    };
+</script>
+</html>

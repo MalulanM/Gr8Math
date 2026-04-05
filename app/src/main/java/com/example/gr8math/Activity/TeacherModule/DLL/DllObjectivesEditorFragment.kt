@@ -30,17 +30,17 @@ class DllObjectivesEditorFragment : Fragment(R.layout.fragment_dll_objectives_ed
         val btnSave = view.findViewById<Button>(R.id.btnSaveFragment)
 
         btnSave.setOnClickListener {
-            // 🌟 1. SHOW CONFIRMATION MODAL
+            //  1. SHOW CONFIRMATION MODAL
             val dialog = MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Do you want to save changes?")
                 .setPositiveButton("Yes") { _, _ ->
-                    // 🌟 2. ONLY SAVE IF YES IS PRESSED
+                    //  2. ONLY SAVE IF YES IS PRESSED
                     saveObjectives(view, btnSave)
                 }
                 .setNegativeButton("No", null)
                 .show()
 
-            // 🌟 3. MATCH RED COLOR DESIGN
+            // 3. MATCH RED COLOR DESIGN
             val redColor = android.graphics.Color.parseColor("#E53935")
             dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setTextColor(redColor)
             dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(redColor)
