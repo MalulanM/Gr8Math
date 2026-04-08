@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorLight">
+    android:background="#F4EFED">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
@@ -16,33 +16,87 @@
         app:titleTextAppearance="@style/TextAppearance.Gr8.ToolbarTitle"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tvQuarter"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:text="@string/quarter_label"
-        android:fontFamily="@font/lexend"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/colorText"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintStart_toStartOf="parent"/>
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <TextView
+            android:id="@+id/tvQuarter"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:text="Month Year"
+            android:fontFamily="@font/lexend"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#101720"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/tilMonthPicker"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilMonthPicker"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="24dp"
+            app:boxStrokeColor="#D1D8DD"
+            app:boxBackgroundColor="#FFFFFF"
+            app:boxCornerRadiusTopStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusBottomEnd="8dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <AutoCompleteTextView
+                android:id="@+id/actvMonth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:paddingVertical="12dp"
+                android:text="Select"
+                android:textSize="13sp"
+                android:fontFamily="@font/lexend"
+                android:textColor="#101720" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.card.MaterialCardView
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="24dp"
         app:cardBackgroundColor="@color/white"
-        app:cardCornerRadius="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp"
         app:strokeWidth="1dp"
-        app:strokeColor="@color/colorDarkCyan"
-        app:layout_constraintTop_toBottomOf="@id/tvQuarter"
+        app:strokeColor="#D1D8DD"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout"
         app:layout_constraintBottom_toTopOf="@id/btnGenerateCopy"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <TextView
+            android:id="@+id/tvEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="No assessments found for this month."
+            android:textColor="#999999"
+            android:textStyle="bold|italic"
+            android:textSize="16sp"
+            android:fontFamily="@font/lexend"
+            android:visibility="gone" />
+
         <HorizontalScrollView
+            android:id="@+id/tableScrollView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fillViewport="true">
@@ -54,76 +108,23 @@
 
                 <TableLayout
                     android:id="@+id/reportTable"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:stretchColumns="*">
 
-                    <TableRow android:background="@color/colorAccent">
-                        <TextView
-                            android:text="@string/col_test_no"
-                            android:padding="16dp"
-                            android:gravity="center"
-                            android:fontFamily="@font/lexend"
-                            android:textColor="@color/colorText"
-                            android:textStyle="bold"/>
-                        <TextView
-                            android:text="@string/col_test_score"
-                            android:padding="16dp"
-                            android:gravity="center"
-                            android:fontFamily="@font/lexend"
-                            android:textColor="@color/colorText"
-                            android:textStyle="bold"/>
-                        <TextView
-                            android:text="@string/col_percentage"
-                            android:padding="16dp"
-                            android:gravity="center"
-                            android:fontFamily="@font/lexend"
-                            android:textColor="@color/colorText"
-                            android:textStyle="bold"/>
-                        <TextView
-                            android:text="@string/col_no_items"
-                            android:padding="16dp"
-                            android:gravity="center"
-                            android:fontFamily="@font/lexend"
-                            android:textColor="@color/colorText"
-                            android:textStyle="bold"/>
+                    <TableRow android:background="#1E4B95">
+                        <TextView android:text="@string/col_test_no" android:paddingVertical="18dp" android:paddingHorizontal="16dp" android:gravity="center" android:fontFamily="@font/lexend" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold"/>
+                        <TextView android:text="@string/col_test_score" android:paddingVertical="18dp" android:paddingHorizontal="16dp" android:gravity="center" android:fontFamily="@font/lexend" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold"/>
+                        <TextView android:text="@string/col_percentage" android:paddingVertical="18dp" android:paddingHorizontal="16dp" android:gravity="center" android:fontFamily="@font/lexend" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold"/>
+                        <TextView android:text="@string/col_no_items" android:paddingVertical="18dp" android:paddingHorizontal="16dp" android:gravity="center" android:fontFamily="@font/lexend" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold"/>
                     </TableRow>
 
-                    <TableRow android:background="@color/colorAccent">
-                        <TextView
-                            android:text="@string/total_score"
-                            android:padding="16dp"
-                            android:gravity="center"
-                            android:fontFamily="@font/lexend"
-                            android:textColor="@color/colorText"
-                            android:textStyle="bold"/>
-                        <TextView
-                            android:id="@+id/tvTotalScore"
-                            android:text="0"
-                            android:padding="16dp"
-                            android:gravity="center"
-                            android:fontFamily="@font/lexend"
-                            android:textColor="@color/colorText"
-                            android:textStyle="bold"/>
-
-                        <TextView
-                            android:text=""
-                            android:padding="16dp"
-                            android:gravity="center"
-                            android:fontFamily="@font/lexend"
-                            android:textColor="@color/colorText"
-                            android:textStyle="bold"/>
-
-                        <TextView
-                            android:id="@+id/tvTotalItems"
-                            android:text="0"
-                            android:padding="16dp"
-                            android:gravity="center"
-                            android:fontFamily="@font/lexend"
-                            android:textColor="@color/colorText"
-                            android:textStyle="bold"/>
+                    <TableRow android:background="#1E4B95">
+                        <TextView android:text="@string/total_score" android:paddingVertical="18dp" android:paddingHorizontal="16dp" android:gravity="center" android:fontFamily="@font/lexend" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold"/>
+                        <TextView android:id="@+id/tvTotalScore" android:text="0" android:paddingVertical="18dp" android:paddingHorizontal="16dp" android:gravity="center" android:fontFamily="@font/lexend" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold"/>
+                        <TextView android:text="Total No. of Items" android:paddingVertical="18dp" android:paddingHorizontal="16dp" android:gravity="center" android:fontFamily="@font/lexend" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold"/>
+                        <TextView android:id="@+id/tvTotalItems" android:text="0" android:paddingVertical="18dp" android:paddingHorizontal="16dp" android:gravity="center" android:fontFamily="@font/lexend" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold"/>
                     </TableRow>
-
                 </TableLayout>
             </ScrollView>
         </HorizontalScrollView>
@@ -131,11 +132,20 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnGenerateCopy"
-        style="@style/Gr8ButtonStyle"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_margin="16dp"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="24dp"
+        app:backgroundTint="#1E4B95"
         android:text="@string/generate_copy"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:fontFamily="@font/lexend"
+        android:textStyle="bold"
+        app:cornerRadius="12dp"
+        app:elevation="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

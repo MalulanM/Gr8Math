@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="24dp"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Export Report"
+            android:textColor="#101720"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/lexend"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Choose a format to download the monthly report."
+            android:textColor="#6B7280"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:fontFamily="@font/lexend"
+            android:layout_marginBottom="24dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDownloadPdf"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Download PDF"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:fontFamily="@font/lexend"
+            app:backgroundTint="#ED1F24"
+            app:cornerRadius="12dp"
+            app:icon="@drawable/ic_pdf_icon"
+            app:iconTint="@color/white"
+            app:iconGravity="textStart"
+            app:iconPadding="12dp"
+            android:layout_marginBottom="12dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDownloadCsv"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Download Excel (CSV)"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:fontFamily="@font/lexend"
+            app:backgroundTint="#107C41"
+            app:cornerRadius="12dp"
+            app:icon="@drawable/ic_excel_icon"
+            app:iconTint="@color/white"
+            app:iconGravity="textStart"
+            app:iconPadding="12dp"
+            android:layout_marginBottom="12dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancel"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Cancel"
+            android:textColor="#4B5563"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:fontFamily="@font/lexend"
+            app:backgroundTint="#F3F4F6"
+            app:cornerRadius="12dp" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
