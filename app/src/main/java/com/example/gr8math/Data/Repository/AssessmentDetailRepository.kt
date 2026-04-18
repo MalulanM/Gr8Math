@@ -19,7 +19,7 @@ class AssessmentDetailRepository {
                     .select(
                         columns = Columns.raw("""
                             id, course_id, title, start_time, end_time, 
-                            assessment_items, assessment_number, assessment_quarter,
+                            assessment_items, assessment_number, assessment_quarter,time_limit_minutes,
                             assessment_questions (
                                 id, question_text,
                                 assessment_choices (

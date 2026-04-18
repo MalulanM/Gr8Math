@@ -68,7 +68,8 @@ sealed class ClassContentItem {
         val title: String = "",
         val quarter: Int = 0,
         val startTime: String = "",
-        val endTime: String = ""
+        val endTime: String = "",
+        val timeLimit: Int = 0
     ) : ClassContentItem()
 }
 

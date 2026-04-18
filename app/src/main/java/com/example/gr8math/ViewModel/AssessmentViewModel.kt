@@ -8,6 +8,7 @@ import com.example.gr8math.Data.Model.AssessmentInsert
 import com.example.gr8math.Data.Model.AssessmentUpdate
 import com.example.gr8math.Data.Model.UiQuestion
 import com.example.gr8math.Data.Repository.AssessmentRepository
+import com.example.gr8math.Data.Repository.WordBankItem
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -50,7 +51,7 @@ class AssessmentViewModel : ViewModel() {
 
     fun publishAssessment(
         userId: Int, courseId: Int, title: String, rawStartTime: String, rawEndTime: String,
-        assessmentNumber: Int, assessmentQuarter: Int, totalPoints: Int, questions: List<UiQuestion>
+        assessmentNumber: Int, assessmentQuarter: Int, totalPoints: Int, timeLimit: Int, questions: List<UiQuestion>
     ) {
         _state.value = AssessmentState.Loading
         val startTime = convertToIso(rawStartTime)
@@ -66,6 +67,7 @@ class AssessmentViewModel : ViewModel() {
             title = title,
             startTime = startTime,
             endTime = endTime,
+            timeLimitMinutes = timeLimit,
             assessmentItems = questions.size,
             assessmentNumber = assessmentNumber,
             assessmentQuarter = assessmentQuarter,
@@ -81,7 +83,7 @@ class AssessmentViewModel : ViewModel() {
 
     fun updateAssessment(
         userId: Int, assessmentId: Int, title: String, rawStartTime: String, rawEndTime: String,
-        assessmentNumber: Int, assessmentQuarter: Int, totalPoints: Int, questions: List<UiQuestion>
+        assessmentNumber: Int, assessmentQuarter: Int, totalPoints: Int, timeLimit: Int, questions: List<UiQuestion>
     ) {
         _state.value = AssessmentState.Loading
         val startTime = convertToIso(rawStartTime)
@@ -96,6 +98,7 @@ class AssessmentViewModel : ViewModel() {
             title = title,
             startTime = startTime,
             endTime = endTime,
+            timeLimitMinutes = timeLimit,
             assessmentItems = questions.size,
             assessmentNumber = assessmentNumber,
             assessmentQuarter = assessmentQuarter,
@@ -107,6 +110,10 @@ class AssessmentViewModel : ViewModel() {
             if (result.isSuccess) _state.value = AssessmentState.Success(result.getOrDefault(false))
             else _state.value = AssessmentState.Error("Failed to update")
         }
+    }
+
+    suspend fun fetchPastQuestionsForWordBank(teacherId: Int): Result<List<WordBankItem>> {
+        return repository.fetchPastQuestionsForWordBank(teacherId)
     }
 
     private fun convertToIso(raw: String): String? {

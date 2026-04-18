@@ -82,7 +82,8 @@ class ClassPageRepository {
                         title = a.title ?: "",
                         quarter = a.assessmentQuarter ?: 0,
                         startTime = formatIsoToReadable(a.startTime),
-                        endTime = formatIsoToReadable(a.endTime)
+                        endTime = formatIsoToReadable(a.endTime),
+                        timeLimit = a.timeLimitMinutes ?: 0
                     )
                 }
 
@@ -343,7 +344,8 @@ class ClassPageRepository {
         val title: String? = null,
         @SerialName("assessment_quarter") val assessmentQuarter: Int? = null,
         @SerialName("start_time") val startTime: String? = null,
-        @SerialName("end_time") val endTime: String? = null
+        @SerialName("end_time") val endTime: String? = null,
+        @SerialName("time_limit_minutes") val timeLimitMinutes: Int? = 0
     )
 
 

@@ -23,6 +23,7 @@ import aws.smithy.kotlin.runtime.content.ByteStream
 import com.bumptech.glide.Glide
 import com.example.gr8math.Data.Model.UiChoice
 import com.example.gr8math.Data.Model.UiQuestion
+import com.example.gr8math.Data.Repository.WordBankItem
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
 import com.example.gr8math.Services.TigrisService
@@ -64,6 +65,13 @@ class AssessmentCreatorActivity : AppCompatActivity() {
     private var availableFrom: String = ""
     private var availableUntil: String = ""
     private var courseId: Int = 0
+
+    private lateinit var timeLimitContainer: LinearLayout
+    private var timeLimit: Int = 0
+    private lateinit var etTimeLimit: TextInputEditText
+
+    private lateinit var btnWordBank: Button
+
 
     private var pendingQuestionManager: QuestionCardManager? = null
 
@@ -110,21 +118,29 @@ class AssessmentCreatorActivity : AppCompatActivity() {
         availableUntil = intent.getStringExtra("EXTRA_AVAILABLE_UNTIL") ?: ""
         assessmentQuarter = intent.getStringExtra("EXTRA_AVAILABLE_QUARTER")?.toIntOrNull() ?: 0
         courseId = CurrentCourse.courseId
+        timeLimit = intent.getIntExtra("EXTRA_TIME_LIMIT", 0)
     }
 
     private fun initViews() {
         toolbar = findViewById(R.id.toolbar)
         questionsContainer = findViewById(R.id.questionsContainer)
         btnAddQuestion = findViewById(R.id.btnAddQuestion)
+
+        btnWordBank = findViewById(R.id.btnWordBank)
+
         btnPublishAssessmentTest = findViewById(R.id.btnPublishAssessmentTest)
         loadingLayout = findViewById(R.id.loadingLayout)
         loadingProgress = findViewById(R.id.loadingProgressBg)
         loadingText = findViewById(R.id.loadingText)
 
+        etTimeLimit = findViewById(R.id.etTimeLimit)
+        etTimeLimit.setText(timeLimit.toString())
+
         val titlePrefix = if (editAssessmentId != -1) "Edit" else "Create"
         toolbar.title = assessmentTitle.ifEmpty { "$titlePrefix Assessment" }
         btnPublishAssessmentTest.text = if (editAssessmentId != -1) "Update Assessment" else "Publish Assessment"
     }
+
 
     private fun setupListeners() {
         toolbar.setNavigationOnClickListener { handleBackPress() }
@@ -139,11 +155,20 @@ class AssessmentCreatorActivity : AppCompatActivity() {
             updatePublishButtonState()
         }
 
+        //FIX 2: Move the Word Bank listener here (out of setupObservers)
+        btnWordBank.setOnClickListener {
+            showWordBankDialog()
+        }
+
         btnPublishAssessmentTest.setOnClickListener {
             if (validateAllQuestions()) {
                 showSaveConfirmationDialog()
             }
         }
+
+        etTimeLimit.addTextChangedListener(AfterTextChangedWatcher { text ->
+            timeLimit = text.toIntOrNull() ?: 0
+        })
     }
 
     private fun setupObservers() {
@@ -186,6 +211,8 @@ class AssessmentCreatorActivity : AppCompatActivity() {
                 }
             }
         }
+
+        btnWordBank.setOnClickListener { showWordBankDialog() }
     }
 
     private fun populateExistingQuestions(existingQuestions: List<UiQuestion>) {
@@ -302,9 +329,9 @@ class AssessmentCreatorActivity : AppCompatActivity() {
                 }
 
                 if (editAssessmentId != -1) {
-                    viewModel.updateAssessment(CurrentCourse.userId, editAssessmentId, assessmentTitle, availableFrom, availableUntil, assessmentNumber, assessmentQuarter, totalPoints, uiQuestions)
+                    viewModel.updateAssessment(CurrentCourse.userId, editAssessmentId, assessmentTitle, availableFrom, availableUntil, assessmentNumber, assessmentQuarter, totalPoints,  timeLimit,uiQuestions)
                 } else {
-                    viewModel.publishAssessment(CurrentCourse.userId, courseId, assessmentTitle, availableFrom, availableUntil, assessmentNumber, assessmentQuarter, totalPoints, uiQuestions)
+                    viewModel.publishAssessment(CurrentCourse.userId, courseId, assessmentTitle, availableFrom, availableUntil, assessmentNumber, assessmentQuarter, totalPoints,  timeLimit,uiQuestions)
                 }
 
             } catch (e: Exception) {
@@ -424,6 +451,140 @@ class AssessmentCreatorActivity : AppCompatActivity() {
         btnPublishAssessmentTest.isEnabled = canPublish
         btnPublishAssessmentTest.alpha = if (canPublish) 1.0f else 0.5f
     }
+
+    private fun loadPresetWordBankFromJson(): List<com.example.gr8math.Data.Repository.WordBankItem> {
+        val bankList = mutableListOf<com.example.gr8math.Data.Repository.WordBankItem>()
+        try {
+            val jsonString = assets.open("gr8_math_bank.json").bufferedReader().use { it.readText() }
+            val jsonArray = org.json.JSONArray(jsonString)
+
+            for (i in 0 until jsonArray.length()) {
+                val topicObj = jsonArray.getJSONObject(i)
+                val topicName = topicObj.getString("topic")
+                val questionsArray = topicObj.getJSONArray("questions")
+
+                val questionsList = mutableListOf<AssessmentQuestion>()
+                for (j in 0 until questionsArray.length()) {
+                    val qObj = questionsArray.getJSONObject(j)
+                    val choices = mutableListOf<String>()
+                    val cArr = qObj.getJSONArray("choices")
+                    for (k in 0 until cArr.length()) choices.add(cArr.getString(k))
+
+                    val correctAnswers = mutableListOf<String>()
+                    val caArr = qObj.getJSONArray("correctAnswers")
+                    for (k in 0 until caArr.length()) correctAnswers.add(caArr.getString(k))
+
+                    val type = qObj.getString("type")
+                    val points = if (qObj.has("points")) qObj.getInt("points") else 1
+                    var correctIndex = -1
+                    var correctText = ""
+                    if (correctAnswers.isNotEmpty()) {
+                        correctText = correctAnswers[0]
+                        correctIndex = choices.indexOf(correctText)
+                    }
+
+                    questionsList.add(AssessmentQuestion(type, qObj.getString("question"), "", "", choices, correctIndex, points, correctText, ""))
+                }
+                bankList.add(com.example.gr8math.Data.Repository.WordBankItem(topicName, questionsList))
+            }
+        } catch (e: Exception) { e.printStackTrace() }
+        return bankList
+    }
+
+    private fun showWordBankDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_word_bank, null)
+        val dialog = MaterialAlertDialogBuilder(this).setView(dialogView).create()
+
+        val btnClose = dialogView.findViewById<ImageButton>(R.id.btnCloseWordBank)
+        val spinnerTopics = dialogView.findViewById<Spinner>(R.id.spinnerTopics)
+        val llQuestions = dialogView.findViewById<LinearLayout>(R.id.llWordBankQuestions)
+        val pbLoading = dialogView.findViewById<ProgressBar>(R.id.pbWordBankLoading)
+
+        btnClose.setOnClickListener { dialog.dismiss() }
+
+        val spinnerLabels = mutableListOf<String>()
+
+        // 🌟 FIX 3: Explicitly use the Repository Type to match the fetch result
+        val bankMap = mutableMapOf<String, com.example.gr8math.Data.Repository.WordBankItem>()
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, spinnerLabels)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerTopics.adapter = adapter
+
+        // Helper to refresh UI
+        fun rebuildSpinner(dynamicBank: List<com.example.gr8math.Data.Repository.WordBankItem>) {
+            spinnerLabels.clear()
+            bankMap.clear()
+
+            // 1. Load Presets from JSON
+            val presetTopics = loadPresetWordBankFromJson()
+            if (presetTopics.isNotEmpty()) {
+                spinnerLabels.add("─── PRESET TOPICS ───")
+                presetTopics.forEach {
+                    spinnerLabels.add(it.topic)
+                    bankMap[it.topic] = it
+                }
+            }
+
+            // 2. Add Past Assessments from dynamicBank
+            if (dynamicBank.isNotEmpty()) {
+                spinnerLabels.add("─── PAST ASSESSMENTS ───")
+                dynamicBank.forEach {
+                    spinnerLabels.add(it.topic)
+                    bankMap[it.topic] = it
+                }
+            }
+            adapter.notifyDataSetChanged()
+            if (spinnerLabels.size > 1) spinnerTopics.setSelection(1)
+        }
+
+        val updateQuestionsList = { selectedBank: com.example.gr8math.Data.Repository.WordBankItem? ->
+            llQuestions.removeAllViews()
+            selectedBank?.questions?.forEach { q ->
+                val card = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(32, 32, 32, 32)
+                    background = ContextCompat.getDrawable(this@AssessmentCreatorActivity, R.drawable.bg_rounded_border)
+                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, 24) }
+                }
+
+                val tvType = TextView(this).apply { text = "[${q.type}]"; textSize = 10f; setTextColor(Color.parseColor("#1A4C8B")); setTypeface(null, android.graphics.Typeface.BOLD) }
+                val tvQ = TextView(this).apply { text = q.questionText; textSize = 14f; setTextColor(Color.BLACK); setTypeface(null, android.graphics.Typeface.BOLD); setPadding(0, 8, 0, 16) }
+                val btnAdd = Button(this).apply {
+                    text = "+ Add to Assessment"
+                    setBackgroundColor(Color.parseColor("#1A4C8B"))
+                    setTextColor(Color.WHITE)
+                    setOnClickListener {
+                        addNewQuestion(AssessmentQuestion(q.type, q.questionText, q.imageUrl, q.pendingQuestionImageUri, q.choices.toMutableList(), q.correctAnswerIndex, q.points, q.correctTextAnswer, q.pendingAnswerImageUri))
+                        hasUnsavedChanges = true
+                        updatePublishButtonState()
+                        dialog.dismiss()
+                    }
+                }
+                card.addView(tvType); card.addView(tvQ); card.addView(btnAdd); llQuestions.addView(card)
+            }
+        }
+
+        spinnerTopics.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, pos: Int, p3: Long) {
+                val label = spinnerLabels[pos]
+                if (!label.startsWith("───")) updateQuestionsList(bankMap[label])
+            }
+            override fun onNothingSelected(p0: AdapterView<*>?) {}
+        }
+
+        rebuildSpinner(emptyList())
+
+        lifecycleScope.launch {
+            pbLoading.visibility = View.VISIBLE
+            val dynamicRes = viewModel.fetchPastQuestionsForWordBank(CurrentCourse.userId)
+            pbLoading.visibility = View.GONE
+            if (dynamicRes.isSuccess) {
+                rebuildSpinner(dynamicRes.getOrDefault(emptyList()))
+            }
+        }
+        dialog.show()
+    }
 }
 
 // =========================================================================
@@ -441,6 +602,7 @@ data class AssessmentQuestion(
     var correctTextAnswer: String = "",
     var pendingAnswerImageUri: String = ""
 ) : Serializable
+
 
 class QuestionCardManager(
     private val activity: AssessmentCreatorActivity,

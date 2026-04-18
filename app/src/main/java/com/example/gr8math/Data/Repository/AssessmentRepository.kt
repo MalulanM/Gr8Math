@@ -293,4 +293,79 @@ class AssessmentRepository {
         val status: String,
         val details: String
     )
+
+    suspend fun fetchPastQuestionsForWordBank(teacherId: Int): Result<List<WordBankItem>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                // 1. Get classes taught by this teacher
+                val sections = db.from("class").select(columns = Columns.list("id")) {
+                    filter { eq("adviser_id", teacherId) }
+                }.decodeList<SectionIdFetchRes>()
+
+                val sectionIds = sections.map { it.id }
+                if (sectionIds.isEmpty()) return@withContext Result.success(emptyList())
+
+                // 2. Get course contents
+                val courseContents = db.from("course_content").select(columns = Columns.list("id")) {
+                    filter { isIn("section_id", sectionIds) }
+                }.decodeList<SectionIdFetchRes>()
+
+                val courseIds = courseContents.map { it.id }
+                if (courseIds.isEmpty()) return@withContext Result.success(emptyList())
+
+                // 3. Get Assessments + Questions
+                val assessments = db.from("assessment_created")
+                    .select(columns = Columns.raw("title, assessment_questions(id, question_text, assessment_choices(id, choice_text, is_correct))")) {
+                        filter { isIn("course_id", courseIds) }
+                    }.decodeList<AssessmentWordBankDto>()
+
+                // 4. Map to WordBankItem format
+                val dynamicBank = assessments.mapNotNull { ass ->
+                    val questions = ass.questions.map { dbQ ->
+                        val rawText = dbQ.questionText
+                        val regex = Regex("^\\[(.*?)\\]\\s*(.*)$", RegexOption.DOT_MATCHES_ALL)
+                        val match = regex.find(rawText)
+                        val type = match?.groupValues?.get(1) ?: "Multiple Choice"
+                        val cleanQuestionText = match?.groupValues?.get(2)?.split(" ||| ")?.get(0) ?: rawText.split(" ||| ")[0]
+
+                        val choices = mutableListOf<String>()
+                        var points = 1
+                        var correctIndex = -1
+                        var correctText = ""
+
+                        dbQ.choices.forEachIndexed { i, c ->
+                            val cMatch = Regex("^\\[(\\d+(\\.\\d+)?)\\s*pts\\]\\s*(.*)$", RegexOption.IGNORE_CASE).find(c.choiceText)
+                            val cleanChoice = if (cMatch != null) {
+                                points = cMatch.groupValues[1].toIntOrNull() ?: 1
+                                cMatch.groupValues[3].trim()
+                            } else c.choiceText
+
+                            choices.add(cleanChoice)
+                            if (c.isCorrect) {
+                                correctIndex = i
+                                correctText = cleanChoice
+                            }
+                        }
+
+                        com.example.gr8math.Activity.TeacherModule.Assessment.AssessmentQuestion(
+                            type = type, questionText = cleanQuestionText.trim(), choices = choices,
+                            correctAnswerIndex = correctIndex, points = points, correctTextAnswer = correctText
+                        )
+                    }
+
+                    if (questions.isNotEmpty()) WordBankItem("Past Test: ${ass.title}", questions) else null
+                }
+                Result.success(dynamicBank)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Result.success(emptyList())
+            }
+        }
+    }
 }
+
+@Serializable data class SectionIdFetchRes(val id: Int)
+@Serializable data class AssessmentWordBankDto(val title: String, @SerialName("assessment_questions") val questions: List<AssessmentQuestionWBDto>)
+@Serializable data class AssessmentQuestionWBDto(val id: Int, @SerialName("question_text") val questionText: String, @SerialName("assessment_choices") val choices: List<AssessmentChoiceWBDto>)
+@Serializable data class AssessmentChoiceWBDto(val id: Int, @SerialName("choice_text") val choiceText: String, @SerialName("is_correct") val isCorrect: Boolean)
+data class WordBankItem(val topic: String, val questions: List<com.example.gr8math.Activity.TeacherModule.Assessment.AssessmentQuestion>)

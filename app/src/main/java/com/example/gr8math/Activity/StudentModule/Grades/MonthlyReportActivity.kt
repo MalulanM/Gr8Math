@@ -303,79 +303,10 @@ class MonthlyReportActivity : AppCompatActivity() {
         }
     }
 
-    // --- EXACT WEB HIDDEN PDF FORMAT (Gray & White Grid) ---
+    // --- EXACT HTML TO PDF GENERATOR (Matches Web Layout) ---
     private fun generatePdf() {
-        val pdfDocument = PdfDocument()
-
-        // Setup matching Web Styles
-        val textPaint = Paint()
-        val bgPaint = Paint()
-        val borderPaint = Paint().apply {
-            color = Color.parseColor("#CCCCCC") // Web table border color
-            style = Paint.Style.STROKE
-            strokeWidth = 2f
-        }
-
-        // Standard PDF Document size (Letter size approximation)
-        val pageWidth = 1200
-        val pageInfo = PdfDocument.PageInfo.Builder(pageWidth, 1600, 1).create()
-        val page = pdfDocument.startPage(pageInfo)
-        val canvas = page.canvas
-
-        val leftMargin = 80f
-        var yPos = 80f
-
-        // 1. Draw Titles (Matches Web <h1>, <h2>, <h3>)
-        textPaint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        textPaint.textSize = 36f
-        textPaint.color = Color.BLACK
-        canvas.drawText("Monthly Completion Report", leftMargin, yPos, textPaint)
-
-        yPos += 40f
-        textPaint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
-        textPaint.textSize = 28f
-        textPaint.color = Color.parseColor("#555555")
-        canvas.drawText("Student: $studentName", leftMargin, yPos, textPaint)
-
-        yPos += 36f
-        textPaint.textSize = 24f
-        canvas.drawText("Month: $currentDisplayLabel", leftMargin, yPos, textPaint)
-
-        yPos += 60f
-
-        // 2. Setup Table Matrix Parameters
-        val tableWidth = pageWidth - (leftMargin * 2)
-        val colWidth = tableWidth / 4
-        val rowHeight = 60f
-
-        // 3. Draw Header Background (#f0f0f0) & Borders
-        bgPaint.color = Color.parseColor("#F0F0F0")
-        bgPaint.style = Paint.Style.FILL
-        canvas.drawRect(leftMargin, yPos, leftMargin + tableWidth, yPos + rowHeight, bgPaint)
-
-        // Draw Header Cell Borders
-        for (i in 0..4) {
-            canvas.drawLine(leftMargin + (colWidth * i), yPos, leftMargin + (colWidth * i), yPos + rowHeight, borderPaint)
-        }
-        canvas.drawLine(leftMargin, yPos, leftMargin + tableWidth, yPos, borderPaint)
-        canvas.drawLine(leftMargin, yPos + rowHeight, leftMargin + tableWidth, yPos + rowHeight, borderPaint)
-
-        // Header Text
-        textPaint.color = Color.BLACK
-        textPaint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        textPaint.textSize = 20f
-        textPaint.textAlign = Paint.Align.CENTER
-
-        val textYOffset = yPos + 40f
-        canvas.drawText("Assessment Test No.", leftMargin + (colWidth * 0.5f), textYOffset, textPaint)
-        canvas.drawText("Assessment Test Score", leftMargin + (colWidth * 1.5f), textYOffset, textPaint)
-        canvas.drawText("Percentage of Score", leftMargin + (colWidth * 2.5f), textYOffset, textPaint)
-        canvas.drawText("No. of Items", leftMargin + (colWidth * 3.5f), textYOffset, textPaint)
-
-        yPos += rowHeight
-
-        // 4. Draw Data Rows
-        textPaint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        // Extract row data to inject into HTML
+        val rowsHtml = java.lang.StringBuilder()
         for (i in 1 until reportTable.childCount - 1) {
             val row = reportTable.getChildAt(i) as TableRow
             val t1 = (row.getChildAt(0) as? TextView)?.text.toString()
@@ -383,50 +314,67 @@ class MonthlyReportActivity : AppCompatActivity() {
             val t3 = (row.getChildAt(2) as? TextView)?.text.toString()
             val t4 = (row.getChildAt(3) as? TextView)?.text.toString()
 
-            // Draw Data Borders
-            for (col in 0..4) {
-                canvas.drawLine(leftMargin + (colWidth * col), yPos, leftMargin + (colWidth * col), yPos + rowHeight, borderPaint)
+            // Apply inline border styles directly to the <td> elements
+            rowsHtml.append("""
+                <tr>
+                    <td style="border: 1px solid #cccccc; padding: 10px;">$t1</td>
+                    <td style="border: 1px solid #cccccc; padding: 10px;">$t2</td>
+                    <td style="border: 1px solid #cccccc; padding: 10px;">$t3</td>
+                    <td style="border: 1px solid #cccccc; padding: 10px;">$t4</td>
+                </tr>
+            """.trimIndent())
+        }
+
+        // Build HTML string exact to the Web version without a <style> block
+        val htmlString = """
+            <!DOCTYPE html>
+            <html>
+            <body style="font-family: sans-serif; padding: 40px; color: black; background: white;">
+                <div style="margin-bottom: 30px;">
+                    <h1 style="font-size: 24px; margin: 0 0 10px 0; font-weight: bold;">Monthly Completion Report</h1>
+                    <h2 style="font-size: 18px; margin: 0; color: #555555;">Student: $studentName</h2>
+                    <h3 style="font-size: 16px; margin: 5px 0 0 0; color: #555555;">Month: $currentDisplayLabel</h3>
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; text-align: center; margin-top: 30px;">
+                    <thead>
+                        <tr style="background-color: #f0f0f0; font-weight: bold;">
+                            <th style="border: 1px solid #cccccc; padding: 12px;">Assessment Test No.</th>
+                            <th style="border: 1px solid #cccccc; padding: 12px;">Assessment Test Score</th>
+                            <th style="border: 1px solid #cccccc; padding: 12px;">Percentage of Score</th>
+                            <th style="border: 1px solid #cccccc; padding: 12px;">No. of Items</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        $rowsHtml
+                    </tbody>
+                    <tfoot>
+                        <tr style="background-color: #f0f0f0; font-weight: bold;">
+                            <td style="border: 1px solid #cccccc; padding: 12px;">Total Score</td>
+                            <td style="border: 1px solid #cccccc; padding: 12px;">${tvTotalScore.text}</td>
+                            <td style="border: 1px solid #cccccc; padding: 12px;">Total No. of Items</td>
+                            <td style="border: 1px solid #cccccc; padding: 12px;">${tvTotalItems.text}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </body>
+            </html>
+        """.trimIndent()
+
+        // Use Android's WebView Print Manager to render the HTML perfectly to PDF
+        val webView = android.webkit.WebView(this)
+        webView.webViewClient = object : android.webkit.WebViewClient() {
+            override fun onPageFinished(view: android.webkit.WebView, url: String) {
+                val printManager = getSystemService(android.content.Context.PRINT_SERVICE) as android.print.PrintManager
+                val safeName = studentName.replace(Regex("[^a-zA-Z0-9]"), "_").lowercase()
+                val jobName = "Monthly_Report_${safeName}_${selectedMonthValue}"
+
+                val printAdapter = webView.createPrintDocumentAdapter(jobName)
+                printManager.print(jobName, printAdapter, android.print.PrintAttributes.Builder().build())
+
+                ShowToast.showMessage(this@MonthlyReportActivity, "Preparing PDF Download...")
             }
-            canvas.drawLine(leftMargin, yPos + rowHeight, leftMargin + tableWidth, yPos + rowHeight, borderPaint)
-
-            // Draw Data Text
-            val rowTextY = yPos + 40f
-            canvas.drawText(t1, leftMargin + (colWidth * 0.5f), rowTextY, textPaint)
-            canvas.drawText(t2, leftMargin + (colWidth * 1.5f), rowTextY, textPaint)
-            canvas.drawText(t3, leftMargin + (colWidth * 2.5f), rowTextY, textPaint)
-            canvas.drawText(t4, leftMargin + (colWidth * 3.5f), rowTextY, textPaint)
-
-            yPos += rowHeight
         }
-
-        // 5. Draw Footer Background (#f0f0f0) & Borders
-        canvas.drawRect(leftMargin, yPos, leftMargin + tableWidth, yPos + rowHeight, bgPaint)
-        for (i in 0..4) {
-            canvas.drawLine(leftMargin + (colWidth * i), yPos, leftMargin + (colWidth * i), yPos + rowHeight, borderPaint)
-        }
-        canvas.drawLine(leftMargin, yPos + rowHeight, leftMargin + tableWidth, yPos + rowHeight, borderPaint)
-
-        // Footer Text
-        textPaint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        val footerTextY = yPos + 40f
-        canvas.drawText("Total Score", leftMargin + (colWidth * 0.5f), footerTextY, textPaint)
-        canvas.drawText(tvTotalScore.text.toString(), leftMargin + (colWidth * 1.5f), footerTextY, textPaint)
-        canvas.drawText("Total No. of Items", leftMargin + (colWidth * 2.5f), footerTextY, textPaint)
-        canvas.drawText(tvTotalItems.text.toString(), leftMargin + (colWidth * 3.5f), footerTextY, textPaint)
-
-        pdfDocument.finishPage(page)
-
-        // Save Document
-        val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val safeName = studentName.replace(Regex("[^a-zA-Z0-9]"), "_").lowercase()
-        val file = File(directory, "Monthly_Report_${safeName}_${selectedMonthValue}.pdf")
-
-        try {
-            pdfDocument.writeTo(FileOutputStream(file))
-            ShowToast.showMessage(this, "PDF Saved to Downloads!")
-        } catch (e: Exception) {
-            ShowToast.showMessage(this, "Error saving PDF: ${e.message}")
-        }
-        pdfDocument.close()
+        webView.loadDataWithBaseURL(null, htmlString, "text/HTML", "UTF-8", null)
     }
 }

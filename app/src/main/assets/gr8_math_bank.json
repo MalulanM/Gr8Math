@@ -1,0 +1,33 @@
+[
+  {
+    "topic": "Factoring Polynomials",
+    "questions": [
+      {
+        "type": "Multiple Choice",
+        "question": "What is the greatest common factor (GCF) of $6x^3$ and $12x^2$?",
+        "choices": ["$3x$", "$6x^2$", "$12x^3$", "$2x$"],
+        "correctAnswers": ["$6x^2$"],
+        "points": 1
+      },
+      {
+        "type": "Short Answer",
+        "question": "Factor completely: $x^2 - 16$",
+        "choices": ["$(x-4)(x+4)$"],
+        "correctAnswers": ["$(x-4)(x+4)$"],
+        "points": 2
+      }
+    ]
+  },
+  {
+    "topic": "Linear Equations in Two Variables",
+    "questions": [
+      {
+        "type": "Multiple Choice",
+        "question": "What is the slope of the line $y = 3x - 4$?",
+        "choices": ["-4", "3", "x", "0"],
+        "correctAnswers": ["3"],
+        "points": 1
+      }
+    ]
+  }
+]

@@ -16,6 +16,8 @@ data class AssessmentInsert(
     @SerialName("assessment_number") val assessmentNumber: Int,
     @SerialName("assessment_quarter") val assessmentQuarter: Int,
     @SerialName("total_points") var totalPoints: Double? = null,
+    @SerialName("time_limit_minutes")
+    val timeLimitMinutes: Int = 0,
     var status: String = "approved"
 )
 
@@ -66,6 +68,7 @@ data class AssessmentFullDetails(
     @SerialName("assessment_items") val assessmentItems: Int,
     @SerialName("assessment_number") val assessmentNumber: Int,
     @SerialName("assessment_quarter") val assessmentQuarter: Int,
+    @SerialName("time_limit_minutes") val timeLimitMinutes: Int = 0,
     @SerialName("assessment_questions") val questions: List<QuestionFullDetails> = emptyList()
 )
 
@@ -142,5 +145,7 @@ data class AssessmentUpdate(
     @SerialName("assessment_number") val assessmentNumber: Int,
     @SerialName("assessment_quarter") val assessmentQuarter: Int,
     @SerialName("total_points") var totalPoints: Double? = null,
+    @SerialName("time_limit_minutes")
+    val timeLimitMinutes: Int = 0,
     var status: String = "approved"
 )

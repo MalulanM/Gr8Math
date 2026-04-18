@@ -21,6 +21,10 @@ class TakeAssessmentViewModel : ViewModel() {
 
     private val repository = TakeAssessmentRepository()
 
+    var timeLimitMillis: Long = 0L
+    var timeRemainingMillis: Long = 0L
+    var timerStarted: Boolean = false
+
     // Assessment Data
     var assessment: AssessmentFullDetails? = null
         private set

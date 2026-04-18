@@ -522,6 +522,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
                 putExtra("EXTRA_AVAILABLE_FROM", availableFrom)
                 putExtra("EXTRA_AVAILABLE_UNTIL", availableUntil)
                 putExtra("EXTRA_AVAILABLE_QUARTER", assessmentQuarter)
+                putExtra("EXTRA_TIME_LIMIT", existingItem?.timeLimit ?: 0)
 
 
                 if (existingItem != null) {

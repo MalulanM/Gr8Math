@@ -84,7 +84,33 @@ class TakeAssessmentActivity : AppCompatActivity() {
         }
 
         setupObservers()
-        startTimer(60 * 60 * 1000)
+
+        if (!viewModel.timerStarted) {
+            val prefs = getSharedPreferences("assessment_timer", MODE_PRIVATE)
+            val assessmentId = viewModel.assessment?.id ?: 0
+            val savedDeadline = prefs.getLong("deadline_$assessmentId", -1L)
+            val now = System.currentTimeMillis()
+
+            when {
+                savedDeadline != -1L && savedDeadline > now -> {
+                    viewModel.timeRemainingMillis = savedDeadline - now
+                }
+                savedDeadline != -1L && savedDeadline <= now -> {
+                    viewModel.submitAssessment()
+                    return
+                }
+                else -> {
+                    val limitMinutes = viewModel.assessment?.timeLimitMinutes ?: 0
+                    viewModel.timeLimitMillis = if (limitMinutes > 0) limitMinutes * 60 * 1000L else 60 * 60 * 1000L
+                    viewModel.timeRemainingMillis = viewModel.timeLimitMillis
+                    val deadline = now + viewModel.timeRemainingMillis
+                    prefs.edit().putLong("deadline_$assessmentId", deadline).apply()
+                }
+            }
+            viewModel.timerStarted = true
+        }
+
+        startTimer(viewModel.timeRemainingMillis) // only called ONCE, outside the if-block
     }
 
     private fun initViews() {
@@ -119,6 +145,10 @@ class TakeAssessmentActivity : AppCompatActivity() {
             when (state) {
                 is TakeAssessmentState.Loading -> UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
                 is TakeAssessmentState.Submitted -> {
+                    val prefs = getSharedPreferences("assessment_timer", MODE_PRIVATE)
+                    val assessmentId = viewModel.assessment?.id ?: 0
+                    prefs.edit().remove("deadline_$assessmentId").apply()
+
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     countDownTimer?.cancel()
                     val intent = Intent(this, AssessmentResultActivity::class.java)
@@ -336,14 +366,17 @@ class TakeAssessmentActivity : AppCompatActivity() {
     }
 
     private fun startTimer(durationMillis: Long) {
+        countDownTimer?.cancel()
         countDownTimer = object : CountDownTimer(durationMillis, 1000) {
             override fun onTick(millisUntilFinished: Long) {
+                viewModel.timeRemainingMillis = millisUntilFinished // keep saving remaining time
                 val hours = TimeUnit.MILLISECONDS.toHours(millisUntilFinished)
                 val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) % 60
                 val seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) % 60
                 tvTimer.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
             }
             override fun onFinish() {
+                viewModel.timeRemainingMillis = 0L
                 tvTimer.text = "00:00:00"
                 ShowToast.showMessage(this@TakeAssessmentActivity, "Time is up! Submitting...")
                 viewModel.submitAssessment()
