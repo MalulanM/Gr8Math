@@ -3,6 +3,7 @@ package com.example.gr8math.Activity.TeacherModule.Participants
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +24,7 @@ import com.example.gr8math.ViewModel.ParticipantsViewModel
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.card.MaterialCardView
+
 
 class TeacherParticipantsActivity : AppCompatActivity() {
 
@@ -74,34 +76,53 @@ class TeacherParticipantsActivity : AppCompatActivity() {
     }
 
     private fun setupPodium(participants: List<Participant>) {
-        // Rank 1
+        val ivTrophy1 = findViewById<ImageView>(R.id.ivTrophy1)
+        val ivTrophy2 = findViewById<ImageView>(R.id.ivTrophy2)
+        val ivTrophy3 = findViewById<ImageView>(R.id.ivTrophy3)
+        val cardRank1 = findViewById<MaterialCardView>(R.id.cardRank1)
+        val cardRank2 = findViewById<MaterialCardView>(R.id.cardRank2)
+        val cardRank3 = findViewById<MaterialCardView>(R.id.cardRank3)
+
+        // Reset visibility completely (hide everything by default)
+        ivTrophy1.visibility = View.INVISIBLE
+        ivTrophy2.visibility = View.INVISIBLE
+        ivTrophy3.visibility = View.INVISIBLE
+        cardRank1.visibility = View.INVISIBLE
+        cardRank2.visibility = View.INVISIBLE
+        cardRank3.visibility = View.INVISIBLE
+
+        // Rank 1 (Top Center)
         if (participants.isNotEmpty()) {
             val p1 = participants[0]
+            ivTrophy1.visibility = View.VISIBLE
+            cardRank1.visibility = View.VISIBLE
             findViewById<TextView>(R.id.tvRank1Num).text = "1st"
             findViewById<TextView>(R.id.tvRank1Name).text = p1.name
-            findViewById<MaterialCardView>(R.id.cardRank1).setOnClickListener {
+            cardRank1.setOnClickListener {
                 openScoresPage(p1.id, p1.name)
             }
-        } else {
-            findViewById<TextView>(R.id.tvRank1Name).text = "-"
         }
 
-        // Rank 2
+        // Rank 2 (Left)
         if (participants.size > 1) {
             val p2 = participants[1]
+            ivTrophy2.visibility = View.VISIBLE
+            cardRank2.visibility = View.VISIBLE
             findViewById<TextView>(R.id.tvRank2Num).text = "2nd"
             findViewById<TextView>(R.id.tvRank2Name).text = p2.name
-            findViewById<MaterialCardView>(R.id.cardRank2).setOnClickListener {
+            cardRank2.setOnClickListener {
                 openScoresPage(p2.id, p2.name)
             }
         }
 
-        // Rank 3
+        // Rank 3 (Right)
         if (participants.size > 2) {
             val p3 = participants[2]
+            ivTrophy3.visibility = View.VISIBLE
+            cardRank3.visibility = View.VISIBLE
             findViewById<TextView>(R.id.tvRank3Num).text = "3rd"
             findViewById<TextView>(R.id.tvRank3Name).text = p3.name
-            findViewById<MaterialCardView>(R.id.cardRank3).setOnClickListener {
+            cardRank3.setOnClickListener {
                 openScoresPage(p3.id, p3.name)
             }
         }

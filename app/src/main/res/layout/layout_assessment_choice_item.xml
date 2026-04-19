@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:layout_marginBottom="8dp">
+    android:layout_marginBottom="12dp">
 
     <TextView
         android:id="@+id/tvChoicePreviewLabel"
@@ -28,7 +28,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilAnswerChoice"
@@ -37,7 +38,7 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:hint="@string/answer_choice_hint"
-            app:boxBackgroundColor="@color/colorAccent"
+            app:boxBackgroundColor="@color/white"
             app:startIconDrawable="@drawable/radio_button_selector"
             app:startIconCheckable="true">
 
@@ -52,22 +53,35 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilPoints"
-            style="@style/Gr8TextInputStyle"
-            android:layout_width="80dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="110dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:hint="Pts"
             android:visibility="gone"
-            app:boxBackgroundColor="@color/colorAccent">
+            app:boxBackgroundColor="#F9FAFB"
+            app:boxCornerRadiusBottomEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusTopStart="8dp"
+            app:boxStrokeColor="#D1D8DD"
+            app:hintEnabled="false"
+            app:suffixText="Points"
+            app:suffixTextColor="#666666">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPoints"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/lexend"
-                android:inputType="numberDecimal"
-                android:textColor="@color/colorText"
-                android:text="1" />
+                android:gravity="center"
+                android:inputType="number"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:text="1"
+                android:textColor="#222222"
+                android:textSize="15sp"
+                android:textStyle="bold" />
         </com.google.android.material.textfield.TextInputLayout>
+
     </LinearLayout>
 </LinearLayout>

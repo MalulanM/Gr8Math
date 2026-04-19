@@ -386,7 +386,7 @@ class AssessmentCreatorActivity : AppCompatActivity() {
         var isInsideMath = false
 
         val density = resources.displayMetrics.density
-        val heightPx = (fontSizeSp * 2.5f * density).toInt()
+        val heightPx = (fontSizeSp * 1.5f * density).toInt()
 
         parts.forEach { part ->
             if (part == "$") {
@@ -598,7 +598,7 @@ data class AssessmentQuestion(
     var pendingQuestionImageUri: String = "",
     val choices: MutableList<String> = mutableListOf(),
     var correctAnswerIndex: Int = -1,
-    var points: Int = 1, // 🌟 NEW FIELD
+    var points: Int = 1,
     var correctTextAnswer: String = "",
     var pendingAnswerImageUri: String = ""
 ) : Serializable
@@ -613,14 +613,12 @@ class QuestionCardManager(
 ) {
     val cardView: View = LayoutInflater.from(activity).inflate(R.layout.layout_assessment_question_card, container, false)
 
-
     // Views
     private val spinnerType: Spinner = cardView.findViewById(R.id.spinnerQuestionType)
     private val btnUploadImage: ImageButton = cardView.findViewById(R.id.btnUploadImage)
 
     private val rlImagePreviewContainer: RelativeLayout = cardView.findViewById(R.id.rlImagePreviewContainer)
     private val ivUploadedImage: ImageView = cardView.findViewById(R.id.ivUploadedImage)
-
 
     private val etQuestion: TextInputEditText = cardView.findViewById(R.id.etQuestion)
     private val tilQuestion: TextInputLayout = cardView.findViewById(R.id.tilQuestion)
@@ -629,10 +627,15 @@ class QuestionCardManager(
     private val llMathPreview: LinearLayout = cardView.findViewById(R.id.llMathPreview)
     private val choicesContainer: LinearLayout = cardView.findViewById(R.id.choicesContainer)
     private val btnAddChoices: Button = cardView.findViewById(R.id.btnAddChoices)
-    private val tvAnswerKey: TextView = cardView.findViewById(R.id.tvAnswerKey)
     private val ibRemoveQuestion: ImageButton = cardView.findViewById(R.id.ibRemoveQuestion)
     private val ibRemoveImage: FrameLayout = cardView.findViewById(R.id.ibRemoveImage)
     private val choiceManagers = mutableListOf<ChoiceItemManager>()
+
+    // Answer Key UI Bindings
+    private val tvAnswerKey: TextView = cardView.findViewById(R.id.tvAnswerKey)
+    private val ivAnswerKeyErrorIcon: ImageView = cardView.findViewById(R.id.ivAnswerKeyErrorIcon)
+    private val tvAnswerKeyErrorMsg: TextView = cardView.findViewById(R.id.tvAnswerKeyErrorMsg)
+    private val tvKeySetLabel: TextView = cardView.findViewById(R.id.tvKeySetLabel)
 
     init {
         container.addView(cardView)
@@ -652,14 +655,9 @@ class QuestionCardManager(
                     choiceManagers.clear()
                     choicesContainer.removeAllViews()
 
-                    if (newType == "Short Answer" || newType == "Paragraph") {
+                    if (newType == "Short Answer" || newType == "Paragraph" || newType == "Upload Image") {
                         btnAddChoices.visibility = View.GONE
-                        tvAnswerKey.visibility = View.GONE
-                        addChoiceItem("") // 🌟 Empty string, use hint instead
-                    } else if (newType == "Upload Image") {
-                        btnAddChoices.visibility = View.GONE
-                        tvAnswerKey.visibility = View.GONE
-                        addChoiceItem("") // 🌟 Empty string
+                        addChoiceItem("")
                     } else {
                         btnAddChoices.visibility = View.VISIBLE
                         addChoiceItem("")
@@ -670,9 +668,7 @@ class QuestionCardManager(
             override fun onNothingSelected(p0: AdapterView<*>?) {}
         }
 
-        btnUploadImage.setOnClickListener {
-            activity.pickImage(this)
-        }
+        btnUploadImage.setOnClickListener { activity.pickImage(this) }
 
         ibRemoveImage.setOnClickListener {
             question.pendingQuestionImageUri = ""
@@ -680,7 +676,6 @@ class QuestionCardManager(
             rlImagePreviewContainer.visibility = View.GONE
             onQuestionChanged()
         }
-
 
         val initialQuestionImage = question.imageUrl.ifEmpty { question.pendingQuestionImageUri }
         if (initialQuestionImage.isNotEmpty()) {
@@ -741,15 +736,15 @@ class QuestionCardManager(
     }
 
     private fun addChoiceItem(initialText: String) {
-        // 🌟 FIX: Pass question.points in, and receive pts out from the callback
         val newChoiceManager = ChoiceItemManager(activity, choicesContainer, initialText, question.type, question.points) { index, newText, pts ->
             if (index != -1 && index < question.choices.size) {
                 question.choices[index] = newText
                 if (question.type == "Short Answer" || question.type == "Paragraph" || question.type == "Upload Image") {
                     question.correctTextAnswer = newText
-                    question.points = pts // 🌟 Save the points back to the underlying question object!
+                    question.points = pts
                 }
             }
+            updateAnswerKeyVisibility() // 🌟 FIX: Instantly refresh the "Key Set (X pt)" pill when typing points!
             onQuestionChanged()
         }
 
@@ -759,15 +754,24 @@ class QuestionCardManager(
     }
 
     private fun updateAnswerKeyVisibility() {
+        ivAnswerKeyErrorIcon.visibility = View.GONE
+        tvAnswerKeyErrorMsg.visibility = View.GONE
+
         if (question.type == "Short Answer" || question.type == "Paragraph" || question.type == "Upload Image") {
             tvAnswerKey.visibility = View.GONE
+            // 🌟 FIX: Show the Key Set Pill for these types to perfectly match the Web UI!
+            tvKeySetLabel.visibility = View.VISIBLE
+            tvKeySetLabel.text = "Key Set (${question.points}pt)"
         } else {
-            val label = if (question.correctAnswerIndex != -1) "Key Set (${question.points} pts)" else "Answer Key"
-            tvAnswerKey.text = label
             tvAnswerKey.visibility = if (question.choices.isNotEmpty()) View.VISIBLE else View.GONE
-        }
 
-        tvAnswerKey.setTextColor(ContextCompat.getColor(activity, R.color.colorMatisse))
+            if (question.correctAnswerIndex != -1) {
+                tvKeySetLabel.visibility = View.VISIBLE
+                tvKeySetLabel.text = "Key Set (${question.points}pt)"
+            } else {
+                tvKeySetLabel.visibility = View.GONE
+            }
+        }
     }
 
     private fun showAnswerKeySelectionDialog() {
@@ -809,7 +813,7 @@ class QuestionCardManager(
                 question.points = etDialogPoints.text.toString().toIntOrNull() ?: 1
 
                 onQuestionChanged()
-                tvAnswerKey.text = "Key Set (${question.points} pts)"
+                updateAnswerKeyVisibility()
                 dialog.dismiss()
             } else {
                 Toast.makeText(activity, "Select the correct answer", Toast.LENGTH_SHORT).show()
@@ -840,9 +844,13 @@ class QuestionCardManager(
 
         if (question.type != "Short Answer" && question.type != "Paragraph" && question.type != "Upload Image") {
             if (question.correctAnswerIndex == -1) {
-                tvAnswerKey.setTextColor(Color.parseColor("#ED1F24"))
-                tvAnswerKey.text = "Please set an answer key"
+                ivAnswerKeyErrorIcon.visibility = View.VISIBLE
+                tvAnswerKeyErrorMsg.visibility = View.VISIBLE
+                tvKeySetLabel.visibility = View.GONE
                 isCardValid = false
+            } else {
+                ivAnswerKeyErrorIcon.visibility = View.GONE
+                tvAnswerKeyErrorMsg.visibility = View.GONE
             }
         }
 
@@ -871,22 +879,38 @@ class ChoiceItemManager(
     init {
         container.addView(itemView)
 
-        // Use the clean data passed directly from the parent
         etAnswerChoice.setText(initialText)
         etPoints.setText(initialPoints.toString())
 
-        // TYPE-SPECIFIC UI CONFIGURATION
+        // FIX: Web-matching UI styling for specific types
         if (type == "Upload Image") {
             tilAnswerChoice.startIconDrawable = null
             tilPoints.visibility = View.VISIBLE
-            // Mimic the web label by disabling the input and changing the text
+
+            // Dashed Background & Styling
             etAnswerChoice.setText("Answer must be an uploaded image. No key required. Points saved.")
             etAnswerChoice.isEnabled = false
-            etAnswerChoice.setTextColor(Color.GRAY)
+            etAnswerChoice.setTextColor(Color.parseColor("#666666"))
+            tilAnswerChoice.boxStrokeWidth = 0
+            tilAnswerChoice.boxStrokeWidthFocused = 0
+            tilAnswerChoice.boxBackgroundColor = Color.TRANSPARENT
+            etAnswerChoice.background = ContextCompat.getDrawable(context, R.drawable.bg_dashed_upload)
+            etAnswerChoice.setPadding(32, 48, 32, 48)
+            etAnswerChoice.gravity = android.view.Gravity.CENTER
+
         } else if (type == "Short Answer" || type == "Paragraph") {
             tilAnswerChoice.startIconDrawable = null
-            tilAnswerChoice.hint = "Expected answer or grading criteria..." // 🌟 Use hint
+            tilAnswerChoice.hint = if (type == "Short Answer") "Correct Answer" else "Expected answer or grading criteria..."
             tilPoints.visibility = View.VISIBLE
+
+            // Bold Blue text matching the web
+            etAnswerChoice.setTextColor(Color.parseColor("#1E4B95"))
+            etAnswerChoice.setTypeface(null, android.graphics.Typeface.BOLD)
+
+            if (type == "Paragraph") {
+                etAnswerChoice.minLines = 4
+                etAnswerChoice.gravity = android.view.Gravity.TOP or android.view.Gravity.START
+            }
         } else {
             tilPoints.visibility = View.GONE
         }
@@ -922,14 +946,12 @@ class ChoiceItemManager(
         val currentText = if (type == "Upload Image") "" else etAnswerChoice.text.toString().trim()
         val currentPoints = etPoints.text.toString().toIntOrNull() ?: 1
 
-        // 🌟 This now perfectly matches the 3-parameter signature above!
         onChoiceChanged(index, currentText, currentPoints)
     }
 
     fun isValid(): Boolean {
         var valid = true
 
-        // 🌟 Skip text validation entirely for Upload Image
         if (type != "Upload Image" && etAnswerChoice.text.isNullOrBlank()) {
             UIUtils.errorDisplay(context, tilAnswerChoice, etAnswerChoice, true, "Required")
             valid = false

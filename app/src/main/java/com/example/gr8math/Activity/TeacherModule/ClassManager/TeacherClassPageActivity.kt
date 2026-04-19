@@ -283,7 +283,18 @@ class TeacherClassPageActivity : AppCompatActivity() {
         val tvMsg = findViewById<TextView>(R.id.tvFlashMessage)
         val btnDismiss = findViewById<Button>(R.id.btnDismissFlash)
 
-        tvMsg.text = "${notif.message}\nWarning Strike: ${notif.meta?.warningCount ?: 0}/3"
+        // FIX: Split the message by the pipe '|' to match the new web backend logic!
+        val messageParts = notif.message.split("|")
+        val mainMessage = messageParts.getOrNull(0) ?: notif.message
+        val countStr = messageParts.getOrNull(1)
+
+        // If the pipe was found, use the hidden count. Otherwise, fallback to the old logic.
+        if (countStr != null) {
+            tvMsg.text = "${mainMessage}\nWarning Strike: ${countStr}/3"
+        } else {
+            tvMsg.text = "${mainMessage}\nWarning Strike: ${notif.meta?.warningCount ?: 0}/3"
+        }
+
         overlay.visibility = View.VISIBLE
 
         btnDismiss.setOnClickListener {

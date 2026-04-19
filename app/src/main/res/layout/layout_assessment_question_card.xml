@@ -72,7 +72,7 @@
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/add_media"
+                android:src="@drawable/ic_image_outline"
                 app:tint="@color/colorDarkCyan" />
         </LinearLayout>
 
@@ -132,10 +132,16 @@
             android:text="@string/add_choices"
             app:backgroundTint="@color/btn_primary_state" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="#D1D8DD" />
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp">
+            android:layout_marginTop="12dp">
 
             <ImageButton
                 android:id="@+id/ibRemoveQuestion"
@@ -147,27 +153,76 @@
                 android:contentDescription="Remove Question"
                 android:padding="8dp"
                 android:scaleType="fitCenter"
+                app:tint="#0A7F93"
                 android:src="@drawable/ic_remove" />
 
-            <TextView
-                android:id="@+id/tvAnswerKey"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true"
-                android:fontFamily="@font/lexend"
-                android:paddingStart="4dp"
-                android:paddingTop="8dp"
-                android:paddingEnd="4dp"
-                android:paddingBottom="8dp"
-                android:text="Answer Key"
-                android:textColor="@color/colorMatisse"
-                android:textStyle="bold"
-                android:visibility="gone"
-                tools:visibility="visible" />
+                android:orientation="vertical"
+                android:gravity="end">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvAnswerKey"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:fontFamily="@font/lexend"
+                        android:paddingHorizontal="4dp"
+                        android:paddingVertical="4dp"
+                        android:text="Answer Key"
+                        android:textColor="#1A4C8B"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <ImageView
+                        android:id="@+id/ivAnswerKeyErrorIcon"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginStart="4dp"
+                        android:src="@drawable/ic_warning_triangle"
+                        app:tint="#ED1F24"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvAnswerKeyErrorMsg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Please set an answer key"
+                    android:textColor="#ED1F24"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/lexend"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvKeySetLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Key Set (1pt)"
+                    android:textColor="#1E4B95"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/lexend"
+                    android:background="@drawable/bg_key_set_pill"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:layout_marginTop="2dp"
+                    android:visibility="gone"
+                    tools:visibility="visible"/>
+            </LinearLayout>
         </RelativeLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -5,123 +5,144 @@
     android:layout_height="wrap_content"
     android:layout_margin="16dp"
     app:cardBackgroundColor="@color/white"
-    app:cardCornerRadius="20dp"
-    app:cardElevation="12dp">
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp"
+    app:strokeColor="#1E4B95"
+    app:strokeWidth="2dp"> <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:background="#1A4C8B"
-            android:paddingHorizontal="20dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:fontFamily="@font/lexend_bold"
-                android:text="Answer Key"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textAllCaps="true"
-                android:letterSpacing="0.05" />
-
-            <ImageButton
-                android:id="@+id/btnCloseDialog"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_close"
-                app:tint="@color/white" />
-        </RelativeLayout>
+        android:layout_marginBottom="16dp">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="24dp">
+            android:layout_centerVertical="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_check_circle_blue" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Set Points"
-                android:fontFamily="@font/lexend_bold"
-                android:textColor="#666"
-                android:textSize="12sp"
+                android:layout_marginStart="8dp"
+                android:fontFamily="@font/lexend"
+                android:letterSpacing="0.05"
+                android:text="ANSWER KEY"
                 android:textAllCaps="true"
-                android:layout_marginBottom="8dp"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_white_rounded_24dp"
-                android:paddingHorizontal="12dp"
-                android:layout_marginBottom="20dp">
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilDialogPoints"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    android:layout_width="100dp"
-                    android:layout_height="wrap_content"
-                    app:boxStrokeColor="#EFBD31"
-                    app:hintTextColor="#EFBD31"
-                    android:hint="Pts">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etDialogPoints"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/lexend_bold"
-                        android:inputType="number"
-                        android:gravity="center"
-                        android:text="1"
-                        android:textSize="18sp"
-                        android:textColor="#222" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="points for this question"
-                    android:fontFamily="@font/lexend"
-                    android:textColor="#999"
-                    android:textSize="14sp"/>
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#EEE"
-                android:layout_marginBottom="16dp"/>
-
-            <LinearLayout
-                android:id="@+id/answerKeyChoicesContainer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnProceed"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="24dp"
-                android:text="DONE"
-                android:fontFamily="@font/lexend_bold"
-                android:textSize="16sp"
-                android:textColor="@color/white"
-                app:backgroundTint="#1A4C8B"
-                app:cornerRadius="12dp"
-                app:elevation="4dp" />
-
+                android:textColor="#1E4B95"
+                android:textSize="14sp"
+                android:textStyle="bold" />
         </LinearLayout>
-    </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnCloseDialog"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_close"
+            app:tint="#666666" />
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginBottom="20dp"
+        android:background="#F3F4F6" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        app:cardBackgroundColor="#F9FAFB"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="0dp"
+        app:strokeColor="#E5E7EB"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilDialogPoints"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="64dp"
+                android:layout_height="wrap_content"
+                app:boxBackgroundColor="@color/white"
+                app:boxStrokeColor="#D1D8DD"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etDialogPoints"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend"
+                    android:gravity="center"
+                    android:inputType="number"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:text="1"
+                    android:textColor="#222222"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="4dp"
+                android:fontFamily="@font/lexend"
+                android:text="Points"
+                android:textColor="#666666"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        android:id="@+id/answerKeyChoicesContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="24dp"
+        android:background="#F3F4F6" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnProceed"
+        android:layout_width="200dp"
+        android:layout_height="52dp"
+        android:layout_gravity="center_horizontal"
+        android:fontFamily="@font/lexend"
+        android:letterSpacing="0.05"
+        android:text="DONE"
+        android:textAllCaps="true"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:backgroundTint="#1E4B95"
+        app:cornerRadius="8dp"
+        app:elevation="2dp" />
+
+</LinearLayout>
 </com.google.android.material.card.MaterialCardView>
