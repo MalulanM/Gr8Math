@@ -43,7 +43,7 @@ class ForgotPasswordViewModel : ViewModel() {
             result.onSuccess {
                 _state.value = ForgotState.CodeVerified // Move to next screen
             }.onFailure {
-                _state.value = ForgotState.Error("Invalid code or expired")
+                _state.value = ForgotState.Error("Invalid code.")
             }
         }
     }

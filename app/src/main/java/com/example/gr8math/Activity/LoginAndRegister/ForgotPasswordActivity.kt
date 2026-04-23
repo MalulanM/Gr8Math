@@ -50,6 +50,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
     private lateinit var loadingLayout: View
     private lateinit var loadingProgress: View
     private lateinit var loadingText: TextView
+    private var isTimerExpired = false
 
 
 
@@ -101,10 +102,26 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 }
                 is ForgotState.Error -> {
                     ShowToast.showMessage(this, state.message)
+
                     // Reset buttons if error occurred
-                    if (::txtSendCode.isInitialized) txtSendCode.isEnabled = true
+                    if (::txtSendCode.isInitialized) {
+                        txtSendCode.isEnabled = true
+                        txtSendCode.text = "Get Code"
+                        txtSendCode.setTextColor(android.graphics.Color.parseColor("#888888"))
+                    }
                     if (::verifyBtn.isInitialized) verifyBtn.isEnabled = true
                     if (::savePassBtn.isInitialized) savePassBtn.isEnabled = true
+
+                    if (state.message.contains("Invalid code", ignoreCase = true)) {
+                        UIUtils.errorDisplay(
+                            context = this,
+                            til = tilCode,
+                            field = codeInput,
+                            showIcon = true,
+                            errorText = "Please enter the verification code.",
+                            forceError = true
+                        )
+                    }
                 }
             }
         }
@@ -114,21 +131,56 @@ class ForgotPasswordActivity : AppCompatActivity() {
 
     private fun sendCode() {
         val email = emailInput.text.toString().trim()
-        viewModel.sendCode(email) // Calls Supabase
+
+        if (email.isEmpty()) {
+            emailInput.error = "Please enter a valid email address."
+            return
+        }
+
+        isTimerExpired = false
+        txtSendCode.text = "Sending..."
+        txtSendCode.isEnabled = false
+        txtSendCode.setTextColor(android.graphics.Color.parseColor("#888888"))
+        viewModel.sendCode(email)
     }
 
     private fun verifyCode() {
-        val email = emailInput.text.toString().trim()
+        if (isTimerExpired) {
+            UIUtils.errorDisplay(
+                context = this,
+                til = tilCode,
+                field = codeInput,
+                showIcon = true,
+                errorText = "Please enter the verification code.",
+                forceError = true
+            )
+            ShowToast.showMessage(this, "Expired code. Please request a new one.")
+            return
+        }
+
         val code = codeInput.text.toString().trim()
-        viewModel.verifyCode(email, code) // Calls Supabase
+
+        if (code.isEmpty()) {
+            UIUtils.errorDisplay(
+                context = this,
+                til = tilCode,
+                field = codeInput,
+                showIcon = true,
+                errorText = "Please enter the verification code.",
+                forceError = true
+            )
+            return
+        }
+
+        tilCode.error = null
+
+        val email = emailInput.text.toString().trim()
+        viewModel.verifyCode(email, code)
     }
 
     private fun updatePassword() {
         val newPass = newPasswordInput.text.toString()
         val confirmPass = confirmPasswordInput.text.toString()
-
-        // 1. Log to see if click works
-        android.util.Log.d("DEBUG_PASS", "Button Clicked. New: $newPass, Confirm: $confirmPass")
 
         if (newPass.isEmpty() || confirmPass.isEmpty()) {
             ShowToast.showMessage(this, "Please fill in all fields")
@@ -155,15 +207,29 @@ class ForgotPasswordActivity : AppCompatActivity() {
 
     private fun startCountdown() {
         txtSendCode.isEnabled = false
+        isTimerExpired = false
+
+        txtSendCode.setTextColor(android.graphics.Color.parseColor("#888888"))
 
         object : CountDownTimer(180000, 1000) {
             override fun onTick(ms: Long) {
                 txtSendCode.text = "${ms / 1000} s"
             }
+
             override fun onFinish() {
                 txtSendCode.text = "Get Code"
                 txtSendCode.isEnabled = true
-                txtSendCode.setTextColor(ContextCompat.getColor(this@ForgotPasswordActivity, R.color.colorLight))
+
+
+                txtSendCode.setTextColor(android.graphics.Color.parseColor("#222222"))
+
+                isTimerExpired = true
+                codeInput.setText("")
+                codeInput.clearFocus()
+                codeInput.isEnabled = false
+
+
+                ShowToast.showMessage(this@ForgotPasswordActivity, "Expired code. Please request a new one.")
             }
         }.start()
     }
@@ -255,13 +321,21 @@ class ForgotPasswordActivity : AppCompatActivity() {
         txtSendCode = findViewById(R.id.tvGetCode)
         tilCode = findViewById(R.id.tilCode)
 
-        // FIXED: Initialize loading views here to prevent crash
         loadingLayout = findViewById(R.id.loadingLayout)
         loadingProgress = findViewById(R.id.loadingProgressBg)
         loadingText = findViewById(R.id.loadingText)
 
         codeInput.isEnabled = false
         verifyBtn.isEnabled = false
+
+
+        codeInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                tilCode.error = null
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
     }
 
     private fun initScreen2() {

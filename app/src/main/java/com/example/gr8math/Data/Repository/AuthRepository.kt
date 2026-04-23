@@ -217,12 +217,10 @@ class AuthRepository {
             try {
                 auth.resetPasswordForEmail(email)
 
-                // --- NEW: Log Successful Request ---
                 logAuditTrail(targetUserId, "Authentication", "REQUEST_RESET", "SUCCESS", "Requested password reset OTP.")
 
                 Result.success(Unit)
             } catch (e: Exception) {
-                // --- NEW: Log Failed Request ---
                 logAuditTrail(targetUserId, "Authentication", "REQUEST_RESET", "FAILED", "Failed OTP request: ${e.message}")
                 Result.failure(e)
             }

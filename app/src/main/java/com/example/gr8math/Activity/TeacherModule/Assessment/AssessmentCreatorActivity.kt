@@ -741,10 +741,8 @@ class QuestionCardManager(
                 question.choices[index] = newText
                 if (question.type == "Short Answer" || question.type == "Paragraph" || question.type == "Upload Image") {
                     question.correctTextAnswer = newText
-                    question.points = pts
                 }
             }
-            updateAnswerKeyVisibility() // 🌟 FIX: Instantly refresh the "Key Set (X pt)" pill when typing points!
             onQuestionChanged()
         }
 
@@ -757,9 +755,9 @@ class QuestionCardManager(
         ivAnswerKeyErrorIcon.visibility = View.GONE
         tvAnswerKeyErrorMsg.visibility = View.GONE
 
+        // 🌟 FIX: "Answer Key" is ALWAYS visible for these 3 types so they can set the points!
         if (question.type == "Short Answer" || question.type == "Paragraph" || question.type == "Upload Image") {
-            tvAnswerKey.visibility = View.GONE
-            // 🌟 FIX: Show the Key Set Pill for these types to perfectly match the Web UI!
+            tvAnswerKey.visibility = View.VISIBLE
             tvKeySetLabel.visibility = View.VISIBLE
             tvKeySetLabel.text = "Key Set (${question.points}pt)"
         } else {
@@ -784,39 +782,62 @@ class QuestionCardManager(
         etDialogPoints.setText(question.points.toString())
 
         val checkboxes = mutableListOf<CheckBox>()
-        question.choices.forEachIndexed { index, choiceText ->
-            val checkBox = CheckBox(activity).apply {
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 120)
-                text = choiceText.replace(Regex("^\\[\\d+(\\.\\d+)?\\s*pts\\]\\s*"), "").trim()
-                textSize = 16f
-                typeface = ResourcesCompat.getFont(activity, R.font.lexend)
-                buttonTintList = ColorStateList.valueOf(Color.parseColor("#1A4C8B"))
-                isChecked = (index == question.correctAnswerIndex)
-                setPadding(24, 0, 0, 0)
-            }
+        val isChoiceType = question.type == "Multiple Choice" || question.type == "Dropdown" || question.type == "Checkboxes"
 
-            checkBox.setOnCheckedChangeListener { buttonView, isChecked ->
-                if (isChecked && (question.type == "Multiple Choice" || question.type == "Dropdown")) {
-                    checkboxes.forEach { if (it != buttonView) it.isChecked = false }
+        // 🌟 FIX: Only render checkboxes if it's a multiple choice style question!
+        if (isChoiceType) {
+            question.choices.forEachIndexed { index, choiceText ->
+                val checkBox = CheckBox(activity).apply {
+                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 120)
+                    text = choiceText.replace(Regex("^\\[\\d+(\\.\\d+)?\\s*pts\\]\\s*"), "").trim()
+                    textSize = 16f
+                    typeface = ResourcesCompat.getFont(activity, R.font.lexend)
+                    buttonTintList = ColorStateList.valueOf(Color.parseColor("#1A4C8B"))
+                    isChecked = (index == question.correctAnswerIndex)
+                    setPadding(24, 0, 0, 0)
                 }
+
+                checkBox.setOnCheckedChangeListener { buttonView, isChecked ->
+                    if (isChecked && (question.type == "Multiple Choice" || question.type == "Dropdown")) {
+                        checkboxes.forEach { if (it != buttonView) it.isChecked = false }
+                    }
+                }
+                answerKeyChoicesContainer.addView(checkBox)
+                checkboxes.add(checkBox)
             }
-            answerKeyChoicesContainer.addView(checkBox)
-            checkboxes.add(checkBox)
+        } else {
+            val tvInfo = TextView(activity).apply {
+                text = "Points apply to the whole question."
+                textSize = 14f
+                setTextColor(Color.GRAY)
+                setPadding(0, 0, 0, 16)
+            }
+            answerKeyChoicesContainer.addView(tvInfo)
         }
 
         val dialog = MaterialAlertDialogBuilder(activity).setView(dialogView).create()
         btnCloseDialog.setOnClickListener { dialog.dismiss() }
         btnProceed.setOnClickListener {
-            val selectedIndex = checkboxes.indexOfFirst { it.isChecked }
-            if (selectedIndex != -1) {
-                question.correctAnswerIndex = selectedIndex
+            if (isChoiceType) {
+                val selectedIndex = checkboxes.indexOfFirst { it.isChecked }
+                if (selectedIndex != -1) {
+                    question.correctAnswerIndex = selectedIndex
+                    question.points = etDialogPoints.text.toString().toIntOrNull() ?: 1
+
+                    onQuestionChanged()
+                    updateAnswerKeyVisibility()
+                    dialog.dismiss()
+                } else {
+                    Toast.makeText(activity, "Select the correct answer", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                // Instantly save points for Short Answer/Para/Image without needing a checkbox!
+                question.correctAnswerIndex = 0
                 question.points = etDialogPoints.text.toString().toIntOrNull() ?: 1
 
                 onQuestionChanged()
                 updateAnswerKeyVisibility()
                 dialog.dismiss()
-            } else {
-                Toast.makeText(activity, "Select the correct answer", Toast.LENGTH_SHORT).show()
             }
         }
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -882,10 +903,12 @@ class ChoiceItemManager(
         etAnswerChoice.setText(initialText)
         etPoints.setText(initialPoints.toString())
 
-        // FIX: Web-matching UI styling for specific types
+        // 🌟 FORCE POINTS BOX TO HIDE EVERYWHERE to match web (points managed via Answer Key button now)
+        tilPoints.visibility = View.GONE
+
+        // TYPE-SPECIFIC UI CONFIGURATION
         if (type == "Upload Image") {
             tilAnswerChoice.startIconDrawable = null
-            tilPoints.visibility = View.VISIBLE
 
             // Dashed Background & Styling
             etAnswerChoice.setText("Answer must be an uploaded image. No key required. Points saved.")
@@ -901,7 +924,6 @@ class ChoiceItemManager(
         } else if (type == "Short Answer" || type == "Paragraph") {
             tilAnswerChoice.startIconDrawable = null
             tilAnswerChoice.hint = if (type == "Short Answer") "Correct Answer" else "Expected answer or grading criteria..."
-            tilPoints.visibility = View.VISIBLE
 
             // Bold Blue text matching the web
             etAnswerChoice.setTextColor(Color.parseColor("#1E4B95"))
@@ -911,8 +933,6 @@ class ChoiceItemManager(
                 etAnswerChoice.minLines = 4
                 etAnswerChoice.gravity = android.view.Gravity.TOP or android.view.Gravity.START
             }
-        } else {
-            tilPoints.visibility = View.GONE
         }
 
         etAnswerChoice.addTextChangedListener(AfterTextChangedWatcher { text ->
@@ -927,11 +947,6 @@ class ChoiceItemManager(
                 tvChoicePreviewLabel.visibility = View.GONE
                 llChoiceMathPreview.visibility = View.GONE
             }
-        })
-
-        etPoints.addTextChangedListener(AfterTextChangedWatcher {
-            tilPoints.error = null
-            syncData()
         })
 
         if (type != "Upload Image" && initialText.contains("$")) {
@@ -959,12 +974,6 @@ class ChoiceItemManager(
             UIUtils.errorDisplay(context, tilAnswerChoice, etAnswerChoice, false, "")
         }
 
-        if (tilPoints.visibility == View.VISIBLE && etPoints.text.isNullOrBlank()) {
-            UIUtils.errorDisplay(context, tilPoints, etPoints, true, "!")
-            valid = false
-        } else {
-            UIUtils.errorDisplay(context, tilPoints, etPoints, false, "")
-        }
         return valid
     }
 }
