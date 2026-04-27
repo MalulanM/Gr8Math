@@ -98,9 +98,21 @@ class TeacherAddClassActivity : AppCompatActivity() {
                 }
                 is AddClassState.Error -> {
                     setInputsEnabled(true)
-                    ShowToast.showMessage(this, state.message)
-                    if (state.message.contains("needed details")) {
-                        validateEmptyFields()
+
+                    // Route specific errors to the exact UI fields, just like the web!
+                    when {
+                        state.message.contains("needed details") -> {
+                            validateEmptyFields()
+                        }
+                        state.message.contains("positive number") -> {
+                            UIUtils.errorDisplay(this, tilNumStudents, etNumStudents, true, state.message)
+                        }
+                        state.message.contains("Already have a class") -> {
+                            UIUtils.errorDisplay(this, tilSection, etSection, true, state.message)
+                        }
+                        else -> {
+                            ShowToast.showMessage(this, state.message)
+                        }
                     }
                 }
                 is AddClassState.Idle -> { }
@@ -109,11 +121,21 @@ class TeacherAddClassActivity : AppCompatActivity() {
     }
 
     private fun validateEmptyFields() {
-        val fields = listOf(etSection, etNumStudents, etStartTime, etEndTime)
-        val tils = listOf(tilSection, tilNumStudents, tilStartTime, tilEndTime)
+        // Clear errors first
+        UIUtils.errorDisplay(this, tilSection, etSection, false, "")
+        UIUtils.errorDisplay(this, tilNumStudents, etNumStudents, false, "")
 
-        for (i in fields.indices) {
-            UIUtils.errorDisplay(this, tils[i], fields[i], fields[i].text.toString().isEmpty(), "Required")
+        // Class Name Validation
+        if (etSection.text.toString().trim().isEmpty()) {
+            UIUtils.errorDisplay(this, tilSection, etSection, true, "Please enter the needed details.")
+        }
+
+        // Number of Students Validation
+        val studentsText = etNumStudents.text.toString().trim()
+        if (studentsText.isEmpty()) {
+            UIUtils.errorDisplay(this, tilNumStudents, etNumStudents, true, "Please enter the needed details")
+        } else if ((studentsText.toIntOrNull() ?: 0) <= 0) {
+            UIUtils.errorDisplay(this, tilNumStudents, etNumStudents, true, "Must be a valid positive number.")
         }
     }
 
@@ -163,7 +185,7 @@ class TeacherAddClassActivity : AppCompatActivity() {
             val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
             val clip = ClipData.newPlainText("Class Code", code)
             clipboard.setPrimaryClip(clip)
-            ShowToast.showMessage(this, "Copied to clipboard!")
+            ShowToast.showMessage(this, "Class code copied")
         }
 
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))

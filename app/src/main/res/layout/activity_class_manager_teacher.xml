@@ -177,7 +177,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="64dp"
-            android:text="@string/no_search_results"
+            android:text="No result found"
             android:textColor="@color/colorSubtleText"
             android:textSize="16sp"
             android:visibility="gone"

@@ -177,7 +177,7 @@ class AssessmentCreatorActivity : AppCompatActivity() {
                 is AssessmentState.Loading -> UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
                 is AssessmentState.Success -> {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                    ShowToast.showMessage(this, if (editAssessmentId != -1) "Assessment updated!" else "Assessment published!")
+                    ShowToast.showMessage(this, if (editAssessmentId != -1) "Assessment Test updated!" else "Assessment Test posted!")
                     setResult(RESULT_OK)
                     finish()
                 }
@@ -494,6 +494,7 @@ class AssessmentCreatorActivity : AppCompatActivity() {
     private fun showWordBankDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_word_bank, null)
         val dialog = MaterialAlertDialogBuilder(this).setView(dialogView).create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
         val btnClose = dialogView.findViewById<ImageButton>(R.id.btnCloseWordBank)
         val spinnerTopics = dialogView.findViewById<Spinner>(R.id.spinnerTopics)
@@ -543,9 +544,16 @@ class AssessmentCreatorActivity : AppCompatActivity() {
             selectedBank?.questions?.forEach { q ->
                 val card = LinearLayout(this).apply {
                     orientation = LinearLayout.VERTICAL
-                    setPadding(32, 32, 32, 32)
-                    background = ContextCompat.getDrawable(this@AssessmentCreatorActivity, R.drawable.bg_rounded_border)
-                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, 24) }
+                    setPadding(48, 48, 48, 48) // Web padding
+
+                    // Web Design: bg-[#F4F6F8] border-2 border-[#D1D8DD] rounded-xl
+                    val shape = android.graphics.drawable.GradientDrawable()
+                    shape.cornerRadius = 32f
+                    shape.setStroke(4, Color.parseColor("#D1D8DD"))
+                    shape.setColor(Color.parseColor("#F4F6F8"))
+                    background = shape
+
+                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, 32) }
                 }
 
                 val tvType = TextView(this).apply { text = "[${q.type}]"; textSize = 10f; setTextColor(Color.parseColor("#1A4C8B")); setTypeface(null, android.graphics.Typeface.BOLD) }
@@ -687,6 +695,8 @@ class QuestionCardManager(
             question.questionText = text
             tilQuestion.error = null
             tilQuestion.isErrorEnabled = false
+            tilQuestion.boxBackgroundColor = Color.WHITE
+            tilQuestion.boxStrokeColor = Color.parseColor("#1E4B95")
 
             if (text.contains("$")) {
                 tvPreviewLabel.visibility = View.VISIBLE
@@ -828,7 +838,7 @@ class QuestionCardManager(
                     updateAnswerKeyVisibility()
                     dialog.dismiss()
                 } else {
-                    Toast.makeText(activity, "Select the correct answer", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(activity, "Select the correct answer", Toast.LENGTH_SHORT).show()
                 }
             } else {
                 // Instantly save points for Short Answer/Para/Image without needing a checkbox!
@@ -848,14 +858,19 @@ class QuestionCardManager(
         var isCardValid = true
 
         if (etQuestion.text.isNullOrBlank() && question.pendingQuestionImageUri.isEmpty() && question.imageUrl.isEmpty()) {
-            UIUtils.errorDisplay(activity, tilQuestion, etQuestion, true, "Question cannot be empty")
+            tilQuestion.boxStrokeColor = Color.parseColor("#ED1F24")
+            tilQuestion.boxBackgroundColor = Color.parseColor("#FFF5F5") // Light red background
+            tilQuestion.error = "Please enter a question or attach an image"
             isCardValid = false
         } else {
-            UIUtils.errorDisplay(activity, tilQuestion, etQuestion, false, "")
+            tilQuestion.boxStrokeColor = Color.parseColor("#D1D8DD")
+            tilQuestion.boxBackgroundColor = Color.WHITE
+            tilQuestion.error = null
+            tilQuestion.isErrorEnabled = false
         }
 
         if (choiceManagers.isEmpty()) {
-            Toast.makeText(activity, "Please add at least one choice", Toast.LENGTH_SHORT).show()
+//            Toast.makeText(activity, "Please add at least one choice", Toast.LENGTH_SHORT).show()
             isCardValid = false
         }
 
@@ -865,8 +880,11 @@ class QuestionCardManager(
 
         if (question.type != "Short Answer" && question.type != "Paragraph" && question.type != "Upload Image") {
             if (question.correctAnswerIndex == -1) {
+
                 ivAnswerKeyErrorIcon.visibility = View.VISIBLE
                 tvAnswerKeyErrorMsg.visibility = View.VISIBLE
+                tvAnswerKeyErrorMsg.text = "Please set an answer key"
+                tvAnswerKeyErrorMsg.setTextColor(Color.parseColor("#ED1F24"))
                 tvKeySetLabel.visibility = View.GONE
                 isCardValid = false
             } else {
@@ -937,6 +955,8 @@ class ChoiceItemManager(
 
         etAnswerChoice.addTextChangedListener(AfterTextChangedWatcher { text ->
             tilAnswerChoice.error = null
+            tilAnswerChoice.isErrorEnabled = false
+            if (type != "Upload Image") tilAnswerChoice.boxBackgroundColor = Color.TRANSPARENT
             syncData()
 
             if (type != "Upload Image" && text.contains("$")) {
@@ -968,10 +988,15 @@ class ChoiceItemManager(
         var valid = true
 
         if (type != "Upload Image" && etAnswerChoice.text.isNullOrBlank()) {
-            UIUtils.errorDisplay(context, tilAnswerChoice, etAnswerChoice, true, "Required")
+            tilAnswerChoice.boxStrokeColor = Color.parseColor("#ED1F24")
+            tilAnswerChoice.boxBackgroundColor = Color.parseColor("#FFF5F5") // Light red background
+            tilAnswerChoice.error = "Please enter a choice"
             valid = false
         } else {
-            UIUtils.errorDisplay(context, tilAnswerChoice, etAnswerChoice, false, "")
+            tilAnswerChoice.boxStrokeColor = Color.parseColor("#D1D8DD")
+            tilAnswerChoice.boxBackgroundColor = Color.TRANSPARENT
+            tilAnswerChoice.error = null
+            tilAnswerChoice.isErrorEnabled = false
         }
 
         return valid

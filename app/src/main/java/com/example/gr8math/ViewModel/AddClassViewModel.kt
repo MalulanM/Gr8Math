@@ -36,7 +36,7 @@ class AddClassViewModel : ViewModel() {
 
         val numStudents = studentsStr.toIntOrNull()
         if (numStudents == null || numStudents <= 0) {
-            _state.value = AddClassState.Error("Invalid number of students.")
+            _state.value = AddClassState.Error("Must be a valid positive number.")
             return
         }
 
