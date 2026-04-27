@@ -275,7 +275,7 @@ class TeacherProfileActivity : AppCompatActivity() {
             val name = etAchievementName.text.toString().trim()
             val year = etYear.text.toString().trim()
             if (name.isEmpty() || year.isEmpty()) {
-                Toast.makeText(this, "Please enter achievement name and year", Toast.LENGTH_SHORT).show()
+                ShowToast.showMessage(this, "Please enter achievement name and year")
                 return@setOnClickListener
             }
 
