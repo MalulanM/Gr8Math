@@ -240,21 +240,57 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         ivEditFirstName.setOnClickListener {
-            isEditingFirstName = !isEditingFirstName
-            setEditMode(etFirstName, ivEditFirstName, isEditingFirstName)
-            if (isEditingFirstName) showKeyboard(etFirstName) else saveData("First Name", etFirstName.text.toString())
+            if (isEditingFirstName) {
+                val newName = etFirstName.text.toString().trim()
+                if (newName.isEmpty()) {
+                    ShowToast.showMessage(this, "First name cannot be empty.")
+                    return@setOnClickListener
+                }
+
+                isEditingFirstName = false
+                setEditMode(etFirstName, ivEditFirstName, false)
+                saveData("First Name", newName)
+            } else {
+                isEditingFirstName = true
+                setEditMode(etFirstName, ivEditFirstName, true)
+                showKeyboard(etFirstName)
+            }
         }
 
         ivEditLastName.setOnClickListener {
-            isEditingLastName = !isEditingLastName
-            setEditMode(etLastName, ivEditLastName, isEditingLastName)
-            if (isEditingLastName) showKeyboard(etLastName) else saveData("Last Name", etLastName.text.toString())
+            if (isEditingLastName) {
+                val newName = etLastName.text.toString().trim()
+                if (newName.isEmpty()) {
+                    ShowToast.showMessage(this, "Last name cannot be empty.")
+                    return@setOnClickListener
+                }
+
+                isEditingLastName = false
+                setEditMode(etLastName, ivEditLastName, false)
+                saveData("Last Name", newName)
+            } else {
+                isEditingLastName = true
+                setEditMode(etLastName, ivEditLastName, true)
+                showKeyboard(etLastName)
+            }
         }
 
         ivEditLRN.setOnClickListener {
-            isEditingLRN = !isEditingLRN
-            setEditMode(etLRN, ivEditLRN, isEditingLRN)
-            if (isEditingLRN) showKeyboard(etLRN) else saveData("LRN", etLRN.text.toString())
+            if (isEditingLRN) {
+                val newLRN = etLRN.text.toString().trim()
+                if (newLRN.isEmpty()) {
+                    ShowToast.showMessage(this, "LRN cannot be empty.")
+                    return@setOnClickListener
+                }
+
+                isEditingLRN = false
+                setEditMode(etLRN, ivEditLRN, false)
+                saveData("LRN", newLRN)
+            } else {
+                isEditingLRN = true
+                setEditMode(etLRN, ivEditLRN, true)
+                showKeyboard(etLRN)
+            }
         }
 
         etGender.setOnItemClickListener { parent, _, position, _ ->

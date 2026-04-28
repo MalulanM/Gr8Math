@@ -198,17 +198,38 @@ class TeacherProfileActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         ivEditFirstName.setOnClickListener {
-            isEditingFirstName = !isEditingFirstName
-            setEditMode(etFirstName, ivEditFirstName, isEditingFirstName)
-            if (isEditingFirstName) showKeyboard(etFirstName)
-            else viewModel.updateUserProfile(userId, "first_name", etFirstName.text.toString())
+            if (isEditingFirstName) {
+                val newName = etFirstName.text.toString().trim()
+                if (newName.isEmpty()) {
+                    ShowToast.showMessage(this, "First name cannot be empty.")
+                    return@setOnClickListener
+                }
+
+                isEditingFirstName = false
+                setEditMode(etFirstName, ivEditFirstName, false)
+                viewModel.updateUserProfile(userId, "first_name", newName)
+            } else {
+                isEditingFirstName = true
+                setEditMode(etFirstName, ivEditFirstName, true)
+                showKeyboard(etFirstName)
+            }
         }
 
         ivEditLastName.setOnClickListener {
-            isEditingLastName = !isEditingLastName
-            setEditMode(etLastName, ivEditLastName, isEditingLastName)
-            if (isEditingLastName) showKeyboard(etLastName)
-            else viewModel.updateUserProfile(userId, "last_name", etLastName.text.toString())
+            if (isEditingLastName) {
+                val newName = etLastName.text.toString().trim()
+                if (newName.isEmpty()) {
+                    ShowToast.showMessage(this, "Last name cannot be empty.")
+                    return@setOnClickListener
+                }
+                isEditingLastName = false
+                setEditMode(etLastName, ivEditLastName, false)
+                viewModel.updateUserProfile(userId, "last_name", newName)
+            } else {
+                isEditingLastName = true
+                setEditMode(etLastName, ivEditLastName, true)
+                showKeyboard(etLastName)
+            }
         }
 
         etTeachingPos.setOnItemClickListener { parent, _, position, _ ->

@@ -38,6 +38,7 @@ import java.util.Calendar
 import java.util.Locale
 import androidx.lifecycle.lifecycleScope
 import com.example.gr8math.Data.Repository.ClassPageRepository
+import com.example.gr8math.Utils.UIUtils
 import kotlinx.coroutines.launch
 import java.util.TimeZone
 
@@ -426,18 +427,49 @@ class TeacherClassPageActivity : AppCompatActivity() {
 
     private fun showWriteALessonDialog(weekToPreload: String = "", titleToPreload: String = "") {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_write_a_lesson, null)
+
         val etWeek = dialogView.findViewById<TextInputEditText>(R.id.etWeekNumber)
+        val tilWeek = dialogView.findViewById<TextInputLayout>(R.id.tilWeekNumber)
         val etTitle = dialogView.findViewById<TextInputEditText>(R.id.etLessonTitle)
+        val tilTitle = dialogView.findViewById<TextInputLayout>(R.id.tilLessonTitle)
+
         val dialog = MaterialAlertDialogBuilder(this).setView(dialogView).setCancelable(false).create()
 
         etWeek.setText(weekToPreload)
         etTitle.setText(titleToPreload)
 
-        dialogView.findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { dialog.dismiss(); showAddOptionsDialog() }
+        dialogView.findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener {
+            dialog.dismiss()
+            showAddOptionsDialog()
+        }
+
         dialogView.findViewById<Button>(R.id.btnNext).setOnClickListener {
+            val weekText = etWeek.text.toString().trim()
+            val titleText = etTitle.text.toString().trim()
+            var hasError = false
+
+            // Validation Checks
+            if (weekText.isEmpty()) {
+                UIUtils.errorDisplay(this, tilWeek, etWeek, true, "Please enter the needed details.")
+                hasError = true
+            } else {
+                tilWeek.error = null
+            }
+
+            if (titleText.isEmpty()) {
+                UIUtils.errorDisplay(this, tilTitle, etTitle, true, "Please enter the needed details.")
+                hasError = true
+            } else {
+                tilTitle.error = null
+            }
+
+            // Stop here if there are errors (No Toast)
+            if (hasError) return@setOnClickListener
+
+            // Proceed if valid
             val intent = Intent(this, LessonContentActivity::class.java).apply {
-                putExtra("EXTRA_WEEK_NUMBER", etWeek.text.toString())
-                putExtra("EXTRA_LESSON_TITLE", etTitle.text.toString())
+                putExtra("EXTRA_WEEK_NUMBER", weekText)
+                putExtra("EXTRA_LESSON_TITLE", titleText)
             }
             lessonContentLauncher.launch(intent)
             dialog.dismiss()
@@ -448,18 +480,46 @@ class TeacherClassPageActivity : AppCompatActivity() {
 
     private fun showEditALessonDialog(weekToPreload: String, titleToPreload: String, lessonId: Int) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_edit_a_lesson, null)
+
         val etWeek = dialogView.findViewById<TextInputEditText>(R.id.etWeekNumber)
+        val tilWeek = dialogView.findViewById<TextInputLayout>(R.id.tilWeekNumber)
         val etTitle = dialogView.findViewById<TextInputEditText>(R.id.etLessonTitle)
+        val tilTitle = dialogView.findViewById<TextInputLayout>(R.id.tilLessonTitle)
+
         val dialog = MaterialAlertDialogBuilder(this).setView(dialogView).setCancelable(false).create()
 
         etWeek.setText(weekToPreload)
         etTitle.setText(titleToPreload)
 
         dialogView.findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { dialog.dismiss() }
+
         dialogView.findViewById<Button>(R.id.btnNext).setOnClickListener {
+            val weekText = etWeek.text.toString().trim()
+            val titleText = etTitle.text.toString().trim()
+            var hasError = false
+
+            // Validation Checks
+            if (weekText.isEmpty()) {
+                UIUtils.errorDisplay(this, tilWeek, etWeek, true, "Please enter the needed details.")
+                hasError = true
+            } else {
+                tilWeek.error = null
+            }
+
+            if (titleText.isEmpty()) {
+                UIUtils.errorDisplay(this, tilTitle, etTitle, true, "Please enter the needed details.")
+                hasError = true
+            } else {
+                tilTitle.error = null
+            }
+
+            // Stop here if there are errors (No Toast)
+            if (hasError) return@setOnClickListener
+
+
             val intent = Intent(this, LessonContentActivity::class.java).apply {
-                putExtra("EXTRA_WEEK_NUMBER", etWeek.text.toString())
-                putExtra("EXTRA_LESSON_TITLE", etTitle.text.toString())
+                putExtra("EXTRA_WEEK_NUMBER", weekText)
+                putExtra("EXTRA_LESSON_TITLE", titleText)
                 putExtra("EXTRA_LESSON_ID", lessonId)
             }
             editLessonLauncher.launch(intent)
@@ -472,11 +532,21 @@ class TeacherClassPageActivity : AppCompatActivity() {
 
     private fun showCreateAssessmentDialog(existingItem: ClassContentItem.AssessmentItem? = null) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_create_assessment, null)
+
+        // Grab EditTexts
         val etNum = dialogView.findViewById<TextInputEditText>(R.id.etAssessmentNumber)
         val etTitle = dialogView.findViewById<TextInputEditText>(R.id.etAssessmentTitle)
         val etFrom = dialogView.findViewById<TextInputEditText>(R.id.etAvailableFrom)
         val etUntil = dialogView.findViewById<TextInputEditText>(R.id.etAvailableUntil)
         val etQuarter = dialogView.findViewById<TextInputEditText>(R.id.etQuarterNumber)
+
+        // Grab TextInputLayouts for the red errors
+        // (Make sure these IDs match your dialog_create_assessment.xml file!)
+        val tilNum = dialogView.findViewById<TextInputLayout>(R.id.tilAssessmentNumber)
+        val tilTitle = dialogView.findViewById<TextInputLayout>(R.id.tilAssessmentTitle)
+        val tilFrom = dialogView.findViewById<TextInputLayout>(R.id.tilAvailableFrom)
+        val tilUntil = dialogView.findViewById<TextInputLayout>(R.id.tilAvailableUntil)
+        val tilQuarter = dialogView.findViewById<TextInputLayout>(R.id.tilQuarterNumber)
 
         val dialog = MaterialAlertDialogBuilder(this).setView(dialogView).setCancelable(false).create()
 
@@ -519,6 +589,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
                     fromCalendar.set(Calendar.SECOND, 0)
 
                     etFrom.setText(dateTimeFormat.format(fromCalendar.time))
+                    tilFrom.error = null // Clear error when selected
                     isFromSet = true
 
                     if (etUntil.text.toString().isNotEmpty() && untilCalendar.timeInMillis <= fromCalendar.timeInMillis) {
@@ -555,6 +626,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
                     } else {
                         untilCalendar.timeInMillis = tempCal.timeInMillis
                         etUntil.setText(dateTimeFormat.format(untilCalendar.time))
+                        tilUntil.error = null // Clear error when selected
                     }
                 }, untilCalendar.get(Calendar.HOUR_OF_DAY), untilCalendar.get(Calendar.MINUTE), false).show()
             }, untilCalendar.get(Calendar.YEAR), untilCalendar.get(Calendar.MONTH), untilCalendar.get(Calendar.DAY_OF_MONTH))
@@ -570,11 +642,38 @@ class TeacherClassPageActivity : AppCompatActivity() {
             val availableUntil = etUntil.text.toString().trim()
             val assessmentQuarter = etQuarter.text.toString().trim()
 
-            if (assessmentNumber.isEmpty() || assessmentTitle.isEmpty() || availableFrom.isEmpty() || availableUntil.isEmpty() || assessmentQuarter.isEmpty()) {
-                ShowToast.showMessage(this, "Please fill in all fields.")
-                return@setOnClickListener
-            }
+            var hasError = false
 
+            // Validation Checks
+            if (assessmentNumber.isEmpty()) {
+                UIUtils.errorDisplay(this, tilNum, etNum, true, "Please enter the needed details.")
+                hasError = true
+            } else tilNum.error = null
+
+            if (assessmentTitle.isEmpty()) {
+                UIUtils.errorDisplay(this, tilTitle, etTitle, true, "Please enter the needed details.")
+                hasError = true
+            } else tilTitle.error = null
+
+            if (assessmentQuarter.isEmpty()) {
+                UIUtils.errorDisplay(this, tilQuarter, etQuarter, true, "Please enter the needed details.")
+                hasError = true
+            } else tilQuarter.error = null
+
+            if (availableFrom.isEmpty()) {
+                UIUtils.errorDisplay(this, tilFrom, etFrom, true, "Please enter the needed details.")
+                hasError = true
+            } else tilFrom.error = null
+
+            if (availableUntil.isEmpty()) {
+                UIUtils.errorDisplay(this, tilUntil, etUntil, true, "Please enter the needed details.")
+                hasError = true
+            } else tilUntil.error = null
+
+            // Stop here if there are errors (No Toast)
+            if (hasError) return@setOnClickListener
+
+            // Proceed if valid
             val intent = Intent(this, AssessmentCreatorActivity::class.java).apply {
                 putExtra("EXTRA_ASSESSMENT_NUMBER", assessmentNumber)
                 putExtra("EXTRA_ASSESSMENT_TITLE", assessmentTitle)
@@ -582,7 +681,6 @@ class TeacherClassPageActivity : AppCompatActivity() {
                 putExtra("EXTRA_AVAILABLE_UNTIL", availableUntil)
                 putExtra("EXTRA_AVAILABLE_QUARTER", assessmentQuarter)
                 putExtra("EXTRA_TIME_LIMIT", existingItem?.timeLimit ?: 0)
-
 
                 if (existingItem != null) {
                     putExtra("EXTRA_EDIT_ASSESSMENT_ID", existingItem.id)
@@ -594,4 +692,5 @@ class TeacherClassPageActivity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
     }
+
 }
