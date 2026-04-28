@@ -341,17 +341,21 @@ class ProfileActivity : AppCompatActivity() {
 
             val confirmDialog = MaterialAlertDialogBuilder(this)
                 .setView(messageView)
-                .setPositiveButton("No") { d, _ -> d.dismiss() }
-                .setNegativeButton("Yes") { d, _ ->
+                .setNeutralButton("Yes") { d, _ ->
                     d.dismiss()
                     dialog.dismiss()
                     val selectedBadgeIds = selected.map { it.id }
                     viewModel.updateDisplayedBadges(studentId!!, selectedBadgeIds, userId)
-                }.create()
+                }
+
+                .setPositiveButton("No") { d, _ -> d.dismiss() }
+                .create()
 
             confirmDialog.show()
-            confirmDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
-            confirmDialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
+
+
+            confirmDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL)?.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
+            confirmDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)?.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
         }
 
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))

@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.gr8math.Data.Model.ClassContentItem
 import com.example.gr8math.Data.Repository.ClassPageRepository
 import com.example.gr8math.Model.CurrentCourse
 import kotlinx.coroutines.launch
@@ -48,6 +49,30 @@ class TeacherClassPageViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _sectionName.postValue("Class Details")
+            }
+        }
+    }
+
+    // Add this inside your TeacherClassPageViewModel class
+
+    fun deleteContent(item: ClassContentItem) {
+        viewModelScope.launch {
+            val result = when (item) {
+                is ClassContentItem.LessonItem -> repository.deleteLesson(item.id)
+                is ClassContentItem.AssessmentItem -> repository.deleteAssessment(item.id)
+                else -> return@launch
+            }
+
+            result.onSuccess {
+                // Instantly remove the item from the UI state
+                val currentState = _state.value
+                if (currentState is ContentState.Success) {
+                    val updatedList = currentState.data.filterNot {
+                        (it is ClassContentItem.LessonItem && it.id == item.id) ||
+                                (it is ClassContentItem.AssessmentItem && it.id == item.id)
+                    }
+                    _state.value = ContentState.Success(updatedList)
+                }
             }
         }
     }

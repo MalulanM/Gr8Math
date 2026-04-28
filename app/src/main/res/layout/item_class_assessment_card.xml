@@ -20,14 +20,14 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:src="@drawable/ic_assessment_green"
-            android:contentDescription="@string/assessment_placeholder" />
-        <!-- Note: No tint is used, so your PNG colors will show! -->
+            android:contentDescription="Assessment Placeholder" />
 
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
             android:layout_weight="1"
             android:fontFamily="@font/lexend"
             android:textColor="@color/colorText"
@@ -40,7 +40,30 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_arrow_proceed_green"
-            android:contentDescription="@string/assessment_placeholder"/>
-        <!-- Note: No tint is used! -->
+            android:contentDescription="Proceed" />
+
+        <ImageButton
+            android:id="@+id/ibEditAssessment"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginEnd="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Edit Assessment"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_edit"
+            app:tint="#0A7F93" />
+
+        <ImageButton
+            android:id="@+id/ibDeleteAssessment"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Delete Assessment"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_remove"
+            app:tint="#0A7F93" />
+
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

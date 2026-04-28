@@ -242,27 +242,65 @@ class TeacherClassPageActivity : AppCompatActivity() {
                         if (userProfile?.isRestricted == true) showRestrictionModal()
                         else showEditALessonDialog(item.weekNumber.toString(), item.title, item.id)
                     }
+
+                    view.findViewById<ImageButton>(R.id.ibDeleteLesson)?.setOnClickListener {
+                        if (userProfile?.isRestricted == true) showRestrictionModal()
+                        else showDeleteConfirmationDialog(item)
+                    }
                     view
                 }
                 is ClassContentItem.AssessmentItem -> {
                     val view = layoutInflater.inflate(R.layout.item_class_assessment_card, parentLayout, false)
                     view.findViewById<TextView>(R.id.tvTitle).text = "Assessment ${item.assessmentNumber}"
 
-                    val btnEditAssessment = view.findViewById<ImageView>(R.id.ivArrow)
-                    if (btnEditAssessment != null) {
-                        btnEditAssessment.setOnClickListener {
-                            if (userProfile?.isRestricted == true) {
-                                showRestrictionModal()
-                            } else {
-                                showCreateAssessmentDialog(item)
-                            }
+
+                    view.findViewById<ImageView>(R.id.ivArrow)?.visibility = View.GONE
+                    view.findViewById<ImageButton>(R.id.ibEditAssessment)?.visibility = View.VISIBLE
+                    view.findViewById<ImageButton>(R.id.ibDeleteAssessment)?.visibility = View.VISIBLE
+
+                    view.findViewById<ImageButton>(R.id.ibEditAssessment)?.setOnClickListener {
+                        if (userProfile?.isRestricted == true) {
+                            showRestrictionModal()
+                        } else {
+                            showCreateAssessmentDialog(item)
                         }
+                    }
+
+                    view.findViewById<ImageButton>(R.id.ibDeleteAssessment)?.setOnClickListener {
+                        if (userProfile?.isRestricted == true) showRestrictionModal()
+                        else showDeleteConfirmationDialog(item)
                     }
                     view
                 }
+                else -> View(this)
             }
             parentLayout.addView(itemView)
         }
+    }
+
+    private fun showDeleteConfirmationDialog(item: ClassContentItem) {
+        val type = if (item is ClassContentItem.LessonItem) "Lesson" else "Assessment"
+
+
+        val message = if (item is ClassContentItem.LessonItem) {
+            "This action cannot be undone and will permanently remove this lesson from the class feed."
+        } else {
+            "This action cannot be undone and will permanently erase all associated student scores and records."
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Delete $type?")
+            .setMessage(message)
+            .setNegativeButton("Yes") { dialog, _ ->
+                viewModel.deleteContent(item)
+                ShowToast.showMessage(this, "$type deleted successfully.")
+                dialog.dismiss()
+                dialog.dismiss()
+            }
+            .setPositiveButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun checkUserModerationStatus() {

@@ -301,14 +301,19 @@ class TeacherProfileActivity : AppCompatActivity() {
     private fun showDeleteDialog(achievement: TeacherAchievementEntity) {
         val achievementId = achievement.id ?: return
 
-        MaterialAlertDialogBuilder(this)
+        val confirmDialog = MaterialAlertDialogBuilder(this)
             .setTitle("Remove Achievement")
             .setMessage("Are you sure you want to delete this achievement?")
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Delete") { _, _ ->
+            .setNeutralButton("Yes") { _, _ ->
                 viewModel.deleteAchievement(achievementId, achievement.certificate)
             }
-            .show()
+            .setPositiveButton("No", null)
+            .create()
+
+        confirmDialog.show()
+
+        confirmDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL)?.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
+        confirmDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)?.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
     }
 
     private fun showSaveConfirmation(parentDialog: androidx.appcompat.app.AlertDialog, name: String, year: String) {
@@ -323,8 +328,7 @@ class TeacherProfileActivity : AppCompatActivity() {
 
         val confirmDialog = MaterialAlertDialogBuilder(this)
             .setView(messageView)
-            .setPositiveButton("No") { d, _ -> d.dismiss() }
-            .setNegativeButton("Yes") { d, _ ->
+            .setNeutralButton("Yes") { d, _ ->
                 val dbFormattedDate = year
                 var imageBytes: ByteArray? = null
                 var mimeType: String? = null
@@ -337,9 +341,14 @@ class TeacherProfileActivity : AppCompatActivity() {
                 viewModel.addAchievement(userId, name, dbFormattedDate, imageBytes, mimeType)
                 d.dismiss()
                 parentDialog.dismiss()
-            }.create()
+            }
+            .setPositiveButton("No") { d, _ -> d.dismiss() }
+            .create()
 
         confirmDialog.show()
+
+        confirmDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL)?.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
+        confirmDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)?.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
     }
 
     private fun showUploadSourceDialog() {

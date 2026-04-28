@@ -231,6 +231,43 @@ class ClassPageRepository {
         }
     }
 
+    suspend fun deleteLesson(lessonId: Int): Result<Boolean> {
+        return withContext(Dispatchers.IO) {
+            try {
+                db.from("lesson").delete {
+                    filter { eq("id", lessonId) }
+                }
+                Result.success(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun deleteAssessment(assessmentId: Int): Result<Boolean> {
+        return withContext(Dispatchers.IO) {
+            try {
+                // 1. Wipe all student answers tied to this assessment
+                db.from("student_answers").delete { filter { eq("assessment_id", assessmentId) } }
+
+                // 2. Wipe all student records/scores tied to this assessment
+                db.from("assessment_record").delete { filter { eq("assessment_id", assessmentId) } }
+
+                // 3. Wipe the assessment questions
+                db.from("assessment_questions").delete { filter { eq("assessment_id", assessmentId) } }
+
+                // 4. Finally, delete the assessment itself
+                db.from("assessment_created").delete { filter { eq("id", assessmentId) } }
+
+                Result.success(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Result.failure(e)
+            }
+        }
+    }
+
     // --- Helper Logic (Keep as is) ---
 
     // NEW Helper: Checks if current time is before the start time

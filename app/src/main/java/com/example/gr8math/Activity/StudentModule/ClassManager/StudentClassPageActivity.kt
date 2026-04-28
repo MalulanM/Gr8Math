@@ -42,9 +42,9 @@ class StudentClassPageActivity : AppCompatActivity() {
         setContentView(R.layout.activity_classpage_student)
 
         initViews()
-        handleIntentData() // 🌟 Sets up ID and triggers Name Fetch
+        handleIntentData()
         setupBottomNav()
-        setupObservers() // 🌟 Listens for the Name Fetch to finish
+        setupObservers()
 
         viewModel.loadContent()
         handleNotificationIntent(intent)
@@ -144,11 +144,9 @@ class StudentClassPageActivity : AppCompatActivity() {
                     emptyStateLayout.visibility = View.GONE
                 }
                 is ContentState.Success -> {
-                    // 🌟 CHECK IF EMPTY
                     if (state.data.isEmpty()) {
                         emptyStateLayout.visibility = View.VISIBLE
 
-                        // Safely remove old lessons but KEEP the game card (which is at index 0)
                         if (parentLayout.childCount > 1) {
                             parentLayout.removeViews(1, parentLayout.childCount - 1)
                         }
@@ -226,7 +224,6 @@ class StudentClassPageActivity : AppCompatActivity() {
     }
 
     private fun populateList(data: List<ClassContentItem>) {
-        // 🌟 Safely remove old lessons but KEEP the game card (index 0)
         if (parentLayout.childCount > 1) {
             parentLayout.removeViews(1, parentLayout.childCount - 1)
         }
@@ -239,6 +236,7 @@ class StudentClassPageActivity : AppCompatActivity() {
                     view.findViewById<TextView>(R.id.tvTitle).text = item.title
                     view.findViewById<TextView>(R.id.tvDescription).text = item.previewContent
                     view.findViewById<ImageButton>(R.id.ibEditLesson).visibility = View.GONE
+                    view.findViewById<ImageButton>(R.id.ibDeleteLesson).visibility = View.GONE
                     view.findViewById<TextView>(R.id.tvSeeMore).setOnClickListener {
                         openLessonDetail(item.id)
                     }
@@ -247,7 +245,17 @@ class StudentClassPageActivity : AppCompatActivity() {
                 is ClassContentItem.AssessmentItem -> {
                     val view = layoutInflater.inflate(R.layout.item_class_assessment_card, parentLayout, false)
                     view.findViewById<TextView>(R.id.tvTitle).text = "Assessment ${item.assessmentNumber}"
-                    view.findViewById<ImageView>(R.id.ivArrow).setOnClickListener {
+
+                    view.findViewById<ImageButton>(R.id.ibEditAssessment)?.visibility = View.GONE
+                    view.findViewById<ImageButton>(R.id.ibDeleteAssessment)?.visibility = View.GONE
+
+                    val ivArrow = view.findViewById<ImageView>(R.id.ivArrow)
+                    ivArrow?.visibility = View.VISIBLE
+                    ivArrow?.setOnClickListener {
+                        viewModel.onAssessmentClicked(item.id)
+                    }
+
+                    view.setOnClickListener {
                         viewModel.onAssessmentClicked(item.id)
                     }
                     parentLayout.addView(view)
