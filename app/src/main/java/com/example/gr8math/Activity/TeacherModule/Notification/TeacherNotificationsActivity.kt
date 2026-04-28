@@ -125,6 +125,12 @@ class TeacherNotificationsActivity : AppCompatActivity() {
         if (::bottomNav.isInitialized) {
             bottomNav.setOnItemSelectedListener(null)
             bottomNav.selectedItemId = R.id.nav_notifications
+
+            NotificationHelper.fetchUnreadCount(bottomNav)
+
+            val focusedCourseId = intent.getIntExtra("courseId", CurrentCourse.courseId)
+            viewModel.loadTeacherNotifications(CurrentCourse.userId, focusedCourseId)
+
             setupBottomNav()
         }
     }

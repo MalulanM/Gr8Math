@@ -118,6 +118,51 @@
             </LinearLayout>
         </ScrollView>
 
+        <LinearLayout
+            android:id="@+id/emptyStateLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingVertical="80dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/toolbar_main"
+            app:layout_constraintBottom_toTopOf="@id/btnAddClasses"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp"
+                android:background="@drawable/bg_dashed_empty_state"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="40dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="NO CLASSES ADDED YET."
+                    android:textColor="#222222"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/lexend"
+                    android:letterSpacing="0.05"
+                    android:layout_marginBottom="12dp"
+                    android:textAlignment="center"/>
+
+                <TextView
+                    android:id="@+id/tvEmptySubtext"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/empty_class_manager_teacher"
+                    android:textColor="#666666"
+                    android:textSize="14sp"
+                    android:lineSpacingExtra="6dp"
+                    android:textAlignment="center"
+                    android:fontFamily="@font/lexend" />
+            </LinearLayout>
+        </LinearLayout>
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAddClasses"
             style="@style/Gr8ButtonStyle"

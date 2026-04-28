@@ -71,6 +71,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
     lateinit var loadingLayout: View
     lateinit var loadingProgress: View
     lateinit var loadingText: TextView
+    private lateinit var emptyStateLayout: View
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -127,12 +128,14 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         tvNoResults = findViewById(R.id.tvNoResults)
         llPastSearches = findViewById(R.id.llPastSearches)
         searchLayout = findViewById(R.id.rvSearchResults)
+        emptyStateLayout = findViewById(R.id.emptyStateLayout)
 
         classAdapter = ClassAdapter(mutableListOf()) { selectedClass ->
             openClass(selectedClass.courseId, selectedClass.sectionName)
         }
         searchLayout.adapter = classAdapter
         searchLayout.layoutManager = LinearLayoutManager(this)
+
     }
 
     private fun setupListeners() {
@@ -181,6 +184,9 @@ class TeacherClassManagerActivity : AppCompatActivity() {
             val isSearchMode = searchView.visibility == View.VISIBLE
 
             when (state) {
+                is ClassState.Loading -> {
+                    emptyStateLayout.visibility = View.GONE
+                }
                 is ClassState.Success -> {
                     tvNoResults.visibility = View.GONE
 
@@ -191,6 +197,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                         }.toMutableList()
                         classAdapter.updateData(adapterList)
                     } else {
+                        emptyStateLayout.visibility = View.GONE
                         // 1. Load the manual cards
                         populateLinearLayout(state.data)
 
@@ -236,9 +243,11 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                         tvNoResults.visibility = View.VISIBLE
                     } else {
                         parentLayout.removeAllViews()
+                        emptyStateLayout.visibility = View.VISIBLE
                     }
                 }
                 is ClassState.Error -> {
+                    emptyStateLayout.visibility = View.GONE
                     ShowToast.showMessage(this, state.message)
                 }
                 else -> {}

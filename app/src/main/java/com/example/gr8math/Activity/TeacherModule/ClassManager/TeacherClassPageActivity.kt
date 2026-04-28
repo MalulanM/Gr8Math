@@ -84,6 +84,16 @@ class TeacherClassPageActivity : AppCompatActivity() {
         handleNotificationIntent(intent)
     }
 
+    override fun onResume() {
+        super.onResume()
+        val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
+        bottomNav.setOnItemSelectedListener(null)
+        bottomNav.selectedItemId = R.id.nav_class
+        NotificationHelper.fetchUnreadCount(bottomNav)
+
+        setupBottomNav()
+    }
+
     private fun initViews() {
         parentLayout = findViewById(R.id.parentLayout)
         toolbar = findViewById(R.id.toolbar)

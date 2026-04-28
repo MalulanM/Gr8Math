@@ -30,6 +30,22 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
+    <TextView
+        android:id="@+id/tvEmptyScores"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No assessments taken yet."
+        android:textStyle="italic"
+        android:textColor="#A0A0A0"
+        android:gravity="center"
+        android:paddingTop="40dp"
+        android:paddingBottom="40dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/btnMonthlyReport"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvStudentName" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvScores"
         android:layout_width="0dp"
@@ -39,6 +55,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvStudentName" />
+
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnMonthlyReport"

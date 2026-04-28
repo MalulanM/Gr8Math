@@ -3,6 +3,7 @@ package com.example.gr8math.Adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gr8math.Data.Model.StudentScore
@@ -15,6 +16,8 @@ class StudentGradesAdapter(
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val title: TextView = view.findViewById(R.id.tvTitle)
+        val btnEdit: ImageButton = view.findViewById(R.id.ibEditAssessment)
+        val btnRemove: ImageButton = view.findViewById(R.id.ibDeleteAssessment)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -25,6 +28,8 @@ class StudentGradesAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = gradeList[position]
+        holder.btnEdit.visibility = View.GONE
+        holder.btnRemove.visibility = View.GONE
         holder.title.text = "Assessment ${item.assessmentNumber}"
         holder.itemView.setOnClickListener { onClick(item) }
     }

@@ -3,6 +3,7 @@ package com.example.gr8math.Activity.TeacherModule.DLL
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -15,6 +16,7 @@ import com.example.gr8math.Data.Repository.DllMainEntity
 import com.example.gr8math.Data.Repository.DllRepository
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NotificationHelper
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
 import com.google.android.material.appbar.MaterialToolbar
@@ -45,7 +47,13 @@ class DLLViewActivityMain : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         loadDllData(CurrentCourse.courseId)
+        val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
+        bottomNav.setOnItemSelectedListener(null)
+        bottomNav.selectedItemId = R.id.nav_dll
+        NotificationHelper.fetchUnreadCount(bottomNav)
+        setupBottomNav()
     }
+
 
     private fun initViews() {
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
@@ -85,8 +93,10 @@ class DLLViewActivityMain : AppCompatActivity() {
             val cardView = layoutInflater.inflate(R.layout.item_class_assessment_card, dllContainer, false)
 
             val tvTitle = cardView.findViewById<TextView>(R.id.tvTitle)
-
-            // 🌟 Use the new range formatter
+            val editBtn = cardView.findViewById<ImageButton>(R.id.ibEditAssessment)
+            val removeBtn = cardView.findViewById<ImageButton>(R.id.ibDeleteAssessment)
+            editBtn.visibility = View.GONE
+            removeBtn.visibility = View.GONE
             val dateRange = formatDateRange(dll.availableFrom, dll.availableUntil)
 
             tvTitle.text = "DLL ($dateRange)"
@@ -115,7 +125,6 @@ class DLLViewActivityMain : AppCompatActivity() {
         }
     }
 
-    // 🌟 SMART DATE FORMATTER
     private fun formatDateRange(fromDateStr: String?, untilDateStr: String?): String {
         if (fromDateStr.isNullOrEmpty() || untilDateStr.isNullOrEmpty()) return "TBD"
 
@@ -147,6 +156,7 @@ class DLLViewActivityMain : AppCompatActivity() {
     private fun setupBottomNav() {
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
         bottomNav.selectedItemId = R.id.nav_dll
+        NotificationHelper.fetchUnreadCount(bottomNav)
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_class -> {

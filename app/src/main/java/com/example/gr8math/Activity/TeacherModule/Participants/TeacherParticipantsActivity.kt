@@ -46,6 +46,15 @@ class TeacherParticipantsActivity : AppCompatActivity() {
         toolbar.setNavigationOnClickListener { finish() }
     }
 
+    override fun onResume() {
+        super.onResume()
+        val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
+        bottomNav.setOnItemSelectedListener(null)
+        bottomNav.selectedItemId = R.id.nav_participants
+        NotificationHelper.fetchUnreadCount(bottomNav)
+        setupBottomNav()
+    }
+
     private fun setupObservers() {
         viewModel.state.observe(this) { state ->
 
@@ -54,7 +63,7 @@ class TeacherParticipantsActivity : AppCompatActivity() {
 
             when (state) {
                 is ParticipantsState.Loading -> {
-                    // Optional: Show loading
+
                 }
                 is ParticipantsState.Success -> {
                     val students = state.data
@@ -149,6 +158,7 @@ class TeacherParticipantsActivity : AppCompatActivity() {
     private fun setupBottomNav() {
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
         bottomNav.selectedItemId = R.id.nav_participants
+        NotificationHelper.fetchUnreadCount(bottomNav)
 
         // This should now be resolved because of the import
         NotificationHelper.fetchUnreadCount(bottomNav)

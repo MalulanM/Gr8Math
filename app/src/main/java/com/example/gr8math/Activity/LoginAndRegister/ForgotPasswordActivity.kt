@@ -22,6 +22,7 @@ import com.example.gr8math.ViewModel.ForgotPasswordViewModel
 import com.example.gr8math.ViewModel.ForgotState
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.textfield.TextInputLayout
+import io.github.jan.supabase.auth.auth
 
 class ForgotPasswordActivity : AppCompatActivity() {
 
@@ -87,7 +88,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
                 }
                 is ForgotState.CodeSent -> {
-                    ShowToast.showMessage(this, "Verification code sent!")
+                    ShowToast.showMessage(this, "A verification code will be sent to your email.")
                     enableCodeInput()
                     startCountdown()
                 }
@@ -101,7 +102,8 @@ class ForgotPasswordActivity : AppCompatActivity() {
                     navigateToLoginOrDashboard()
                 }
                 is ForgotState.Error -> {
-                    ShowToast.showMessage(this, state.message)
+                    val cleanMessage = state.message.split("\n").firstOrNull() ?: "An error occurred"
+                    ShowToast.showMessage(this, cleanMessage)
 
                     // Reset buttons if error occurred
                     if (::txtSendCode.isInitialized) {
@@ -183,7 +185,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
         val confirmPass = confirmPasswordInput.text.toString()
 
         if (newPass.isEmpty() || confirmPass.isEmpty()) {
-            ShowToast.showMessage(this, "Please fill in all fields")
+            ShowToast.showMessage(this, "Please enter a password.")
             return
         }
 
@@ -194,13 +196,23 @@ class ForgotPasswordActivity : AppCompatActivity() {
 
 
         if (!isValidPassword(newPass)) {
-            ShowToast.showMessage(this, "Password invalid")
+            ShowToast.showMessage(this, "Password invalid. Please follow the requirements.")
             return
         }
 
-        // 3. Disable button so they don't click twice
-        savePassBtn.isEnabled = false
-        viewModel.updatePassword(newPass)
+        val session = com.example.gr8math.Services.SupabaseService.client.auth.currentSessionOrNull()
+        val uuid = session?.user?.id ?: ""
+
+        if (uuid.isNotEmpty()) {
+            // 2. Disable button to prevent double-clicks
+            savePassBtn.isEnabled = false
+
+            // 3. Call the updated ViewModel function with the UUID
+            viewModel.updatePassword(newPass, uuid)
+        } else {
+            // If the session is null, the user might have waited too long
+            ShowToast.showMessage(this, "Session expired. Please verify your email code again.")
+        }
     }
 
     // --- UI HELPERS ---

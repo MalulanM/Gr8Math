@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ClassCodeRes(
     val id: Int,
+    val class_size: Int,
     @SerialName("class_name") val className: String
 )
 

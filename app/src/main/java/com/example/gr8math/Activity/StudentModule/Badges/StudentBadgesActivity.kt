@@ -30,6 +30,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
+import com.example.gr8math.Utils.NotificationHelper
 
 class StudentBadgesActivity : AppCompatActivity() {
 
@@ -105,6 +106,7 @@ class StudentBadgesActivity : AppCompatActivity() {
     private fun setupBottomNav() {
         bottomNav = findViewById(R.id.bottom_navigation)
         bottomNav.selectedItemId = R.id.nav_badges
+        NotificationHelper.fetchUnreadCount(bottomNav)
         setupBottomNavListeners(bottomNav)
     }
 
@@ -134,13 +136,15 @@ class StudentBadgesActivity : AppCompatActivity() {
             // Remove listener so it doesn't trigger a fake click
             bottomNav.setOnItemSelectedListener(null)
 
-            // Force highlight the Badges icon
+
             bottomNav.selectedItemId = R.id.nav_badges
+
+            NotificationHelper.fetchUnreadCount(bottomNav)
 
             // Re-attach the listener
             setupBottomNavListeners(bottomNav)
         }
 
-        viewModel.loadProfile(userId) // Refresh in case they earned a badge elsewhere
+        viewModel.loadProfile(userId)
     }
 }

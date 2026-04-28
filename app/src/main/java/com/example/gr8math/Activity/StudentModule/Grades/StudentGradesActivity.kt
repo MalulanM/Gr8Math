@@ -46,7 +46,7 @@ class StudentGradesActivity : AppCompatActivity() {
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
 
-        // Hide report button (as per your original code)
+
         findViewById<Button>(R.id.btnQuarterlyReport).visibility = View.GONE
 
         // 2. Setup Navigation
@@ -73,6 +73,7 @@ class StudentGradesActivity : AppCompatActivity() {
         if (::bottomNav.isInitialized) {
             bottomNav.setOnItemSelectedListener(null)
             bottomNav.selectedItemId = R.id.nav_grades
+            NotificationHelper.fetchUnreadCount(bottomNav)
             setupBottomNavListeners(bottomNav)
         }
     }

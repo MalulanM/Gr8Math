@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.NumberPicker
@@ -40,6 +41,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -189,7 +191,7 @@ class TeacherProfileActivity : AppCompatActivity() {
             tvAchievementsEmpty.visibility = View.GONE
             certContainer.visibility = View.VISIBLE
 
-            // Push the full list (Old Supabase + New Tigris) to the adapter
+
             achievementAdapter.setAchievements(achievements)
         }
     }
@@ -227,14 +229,7 @@ class TeacherProfileActivity : AppCompatActivity() {
 
 
         tvChangePassword.setOnClickListener {
-            val intent = Intent(this, ForgotPasswordActivity::class.java).apply {
-                putExtra("id", userId)
-                putExtra("EXTRA_ROLE", "Teacher")
-                putExtra("name", etFirstName.text.toString())
-                putExtra("profilePic", currentProfilePicUrl)
-                putExtra("EXTRA_IS_DIRECT_CHANGE", true)
-            }
-            startActivity(intent)
+            showDirectChangePasswordDialog()
         }
 
         ivEditAchievements.setOnClickListener { showAddAchievementDialog() }
@@ -243,6 +238,90 @@ class TeacherProfileActivity : AppCompatActivity() {
             isUploadingProfilePic = true
             showUploadSourceDialog()
         }
+    }
+
+    private fun showDirectChangePasswordDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_change_password_profile, null)
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .create()
+
+
+        val etNewPass = dialogView.findViewById<TextInputEditText>(R.id.etNewPass)
+        val etConfirmPass = dialogView.findViewById<TextInputEditText>(R.id.etRePass)
+        val btnSave = dialogView.findViewById<Button>(R.id.btnSave)
+
+        val localLoadingLayout = dialogView.findViewById<View>(R.id.loadingLayout)
+        val localLoadingProgress = dialogView.findViewById<View>(R.id.loadingProgressBg)
+        val localLoadingText = dialogView.findViewById<TextView>(R.id.loadingText)
+
+        btnSave.isEnabled = false
+
+        val watcher = object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                btnSave.isEnabled = !etNewPass.text.isNullOrEmpty() && !etConfirmPass.text.isNullOrEmpty()
+            }
+        }
+        etNewPass.addTextChangedListener(watcher)
+        etConfirmPass.addTextChangedListener(watcher)
+
+        // ... inside showDirectChangePasswordDialog ...
+
+        btnSave.setOnClickListener {
+            val pass = etNewPass.text.toString()
+            val confirm = etConfirmPass.text.toString()
+
+            if (pass != confirm) {
+                ShowToast.showMessage(this, "Passwords do not match")
+                return@setOnClickListener
+            }
+            if (!isValidPassword(pass)) {
+                ShowToast.showMessage(this, "Password invalid. Please follow the requirements.")
+                return@setOnClickListener
+            }
+
+            val session = com.example.gr8math.Services.SupabaseService.client.auth.currentSessionOrNull()
+            val uuid = session?.user?.id ?: ""
+
+            if (uuid.isEmpty()) {
+                ShowToast.showMessage(this, "Session expired. Please log in again.")
+                return@setOnClickListener
+            }
+
+            btnSave.isEnabled = false
+            UIUtils.showLoading(localLoadingLayout, localLoadingProgress, localLoadingText, true)
+
+            lifecycleScope.launch {
+                val repo = com.example.gr8math.Data.Repository.AuthRepository()
+
+                // 2. USE THE BYPASS FUNCTION instead of updateUserPassword
+                val result = repo.updateUserPasswordBypass(pass, uuid)
+
+                UIUtils.showLoading(localLoadingLayout, localLoadingProgress, localLoadingText, false)
+
+                if (result.isSuccess) {
+                    ShowToast.showMessage(this@TeacherProfileActivity, "Password updated successfully!")
+                    dialog.dismiss()
+                } else {
+                    btnSave.isEnabled = true
+                    val fullError = result.exceptionOrNull()?.message ?: "Failed to update password"
+                    val cleanError = fullError.split("\n").firstOrNull() ?: "An error occurred"
+
+                    ShowToast.showMessage(this@TeacherProfileActivity, cleanError)
+                }
+            }
+        }
+
+        // Makes the dialog background transparent so your rounded corners show properly
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+    }
+
+    private fun isValidPassword(pass: String): Boolean {
+        val pattern = Regex("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,16}$")
+        return pattern.matches(pass)
     }
 
     private fun showAddAchievementDialog() {

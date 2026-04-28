@@ -61,6 +61,7 @@ class StudentClassPageActivity : AppCompatActivity() {
         val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
         bottomNav.setOnItemSelectedListener(null)
         bottomNav.selectedItemId = R.id.nav_class
+        NotificationHelper.fetchUnreadCount(bottomNav)
         setupBottomNavListeners(bottomNav)
     }
 

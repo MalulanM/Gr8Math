@@ -8,6 +8,7 @@ import com.example.gr8math.Data.Model.StudentIdRes
 import com.example.gr8math.Services.SupabaseService
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.query.Count
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -18,9 +19,9 @@ class JoinClassRepository {
     suspend fun joinClass(userId: Int, classCode: String): Result<JoinClassSuccess> {
         return withContext(Dispatchers.IO) {
             try {
-                // 1. Find Class by Code
+                // 1. Find Class by Code (Added class_size to columns)
                 val classObj = db.from("class")
-                    .select(columns = Columns.list("id, class_name")) {
+                    .select(columns = Columns.list("id, class_name, class_size")) {
                         filter { eq("class_code", classCode) }
                     }.decodeSingleOrNull<ClassCodeRes>()
                     ?: return@withContext Result.failure(Exception("Invalid class code."))
@@ -32,7 +33,20 @@ class JoinClassRepository {
                     }.decodeSingleOrNull<StudentIdRes>()
                     ?: return@withContext Result.failure(Exception("Student record not found."))
 
-                // 3. Check if Already Joined (FIXED: Just fetch list and check size)
+                // --- NEW: Check Class Capacity ---
+                // 3. Count how many students are currently in this class
+                val currentEnrollmentCount = db.from("student_class").select(columns = Columns.list("id")) {
+                    filter { eq("class_id", classObj.id) }
+                    count(Count.EXACT)
+                }.countOrNull() ?: 0
+
+                // 4. Compare current count to the maximum allowed size
+                if (currentEnrollmentCount >= classObj.class_size) {
+                    return@withContext Result.failure(Exception("This class is already full."))
+                }
+                // ---------------------------------
+
+                // 5. Check if Already Joined
                 val existingJoinList = db.from("student_class").select {
                     filter {
                         eq("student_id", studentObj.id)
@@ -44,7 +58,7 @@ class JoinClassRepository {
                     return@withContext Result.failure(Exception("You are already in this class."))
                 }
 
-                // 4. Insert into student_class
+                // 6. Insert into student_class
                 db.from("student_class").insert(
                     StudentClassInsert(
                         studentId = studentObj.id,
@@ -52,7 +66,7 @@ class JoinClassRepository {
                     )
                 )
 
-                // 5. Get Course ID
+                // 7. Get Course ID
                 val courseObj = db.from("course_content")
                     .select(columns = Columns.list("id")) {
                         filter { eq("section_id", classObj.id) }

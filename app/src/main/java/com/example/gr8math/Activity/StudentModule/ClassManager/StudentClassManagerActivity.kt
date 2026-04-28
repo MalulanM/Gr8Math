@@ -48,6 +48,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
     lateinit var loadingLayout: View
     lateinit var loadingProgress: View
     lateinit var loadingText: TextView
+    private lateinit var emptyStateLayout: View
 
     private lateinit var addClassLauncher: ActivityResultLauncher<Intent>
 
@@ -93,6 +94,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
         mainToolbar = findViewById(R.id.toolbar)
         addClassesButton = findViewById(R.id.btnAddClasses)
         parentLayout = findViewById(R.id.class_list_container)
+        emptyStateLayout = findViewById(R.id.emptyStateLayout)
     }
 
     private fun initData() {
@@ -128,10 +130,12 @@ class StudentClassManagerActivity : AppCompatActivity() {
             when (state) {
                 is ClassState.Loading -> {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
+                    emptyStateLayout.visibility = View.GONE
                 }
                 is ClassState.Success -> {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     parentLayout.removeAllViews()
+                    emptyStateLayout.visibility = View.GONE
 
                     var targetCourseId = intent.getIntExtra("courseId", -1)
                     val metaString = intent.getStringExtra("notif_meta")
@@ -194,7 +198,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
                 is ClassState.Empty -> {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     parentLayout.removeAllViews()
-                    ShowToast.showMessage(this, "No classes found. Join one!")
+                    emptyStateLayout.visibility = View.VISIBLE
                 }
                 is ClassState.Error -> {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)

@@ -58,18 +58,15 @@ class StudentAddClassActivity : AppCompatActivity() {
             when (state) {
                 is JoinClassState.Idle -> {
                     joinButton.isEnabled = true
-                    // Clear errors if any
                     tilClassCode.error = null
                 }
                 is JoinClassState.Loading -> {
                     joinButton.isEnabled = false
-                    // Optionally show a loading dialog or progress bar here
                 }
                 is JoinClassState.Success -> {
                     joinButton.isEnabled = true
                     val data = state.data
 
-                    // Navigate to Class Page
                     val intent = Intent(this, StudentClassPageActivity::class.java).apply {
                         putExtra("courseId", data.courseId)
                         putExtra("sectionName", data.className)
@@ -84,6 +81,11 @@ class StudentAddClassActivity : AppCompatActivity() {
                 }
                 is JoinClassState.Error -> {
                     joinButton.isEnabled = true
+
+                    // --- NEW: Show the Toast ---
+                    ShowToast.showMessage(this, state.message)
+
+                    // Keep the red outline on the text input
                     UIUtils.errorDisplay(
                         this,
                         tilClassCode,
@@ -91,7 +93,6 @@ class StudentAddClassActivity : AppCompatActivity() {
                         true,
                         state.message
                     )
-
                 }
             }
         }

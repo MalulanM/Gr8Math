@@ -123,6 +123,7 @@ class StudentNotificationsActivity : AppCompatActivity() {
         if (::bottomNav.isInitialized) {
             bottomNav.setOnItemSelectedListener(null)
             bottomNav.selectedItemId = R.id.nav_notifications
+            NotificationHelper.fetchUnreadCount(bottomNav)
             setupBottomNavListeners(bottomNav)
         }
         NotificationHelper.fetchUnreadCount(bottomNav)

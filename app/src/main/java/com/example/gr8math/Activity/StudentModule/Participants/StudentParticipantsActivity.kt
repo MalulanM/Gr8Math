@@ -25,6 +25,7 @@ import com.example.gr8math.ViewModel.StudentParticipantsViewModel
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.gson.Gson
+import com.example.gr8math.Utils.NotificationHelper
 
 class StudentParticipantsActivity : AppCompatActivity() {
 
@@ -44,6 +45,17 @@ class StudentParticipantsActivity : AppCompatActivity() {
         setupObservers()
 
         viewModel.loadParticipants()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+
+        bottomNav.setOnItemSelectedListener(null)
+        bottomNav.selectedItemId = R.id.nav_class
+        NotificationHelper.fetchUnreadCount(bottomNav)
+
+        setupBottomNav()
     }
 
     private fun setupObservers() {
@@ -138,6 +150,7 @@ class StudentParticipantsActivity : AppCompatActivity() {
     private fun setupBottomNav() {
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
         bottomNav.selectedItemId = R.id.nav_class
+        NotificationHelper.fetchUnreadCount(bottomNav)
 
         bottomNav.setOnItemSelectedListener { item ->
             if (item.itemId == bottomNav.selectedItemId) return@setOnItemSelectedListener true

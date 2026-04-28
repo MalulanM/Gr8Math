@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ReportRecordRes(
     val score: Double,
-    // Nested Relation
+    @SerialName("date_accomplished") val dateAccomplished: String = "",
     @SerialName("assessment_created") val assessment: ReportAssessmentInfo
 )
 
@@ -25,7 +25,8 @@ data class ReportItem(
     val score: Double,
     val totalPoints: Double,
     val items: Int,
-    val percentString: String
+    val percentString: String,
+    val dateAccomplished: String = ""
 )
 
 // 3. State Data (Holds list + totals)

@@ -41,20 +41,21 @@ class ForgotPasswordViewModel : ViewModel() {
         viewModelScope.launch {
             val result = repository.verifyRecoveryCode(email, code)
             result.onSuccess {
-                _state.value = ForgotState.CodeVerified // Move to next screen
+                _state.value = ForgotState.CodeVerified
             }.onFailure {
                 _state.value = ForgotState.Error("Invalid code.")
             }
         }
     }
 
-    // Step 3: Update Password
-    fun updatePassword(newPass: String) {
+
+    fun updatePassword(newPass: String, uuid: String) {
         _state.value = ForgotState.Loading
         viewModelScope.launch {
-            val result = repository.updateUserPassword(newPass)
+            // Changed to call the BYPASS function
+            val result = repository.updateUserPasswordBypass(newPass, uuid)
             result.onSuccess {
-                _state.value = ForgotState.PasswordUpdated // Done
+                _state.value = ForgotState.PasswordUpdated
             }.onFailure {
                 _state.value = ForgotState.Error(it.message ?: "Failed to update password")
             }

@@ -161,20 +161,31 @@ class MonthlyReportActivity : AppCompatActivity() {
             when (state) {
                 is ReportState.Loading -> { }
                 is ReportState.Success -> {
-                    val items = state.data.items
-                    val df = java.text.DecimalFormat("#")
-                    tvTotalScore.text = df.format(state.data.totalScore)
-                    tvTotalItems.text = state.data.totalItems.toString()
+                    val allItems = state.data.items
 
-                    if (items.isEmpty()) {
-                        tvEmptyState.text = "No assessments found for $currentDisplayLabel."
-                        tvEmptyState.visibility = View.VISIBLE
-                        tableScrollView.visibility = View.GONE
-                    } else {
-                        tvEmptyState.visibility = View.GONE
-                        tableScrollView.visibility = View.VISIBLE
-                        populateTable(items)
+                    // 1. FILTER THE LIST based on the selected dropdown ("2026-04")
+                    val filteredItems = allItems.filter { item ->
+                        val dateStr = item.dateAccomplished
+                        if (dateStr.length >= 7) {
+                            val itemMonthYear = dateStr.substring(0, 7)
+                            itemMonthYear == selectedMonthValue // Compare to dropdown
+                        } else {
+                            false
+                        }
                     }
+
+                    // 2. RECALCULATE TOTALS based only on the filtered items
+                    val df = java.text.DecimalFormat("#")
+                    val calculatedTotalScore = filteredItems.sumOf { it.score }
+                    val calculatedTotalItems = filteredItems.sumOf { it.items }
+
+                    tvTotalScore.text = df.format(calculatedTotalScore)
+                    tvTotalItems.text = calculatedTotalItems.toString()
+
+                    tvEmptyState.visibility = View.GONE
+                    tableScrollView.visibility = View.VISIBLE
+
+                    populateTable(filteredItems)
                 }
                 is ReportState.Error -> {
                     ShowToast.showMessage(this, state.message)
@@ -191,6 +202,31 @@ class MonthlyReportActivity : AppCompatActivity() {
             reportTable.removeViewAt(1)
         }
 
+        if (items.isEmpty()) {
+            val emptyRow = TableRow(this)
+            val tvEmpty = TextView(this)
+
+            tvEmpty.text = "No assessments found for $currentDisplayLabel."
+            tvEmpty.gravity = Gravity.CENTER
+            tvEmpty.setPadding(16, 80, 16, 80)
+            tvEmpty.setTextColor(Color.parseColor("#A0A0A0"))
+            tvEmpty.setTypeface(null, Typeface.ITALIC)
+
+            // Span across all 4 columns
+            val params = TableRow.LayoutParams()
+            params.span = 4
+            tvEmpty.layoutParams = params
+
+            emptyRow.addView(tvEmpty)
+            reportTable.addView(emptyRow, 1)
+
+            // Ensure totals reflect zero
+            tvTotalScore.text = "0"
+            tvTotalItems.text = "0"
+            return
+        }
+
+        // Proceed normally if there are items
         var insertIndex = 1
         val df = java.text.DecimalFormat("#")
 

@@ -13,7 +13,10 @@ import io.github.jan.supabase.postgrest.query.Count
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import io.github.jan.supabase.auth.OtpType
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 @Serializable
 data class AuditTrailInsert(
@@ -239,7 +242,6 @@ class AuthRepository {
                 )
                 Result.success(Unit)
             } catch (e: Exception) {
-                // --- NEW: Log Failed Verification ---
                 logAuditTrail(targetUserId, "Authentication", "VERIFY_RESET", "FAILED", "Failed OTP verification.")
                 Result.failure(e)
             }
@@ -248,20 +250,39 @@ class AuthRepository {
 
     suspend fun updateUserPassword(newPass: String): Result<Unit> {
         return withContext(Dispatchers.IO) {
-            // Find current logged in user's email to get their ID for logging
-            val currentEmail = auth.currentUserOrNull()?.email
+            val session = auth.currentSessionOrNull()
+            if (session == null) {
+                return@withContext Result.failure(Exception("Session expired. Please log in again."))
+            }
+
+            val currentEmail = session.user?.email
             val targetUserId = if (currentEmail != null) getUserIdByEmailSafe(currentEmail) else null
 
             try {
                 auth.updateUser {
                     password = newPass
                 }
-                // --- NEW: Log Successful Password Update ---
                 logAuditTrail(targetUserId, "Authentication", "UPDATE_PASSWORD", "SUCCESS", "Password updated successfully.")
                 Result.success(Unit)
             } catch (e: Exception) {
-                // --- NEW: Log Failed Password Update ---
                 logAuditTrail(targetUserId, "Authentication", "UPDATE_PASSWORD", "FAILED", "Password update failed: ${e.message}")
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun updateUserPasswordBypass(newPass: String, authUuid: String): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                db.postgrest.rpc("bypass_mfa_password_update", buildJsonObject {
+                    put("user_uuid", authUuid)
+                    put("new_password", newPass)
+                })
+
+                logAuditTrail(null, "Authentication", "PASSWORD_RESET_MOBILE", "SUCCESS", "Password updated via mobile bypass.")
+                Result.success(Unit)
+            } catch (e: Exception) {
+                Log.e("AUTH_BYPASS", "Bypass Failed: ${e.message}")
                 Result.failure(e)
             }
         }

@@ -14,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -44,6 +45,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -273,19 +275,95 @@ class ProfileActivity : AppCompatActivity() {
         ivEditBadges.setOnClickListener { showBadgeSelectionDialog() }
 
         tvChangePassword.setOnClickListener {
-            val intent = Intent(this, ForgotPasswordActivity::class.java).apply {
-                putExtra("id", userId)
-                putExtra("EXTRA_ROLE", "Student")
-                putExtra("name", currentName)
-                putExtra("profilePic", currentProfilePicUrl)
-                putExtra("EXTRA_IS_DIRECT_CHANGE", true)
-            }
-            startActivity(intent)
+            showDirectChangePasswordDialog()
         }
 
         editPfp.setOnClickListener { showUploadSourceDialog() }
     }
 
+    private fun showDirectChangePasswordDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_change_password_profile, null)
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .create()
+
+
+        val etNewPass = dialogView.findViewById<TextInputEditText>(R.id.etNewPass)
+        val etConfirmPass = dialogView.findViewById<TextInputEditText>(R.id.etRePass)
+        val btnSave = dialogView.findViewById<Button>(R.id.btnSave)
+
+        val localLoadingLayout = dialogView.findViewById<View>(R.id.loadingLayout)
+        val localLoadingProgress = dialogView.findViewById<View>(R.id.loadingProgressBg)
+        val localLoadingText = dialogView.findViewById<TextView>(R.id.loadingText)
+
+        btnSave.isEnabled = false
+
+        val watcher = object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                btnSave.isEnabled = !etNewPass.text.isNullOrEmpty() && !etConfirmPass.text.isNullOrEmpty()
+            }
+        }
+        etNewPass.addTextChangedListener(watcher)
+        etConfirmPass.addTextChangedListener(watcher)
+
+
+        btnSave.setOnClickListener {
+            val pass = etNewPass.text.toString()
+            val confirm = etConfirmPass.text.toString()
+
+            if (pass != confirm) {
+                ShowToast.showMessage(this, "Passwords do not match")
+                return@setOnClickListener
+            }
+            if (!isValidPassword(pass)) {
+                ShowToast.showMessage(this, "Password invalid. Please follow the requirements.")
+                return@setOnClickListener
+            }
+
+            // 1. Get the UUID of the student currently logged in
+            val session = com.example.gr8math.Services.SupabaseService.client.auth.currentSessionOrNull()
+            val uuid = session?.user?.id ?: ""
+
+            // We only show this if the user is truly not logged in
+            if (uuid.isEmpty()) {
+                ShowToast.showMessage(this, "Identity check failed. Please log in again.")
+                return@setOnClickListener
+            }
+
+            btnSave.isEnabled = false
+            UIUtils.showLoading(localLoadingLayout, localLoadingProgress, localLoadingText, true)
+
+            lifecycleScope.launch {
+                val repo = com.example.gr8math.Data.Repository.AuthRepository()
+
+                val result = repo.updateUserPasswordBypass(pass, uuid)
+
+                UIUtils.showLoading(localLoadingLayout, localLoadingProgress, localLoadingText, false)
+
+                if (result.isSuccess) {
+                    ShowToast.showMessage(this@ProfileActivity, "Password updated successfully!")
+                    dialog.dismiss()
+                } else {
+                    btnSave.isEnabled = true
+                    val fullError = result.exceptionOrNull()?.message ?: "Failed to update password"
+                    val cleanError = fullError.split("\n").firstOrNull() ?: "An error occurred"
+
+                    ShowToast.showMessage(this@ProfileActivity, cleanError)
+                }
+            }
+        }
+
+        // Makes the dialog background transparent so your rounded corners show properly
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
+    }
+
+    private fun isValidPassword(pass: String): Boolean {
+        val pattern = Regex("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,16}$")
+        return pattern.matches(pass)
+    }
     private fun showBadgeSelectionDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_select_badges, null)
         val dialog = MaterialAlertDialogBuilder(this).setView(dialogView).create()

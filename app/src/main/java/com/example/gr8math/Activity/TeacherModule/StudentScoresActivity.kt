@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -49,7 +50,6 @@ class StudentScoresActivity : AppCompatActivity() {
         setupToolbar()
         findViewById<TextView>(R.id.tvStudentName).text = studentName
 
-        // 🌟 FIX: Switched to Monthly Report Logic
         val btnMonthlyReport = findViewById<Button>(R.id.btnMonthlyReport)
         btnMonthlyReport.setOnClickListener {
             val calendar = Calendar.getInstance()
@@ -58,6 +58,7 @@ class StudentScoresActivity : AppCompatActivity() {
 
             val intent = Intent(this, MonthlyReportActivity::class.java)
             intent.putExtra("EXTRA_STUDENT_ID", studentId)
+            intent.putExtra("EXTRA_STUDENT_NAME", studentName)
             intent.putExtra("EXTRA_COURSE_ID", CurrentCourse.courseId) // 🌟 ADD THIS
             intent.putExtra("EXTRA_MONTH", currentMonth)
             intent.putExtra("EXTRA_YEAR", currentYear)
@@ -77,17 +78,21 @@ class StudentScoresActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
+        val tvEmptyScores = findViewById<TextView>(R.id.tvEmptyScores)
         viewModel.state.observe(this) { state ->
             when (state) {
                 is ScoreState.Loading -> { }
                 is ScoreState.Success -> {
                     val list = state.data
                     if (list.isEmpty()) {
-                        ShowToast.showMessage(this, "No scores found.")
-                    }
-
-                    rvScores.adapter = ScoreAdapter(list) { scoreItem ->
-                        showAssessmentDetailsDialog(scoreItem)
+                        tvEmptyScores.visibility = View.VISIBLE
+                        rvScores.visibility = View.GONE
+                    } else {
+                        tvEmptyScores.visibility = View.GONE
+                        rvScores.visibility = View.VISIBLE
+                        rvScores.adapter = ScoreAdapter(list) { scoreItem ->
+                            showAssessmentDetailsDialog(scoreItem)
+                        }
                     }
 
                     autoOpenAssessmentId?.let { idToOpen ->
@@ -144,6 +149,8 @@ class StudentScoresActivity : AppCompatActivity() {
 
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val title: TextView = view.findViewById(R.id.tvTitle)
+            val editBtn: ImageButton = view.findViewById(R.id.ibEditAssessment)
+            val removeBtn: ImageButton = view.findViewById(R.id.ibDeleteAssessment)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -154,6 +161,8 @@ class StudentScoresActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = scores[position]
+            holder.editBtn.visibility = View.GONE
+            holder.removeBtn.visibility = View.GONE
             holder.title.text = "Assessment ${item.assessmentNumber}"
             holder.itemView.setOnClickListener { onClick(item) }
         }
@@ -161,7 +170,7 @@ class StudentScoresActivity : AppCompatActivity() {
         override fun getItemCount() = scores.size
     }
 
-    // --- REFINED DATE FORMATTING ---
+
     private fun formatDate(dateString: String): String {
         val formats = arrayOf(
             "yyyy-MM-dd'T'HH:mm:ss",

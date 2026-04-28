@@ -1,13 +1,9 @@
 package com.example.gr8math.Utils
 
 import android.util.Log
+import com.example.gr8math.Data.Repository.NotificationRepository
 import com.example.gr8math.Model.CurrentCourse
-import com.example.gr8math.R
-import com.example.gr8math.Services.SupabaseService
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.Columns
-import io.github.jan.supabase.postgrest.query.Count
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -16,25 +12,26 @@ import kotlinx.coroutines.withContext
 object NotificationHelper {
 
     var unreadCount: Int = 0
+    private val repository = NotificationRepository()
 
     fun fetchUnreadCount(bottomNav: BottomNavigationView? = null) {
         val userId = CurrentCourse.userId
-        if (userId == 0) return
+        val courseId = CurrentCourse.courseId
+        val role = CurrentCourse.currentRole
+
+        if (userId == 0 || courseId == 0) return
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                val unread = if (role.equals("teacher", ignoreCase = true)) {
+                    val result = repository.getTeacherNotifications(userId, courseId)
+                    result.getOrNull()?.count { !it.isRead } ?: 0
+                } else {
+                    val result = repository.getStudentNotifications(userId, courseId)
+                    result.getOrNull()?.count { !it.isRead } ?: 0
+                }
 
-                val count = SupabaseService.client
-                    .from("notifications")
-                    .select(columns = Columns.list("id")) {
-                        filter {
-                            eq("user_id", userId)
-                            eq("is_read", false)
-                        }
-                        count(Count.EXACT)
-                    }.countOrNull() ?: 0
-
-                unreadCount = count.toInt()
+                unreadCount = unread
 
                 withContext(Dispatchers.Main) {
                     bottomNav?.let { nav ->
@@ -42,7 +39,7 @@ object NotificationHelper {
                     }
                 }
             } catch (e: Exception) {
-                Log.e("NotifHelper", "Error: ${e.message}")
+//                Log.e("NotifHelper", "Error: ${e.message}")
             }
         }
     }
