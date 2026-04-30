@@ -1,7 +1,9 @@
 package com.example.gr8math.Activity.StudentModule.ClassManager
 
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -9,6 +11,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.example.gr8math.Activity.GameActivity
 import com.example.gr8math.Activity.StudentModule.Badges.StudentBadgesActivity
 import com.example.gr8math.Activity.StudentModule.Grades.StudentGradesActivity
 import com.example.gr8math.Activity.StudentModule.Assessment.AssessmentDetailActivity
@@ -26,6 +29,8 @@ import com.example.gr8math.ViewModel.StudentClassPageViewModel
 import com.example.gr8math.ViewModel.StudentNavEvent
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import nl.dionsegijn.konfetti.xml.KonfettiView
 
 class StudentClassPageActivity : AppCompatActivity() {
     private var id: Int = 0
@@ -36,6 +41,8 @@ class StudentClassPageActivity : AppCompatActivity() {
     private lateinit var toolbar: MaterialToolbar
 
     private lateinit var emptyStateLayout: LinearLayout
+    private lateinit var konfettiView: KonfettiView
+    private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,7 +70,12 @@ class StudentClassPageActivity : AppCompatActivity() {
         bottomNav.selectedItemId = R.id.nav_class
         NotificationHelper.fetchUnreadCount(bottomNav)
         setupBottomNavListeners(bottomNav)
+
+        window.decorView.postDelayed({
+            checkPendingGameBadges()
+        }, 2000)
     }
+
 
     private fun setupBottomNav() {
         val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
@@ -99,10 +111,20 @@ class StudentClassPageActivity : AppCompatActivity() {
         findViewById<View>(R.id.btnParticipants).setOnClickListener {
             startActivity(Intent(this, StudentParticipantsActivity::class.java))
         }
-
+        konfettiView = findViewById(R.id.konfettiView)
         val gameCard: View = findViewById(R.id.game_card)
         gameCard.findViewById<TextView>(R.id.tvTitle).text = getString(R.string.play_a_game)
-        gameCard.setOnClickListener { /* Intent to Game Activity */ }
+        gameCard.setOnClickListener {
+            // 1. Create the intent to open our Unity wrapper
+            val intent = Intent(this, GameActivity::class.java)
+
+            // 2. Pass the student's ID so the game knows where to save badges in Supabase
+            intent.putExtra("student_id", CurrentCourse.userId)
+
+            // 3. Launch the game!
+            startActivity(intent)
+        }
+
     }
 
     private fun handleIntentData() {
@@ -180,6 +202,71 @@ class StudentClassPageActivity : AppCompatActivity() {
                 viewModel.clearNavEvent()
             }
         }
+    }
+
+    private fun checkPendingGameBadges() {
+        val file = java.io.File("/data/data/com.example.gr8math/files/pending_badges.txt")
+        Log.d("StudentClassPageActivity", "Checking file: ${file.absolutePath}, exists: ${file.exists()}")
+
+        if (file.exists()) {
+            val badges = file.readText().trim().split("\n").filter { it.isNotEmpty() }
+            Log.d("StudentClassPageActivity", "badges: $badges")
+            file.delete()
+            for (badgeName in badges) {
+                showGameBadgeDialog(badgeName)
+            }
+        }
+    }
+
+    private fun showGameBadgeDialog(badgeName: String) {
+        // Map the game badges to their images!
+        // (Make sure these match the actual names of your drawables in res/drawable)
+        val imageResource = when (badgeName) {
+            "First Escape!" -> R.drawable.badge_firstescape
+            "Perfect Escape!" -> R.drawable.badge_perfectescape
+            "First Exploration..." -> R.drawable.badge_firstescape
+            "Full Exploration..." -> R.drawable.badge_fullexplo
+            else -> R.drawable.badge_firsttimer
+        }
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_badge_acquired, null)
+
+        val ivBadge = dialogView.findViewById<ImageView>(R.id.ivDialogBadge)
+        val tvBadgeTitle = dialogView.findViewById<TextView>(R.id.tvDialogTitle)
+        val btnClose = dialogView.findViewById<ImageButton>(R.id.btnClose)
+
+        ivBadge.setImageResource(imageResource)
+        tvBadgeTitle.text = "$badgeName Badge!"
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.game_win)
+        mediaPlayer?.start()
+
+        val party = nl.dionsegijn.konfetti.core.Party(
+            speed = 0f,
+            maxSpeed = 30f,
+            damping = 0.9f,
+            spread = 360,
+            colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def, 0x1E4B95),
+            position = nl.dionsegijn.konfetti.core.Position.Relative(0.5, 0.3),
+            emitter = nl.dionsegijn.konfetti.core.emitter.Emitter(duration = 100, java.util.concurrent.TimeUnit.MILLISECONDS).max(100)
+        )
+        konfettiView.start(party)
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .setOnDismissListener {
+                mediaPlayer?.release()
+                mediaPlayer = null
+            }
+            .create()
+
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun handleNotificationIntent(intent: Intent?) {

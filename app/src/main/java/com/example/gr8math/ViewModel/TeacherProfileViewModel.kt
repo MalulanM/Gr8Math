@@ -55,7 +55,7 @@ class TeacherProfileViewModel : ViewModel() {
                 if (repository.updateUserField(userId, "profile_pic", publicUrl).isSuccess) loadProfile(userId)
                 else _uiState.value = ProfileUiState.Error("Failed to link image to profile")
             }.onFailure { exception ->
-                _uiState.value = ProfileUiState.Error(exception.message ?: "Failed to upload image")
+                _uiState.value = ProfileUiState.Error(mapErrorMessage(exception))
             }
         }
     }
@@ -78,9 +78,8 @@ class TeacherProfileViewModel : ViewModel() {
                     if (uploadResult.isSuccess) {
                         uploadedCertUrl = uploadResult.getOrNull()
                     } else {
-                        // 🌟 Show exact storage error
-                        val errorMsg = uploadResult.exceptionOrNull()?.message ?: "Unknown storage error"
-                        _uiState.value = ProfileUiState.Error("Upload failed: $errorMsg")
+                        val error = uploadResult.exceptionOrNull()
+                        _uiState.value = ProfileUiState.Error(mapErrorMessage(error))
                         return@launch
                     }
                 }
@@ -114,6 +113,21 @@ class TeacherProfileViewModel : ViewModel() {
             } else {
                 _uiState.value = ProfileUiState.Error("Failed to delete")
             }
+        }
+    }
+
+    private fun mapErrorMessage(error: Throwable?): String {
+        val message = error?.message ?: ""
+        return when {
+            // This catches the specific error shown in 1000113365.jpg
+            message.contains("SocketTimeoutException", ignoreCase = true) ||
+                    message.contains("timeout", ignoreCase = true) ->
+                "Connection timed out. Please check your internet and try again."
+
+            message.contains("Unable to resolve host", ignoreCase = true) ->
+                "No internet connection. Please check your settings."
+
+            else -> "Something went wrong. Please try again later."
         }
     }
 }

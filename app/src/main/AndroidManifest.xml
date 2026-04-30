@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -12,7 +13,8 @@
         android:roundIcon="@drawable/ic_gr8_logo"
         android:supportsRtl="true"
         android:theme="@style/Theme.Gr8Math"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        tools:replace="android:icon,android:theme,android:allowBackup,android:label">
 
         <!-- Splash Activity (Launcher) -->
         <activity
@@ -84,6 +86,7 @@
         <activity
             android:name=".Activity.StudentModule.ClassManager.StudentClassPageActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Gr8Math" >
 
         </activity>
@@ -254,6 +257,18 @@
             android:name=".Activity.TeacherModule.DLL.DllMasterEditorActivity"
             android:exported="false" />
 
+        <activity android:name=".Activity.GameActivity"
+            android:exported="true"
+            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale|layoutDirection|density"
+            android:hardwareAccelerated="true"
+            android:launchMode="singleTask"
+            android:resizeableActivity="false"
+            android:screenOrientation="fullSensor"
+            android:process=":Unity">
+
+            <meta-data android:name="android.app.lib_name" android:value="game" />
+        </activity>
+
         <service
             android:name=".Services.MyFirebaseMessagingService"
             android:exported="false">
@@ -271,7 +286,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-
 
 
     </application>

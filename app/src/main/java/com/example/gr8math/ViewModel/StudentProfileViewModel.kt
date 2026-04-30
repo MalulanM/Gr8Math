@@ -19,7 +19,7 @@ class StudentProfileViewModel : ViewModel() {
             _uiState.value = ProfileUiState.Loading
             repo.getStudentProfile(userId)
                 .onSuccess { _uiState.value = ProfileUiState.Success(it) }
-                .onFailure { _uiState.value = ProfileUiState.Error(it.message ?: "Failed to load profile") }
+                .onFailure { _uiState.value = ProfileUiState.Error(mapErrorMessage(it)) }
         }
     }
 
@@ -31,8 +31,8 @@ class StudentProfileViewModel : ViewModel() {
                 repo.updateField(userId, "user", "profile_pic", url).onSuccess {
                     loadProfile(userId) // Refresh to clear loading state
                 }
-            }.onFailure {
-                _uiState.value = ProfileUiState.Error("Failed to upload profile picture")
+            }.onFailure { error ->
+                _uiState.value = ProfileUiState.Error(mapErrorMessage(error))
             }
         }
     }
@@ -54,6 +54,21 @@ class StudentProfileViewModel : ViewModel() {
             }.onFailure {
                 _uiState.value = ProfileUiState.Error("Failed to update badges.")
             }
+        }
+    }
+
+    private fun mapErrorMessage(error: Throwable?): String {
+        val message = error?.message ?: ""
+        return when {
+            // This targets the specific error seen in 1000113365.jpg
+            message.contains("SocketTimeoutException", ignoreCase = true) ||
+                    message.contains("timeout", ignoreCase = true) ->
+                "Connection timed out. Please check your internet and try again."
+
+            message.contains("Unable to resolve host", ignoreCase = true) ->
+                "No internet connection available."
+
+            else -> "Something went wrong. Please try again later."
         }
     }
 }

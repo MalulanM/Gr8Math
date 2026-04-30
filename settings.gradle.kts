@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Gr8Math"
 include(":app")
+include(":unityLibrary")

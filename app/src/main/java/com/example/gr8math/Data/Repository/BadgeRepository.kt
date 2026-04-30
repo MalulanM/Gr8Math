@@ -107,4 +107,53 @@ class BadgeRepository {
             }
         }
     }
+
+    suspend fun awardGameBadgeFromUnity(userId: Int, badgeId: Int): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                // 1. Convert the app's user_id into the database's student_id
+                val studentRecord = db.from("student")
+                    .select(columns = Columns.list("id")) {
+                        filter { eq("user_id", userId) }
+                    }.decodeSingleOrNull<StudentIdRes>()
+
+                if (studentRecord == null) {
+                    Log.e("BadgeRepo", "Could not find student profile for User ID: $userId")
+                    return@withContext null
+                }
+                val actualStudentId = studentRecord.id
+
+                // 2. Check if the student already earned this specific game badge
+                val existingBadge = db.from("student_badges")
+                    .select(columns = Columns.list("badge_id")) {
+                        filter {
+                            eq("student_id", actualStudentId)
+                            eq("badge_id", badgeId)
+                        }
+                    }.decodeSingleOrNull<ExistingBadgeRes>()
+
+                if (existingBadge != null) {
+                    Log.d("BadgeRepo", "Student already has game badge $badgeId. Skipping.")
+                    return@withContext null // Return null so we don't show a Toast duplicate
+                }
+
+                // 3. Insert the new badge into the database!
+                db.from("student_badges").insert(
+                    StudentBadgeInsert(student_id = actualStudentId, badge_id = badgeId)
+                )
+
+                // 4. Fetch the actual badge name so we can show it in the popup Toast
+                val badgeDef = db.from("badges")
+                    .select(columns = Columns.list("id", "badge_name")) {
+                        filter { eq("id", badgeId) }
+                    }.decodeSingleOrNull<BadgeRes>()
+
+                return@withContext badgeDef?.badge_name ?: "Secret Game Badge"
+
+            } catch (e: Exception) {
+                Log.e("BadgeRepo", "Error saving game badge: ${e.message}")
+                return@withContext null
+            }
+        }
+    }
 }

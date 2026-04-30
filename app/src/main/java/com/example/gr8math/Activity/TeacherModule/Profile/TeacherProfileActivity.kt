@@ -288,7 +288,6 @@ class TeacherProfileActivity : AppCompatActivity() {
         etNewPass.addTextChangedListener(watcher)
         etConfirmPass.addTextChangedListener(watcher)
 
-        // ... inside showDirectChangePasswordDialog ...
 
         btnSave.setOnClickListener {
             val pass = etNewPass.text.toString()
