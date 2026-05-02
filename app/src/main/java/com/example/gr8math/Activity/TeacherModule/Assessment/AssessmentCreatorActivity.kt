@@ -493,33 +493,38 @@ class AssessmentCreatorActivity : AppCompatActivity() {
             for (i in 0 until jsonArray.length()) {
                 val topicObj = jsonArray.getJSONObject(i)
                 val topicName = topicObj.getString("topic")
-                val questionsArray = topicObj.getJSONArray("questions")
+                val questionsArray = topicObj.optJSONArray("questions")
 
                 val questionsList = mutableListOf<AssessmentQuestion>()
-                for (j in 0 until questionsArray.length()) {
-                    val qObj = questionsArray.getJSONObject(j)
-                    val choices = mutableListOf<String>()
-                    val cArr = qObj.getJSONArray("choices")
-                    for (k in 0 until cArr.length()) choices.add(cArr.getString(k))
 
-                    val correctAnswers = mutableListOf<String>()
-                    val caArr = qObj.getJSONArray("correctAnswers")
-                    for (k in 0 until caArr.length()) correctAnswers.add(caArr.getString(k))
+                // Only loop if the array actually exists
+                if (questionsArray != null) {
+                    for (j in 0 until questionsArray.length()) {
+                        val qObj = questionsArray.getJSONObject(j)
+                        val choices = mutableListOf<String>()
+                        val cArr = qObj.optJSONArray("choices")
+                        if (cArr != null) {
+                            for (k in 0 until cArr.length()) choices.add(cArr.getString(k))
+                        }
 
-                    val type = qObj.getString("type")
-                    val points = if (qObj.has("points")) qObj.getInt("points") else 1
-                    var correctIndex = -1
-                    var correctText = ""
-                    if (correctAnswers.isNotEmpty()) {
-                        correctText = correctAnswers[0]
-                        correctIndex = choices.indexOf(correctText)
+                        val type = qObj.optString("type", "Multiple Choice")
+                        val points = qObj.optInt("points", 1)
+
+                        questionsList.add(AssessmentQuestion(
+                            type = type,
+                            questionText = qObj.optString("question", ""),
+                            choices = choices,
+                            points = points
+                        ))
                     }
-
-                    questionsList.add(AssessmentQuestion(type, qObj.getString("question"), "", "", choices, correctIndex, points, correctText, ""))
                 }
+
+                // This now adds the topic even if questionsList is empty!
                 bankList.add(com.example.gr8math.Data.Repository.WordBankItem(topicName, questionsList))
             }
-        } catch (e: Exception) { e.printStackTrace() }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         return bankList
     }
 
@@ -537,7 +542,6 @@ class AssessmentCreatorActivity : AppCompatActivity() {
 
         val spinnerLabels = mutableListOf<String>()
 
-        // 🌟 FIX 3: Explicitly use the Repository Type to match the fetch result
         val bankMap = mutableMapOf<String, com.example.gr8math.Data.Repository.WordBankItem>()
 
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, spinnerLabels)
@@ -574,58 +578,74 @@ class AssessmentCreatorActivity : AppCompatActivity() {
         val updateQuestionsList = { selectedBank: com.example.gr8math.Data.Repository.WordBankItem? ->
             llQuestions.removeAllViews()
 
+            // 1. HEADER (Matches "No Question Topic" in web)
+            val tvTopicHeader = TextView(this).apply {
+                text = selectedBank?.topic ?: "Select a Topic"
+                // FIX: Use TypedValue for SP units
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 18f)
+                setTextColor(Color.parseColor("#1A4C8B"))
+                val font = ResourcesCompat.getFont(this@AssessmentCreatorActivity, R.font.lexend)
+                setTypeface(font, android.graphics.Typeface.BOLD)
+
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    // FIX: Manual margins instead of marginHorizontal
+                    setMargins(0, 0, 0, 48)
+                }
+            }
+            llQuestions.addView(tvTopicHeader)
+
             val questions = selectedBank?.questions ?: emptyList()
 
             if (questions.isEmpty()) {
-                // --- MAIN CONTENT EMPTY STATE (MATCHING WEB) ---
+                // 2. DASHED BOX CONTAINER
                 val emptyStateContainer = LinearLayout(this).apply {
                     orientation = LinearLayout.VERTICAL
                     gravity = android.view.Gravity.CENTER
-                    setPadding(64, 128, 64, 128)
+                    setPadding(40, 120, 40, 120)
 
-                    // Web Design: border-2 border-dashed border-[#D1D8DD] rounded-2xl bg-[#F4F6F8]
                     val shape = android.graphics.drawable.GradientDrawable()
-                    shape.cornerRadius = 32f
-                    // setStroke parameters: width, color, dashWidth, dashGap
-                    shape.setStroke(4, Color.parseColor("#D1D8DD"), 20f, 20f)
+                    shape.cornerRadius = 40f
+                    // DASHED BORDER: width, color, dashWidth, dashGap
+                    shape.setStroke(4, Color.parseColor("#D1D8DD"), 20f, 15f)
                     shape.setColor(Color.parseColor("#F4F6F8"))
                     background = shape
 
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
-                    ).apply { setMargins(0, 32, 0, 32) }
+                    )
                 }
 
-                // Circular Icon Background
+                // 3. ICON (Grey circle with ic_info)
                 val iconContainer = FrameLayout(this).apply {
-                    val iconShape = android.graphics.drawable.GradientDrawable()
-                    iconShape.shape = android.graphics.drawable.GradientDrawable.OVAL
-                    iconShape.setColor(Color.parseColor("#D1D8DD"))
-                    background = iconShape
-                    setPadding(32, 32, 32, 32)
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    ).apply { bottomMargin = 32 }
+                    val circle = android.graphics.drawable.GradientDrawable()
+                    circle.shape = android.graphics.drawable.GradientDrawable.OVAL
+                    circle.setColor(Color.parseColor("#D1D8DD"))
+                    background = circle
+
+                    layoutParams = LinearLayout.LayoutParams(140, 140).apply {
+                        bottomMargin = 40
+                    }
                 }
 
-                // Simple 'i' or '!' Icon to replicate the SVG
-                val tvIcon = TextView(this).apply {
-                    text = "!"
-                    textSize = 24f
-                    setTextColor(Color.parseColor("#888888"))
-                    setTypeface(null, android.graphics.Typeface.BOLD)
-                    gravity = android.view.Gravity.CENTER
+                val ivIcon = ImageView(this).apply {
+                    setImageResource(R.drawable.ic_info)
+                    setColorFilter(Color.parseColor("#888888"))
+                    setPadding(35, 35, 35, 35)
                 }
-                iconContainer.addView(tvIcon)
+                iconContainer.addView(ivIcon)
 
-                // Title
+                // 4. TITLE ("NO QUESTIONS FOUND.")
                 val tvTitle = TextView(this).apply {
                     text = "NO QUESTIONS FOUND."
-                    textSize = 16f
+                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 16f)
                     setTextColor(Color.parseColor("#222222"))
-                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    letterSpacing = 0.03f
+                    val font = ResourcesCompat.getFont(this@AssessmentCreatorActivity, R.font.lexend)
+                    setTypeface(font, android.graphics.Typeface.BOLD)
                     gravity = android.view.Gravity.CENTER
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -633,24 +653,30 @@ class AssessmentCreatorActivity : AppCompatActivity() {
                     ).apply { bottomMargin = 16 }
                 }
 
-                // Subtitle
+                // 5. SUBTITLE
                 val tvSubtitle = TextView(this).apply {
                     text = "This topic currently has no recorded questions. Try selecting another topic or creating a new question manually."
-                    textSize = 13f
+                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13f)
                     setTextColor(Color.parseColor("#666666"))
+
+                    // FIX: Use setLineSpacing(add, mult) to avoid 'val' error
+                    setLineSpacing(0f, 1.2f)
+
+                    val font = ResourcesCompat.getFont(this@AssessmentCreatorActivity, R.font.lexend)
+                    setTypeface(font, android.graphics.Typeface.NORMAL)
                     gravity = android.view.Gravity.CENTER
                     layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
-                    )
+                    ).apply {
+                        setMargins(60, 0, 60, 0)
+                    }
                 }
 
                 emptyStateContainer.addView(iconContainer)
                 emptyStateContainer.addView(tvTitle)
                 emptyStateContainer.addView(tvSubtitle)
-
                 llQuestions.addView(emptyStateContainer)
-
             } else {
                 // --- RENDER QUESTIONS ---
                 questions.forEach { q ->
