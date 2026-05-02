@@ -5,6 +5,7 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -12,6 +13,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gr8math.Activity.StudentModule.ClassManager.StudentClassPageActivity
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
 import com.example.gr8math.ViewModel.AssessmentResultViewModel
@@ -62,7 +64,39 @@ class AssessmentResultActivity : AppCompatActivity() {
 
         studentId = intent.getIntExtra("student_id", 0)
 
+
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        // Let the gatekeeper handle parsing the data and starting the timer!
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val mainContent = findViewById<View>(R.id.mainContent)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the results
+            noInternetView?.visibility = View.VISIBLE
+            mainContent?.visibility = View.INVISIBLE // Use INVISIBLE instead of GONE so it doesn't mess up your constraints
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show the results
+        noInternetView?.visibility = View.GONE
+        mainContent?.visibility = View.VISIBLE
+
+        // 3. Fetch your actual data
+        val assessmentId = intent.getIntExtra("assessment_id", 0)
         Log.e("ASSESwderf", assessmentId.toString())
+
         if (assessmentId != 0) {
             viewModel.loadResult(assessmentId)
         } else {

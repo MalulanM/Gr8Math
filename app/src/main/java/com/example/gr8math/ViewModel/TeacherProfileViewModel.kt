@@ -30,11 +30,13 @@ class TeacherProfileViewModel : ViewModel() {
         }
     }
 
+
     fun updateUserProfile(userId: Int, dbColumn: String, value: String) {
         _uiState.value = ProfileUiState.Loading
         viewModelScope.launch {
-            if (repository.updateUserField(userId, dbColumn, value).isSuccess) loadProfile(userId)
-            else _uiState.value = ProfileUiState.Error("Failed to update user profile")
+            repository.updateUserField(userId, dbColumn, value)
+                .onSuccess { loadProfile(userId) }
+                .onFailure { _uiState.value = ProfileUiState.Error(mapErrorMessage(it)) }
         }
     }
 
@@ -42,8 +44,9 @@ class TeacherProfileViewModel : ViewModel() {
         _uiState.value = ProfileUiState.Loading
         viewModelScope.launch {
             currentTeacherId?.let { tId ->
-                if (repository.updateTeacherField(tId, dbColumn, value).isSuccess) loadProfile(userId)
-                else _uiState.value = ProfileUiState.Error("Failed to update teacher profile")
+                repository.updateTeacherField(tId, dbColumn, value)
+                    .onSuccess { loadProfile(userId) }
+                    .onFailure { _uiState.value = ProfileUiState.Error(mapErrorMessage(it)) }
             }
         }
     }

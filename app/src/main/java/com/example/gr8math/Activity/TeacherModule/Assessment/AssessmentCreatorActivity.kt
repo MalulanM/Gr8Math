@@ -27,6 +27,7 @@ import com.example.gr8math.Data.Repository.WordBankItem
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
 import com.example.gr8math.Services.TigrisService
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
 import com.example.gr8math.ViewModel.AssessmentFetchState
@@ -101,12 +102,43 @@ class AssessmentCreatorActivity : AppCompatActivity() {
         setupListeners()
         setupObservers()
 
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        // Let the gatekeeper handle the network check and data loading
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val scrollView = findViewById<View>(R.id.scrollView)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the editor form
+            noInternetView?.visibility = View.VISIBLE
+            scrollView?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show editor form
+        noInternetView?.visibility = View.GONE
+        scrollView?.visibility = View.VISIBLE
+
+        // 3. Fetch your actual data or setup a blank form
         if (editAssessmentId != -1) {
             viewModel.loadExistingAssessment(editAssessmentId)
         } else {
-            addNewQuestion(null)
-            hasUnsavedChanges = false
-            updatePublishButtonState()
+            if (questionManagers.isEmpty()) {
+                addNewQuestion(null)
+                hasUnsavedChanges = false
+                updatePublishButtonState()
+            }
         }
     }
 
@@ -541,35 +573,202 @@ class AssessmentCreatorActivity : AppCompatActivity() {
 
         val updateQuestionsList = { selectedBank: com.example.gr8math.Data.Repository.WordBankItem? ->
             llQuestions.removeAllViews()
-            selectedBank?.questions?.forEach { q ->
-                val card = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setPadding(48, 48, 48, 48) // Web padding
 
-                    // Web Design: bg-[#F4F6F8] border-2 border-[#D1D8DD] rounded-xl
+            val questions = selectedBank?.questions ?: emptyList()
+
+            if (questions.isEmpty()) {
+                // --- MAIN CONTENT EMPTY STATE (MATCHING WEB) ---
+                val emptyStateContainer = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = android.view.Gravity.CENTER
+                    setPadding(64, 128, 64, 128)
+
+                    // Web Design: border-2 border-dashed border-[#D1D8DD] rounded-2xl bg-[#F4F6F8]
                     val shape = android.graphics.drawable.GradientDrawable()
                     shape.cornerRadius = 32f
-                    shape.setStroke(4, Color.parseColor("#D1D8DD"))
+                    // setStroke parameters: width, color, dashWidth, dashGap
+                    shape.setStroke(4, Color.parseColor("#D1D8DD"), 20f, 20f)
                     shape.setColor(Color.parseColor("#F4F6F8"))
                     background = shape
 
-                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, 32) }
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { setMargins(0, 32, 0, 32) }
                 }
 
-                val tvType = TextView(this).apply { text = "[${q.type}]"; textSize = 10f; setTextColor(Color.parseColor("#1A4C8B")); setTypeface(null, android.graphics.Typeface.BOLD) }
-                val tvQ = TextView(this).apply { text = q.questionText; textSize = 14f; setTextColor(Color.BLACK); setTypeface(null, android.graphics.Typeface.BOLD); setPadding(0, 8, 0, 16) }
-                val btnAdd = Button(this).apply {
-                    text = "+ Add to Assessment"
-                    setBackgroundColor(Color.parseColor("#1A4C8B"))
-                    setTextColor(Color.WHITE)
-                    setOnClickListener {
-                        addNewQuestion(AssessmentQuestion(q.type, q.questionText, q.imageUrl, q.pendingQuestionImageUri, q.choices.toMutableList(), q.correctAnswerIndex, q.points, q.correctTextAnswer, q.pendingAnswerImageUri))
-                        hasUnsavedChanges = true
-                        updatePublishButtonState()
-                        dialog.dismiss()
-                    }
+                // Circular Icon Background
+                val iconContainer = FrameLayout(this).apply {
+                    val iconShape = android.graphics.drawable.GradientDrawable()
+                    iconShape.shape = android.graphics.drawable.GradientDrawable.OVAL
+                    iconShape.setColor(Color.parseColor("#D1D8DD"))
+                    background = iconShape
+                    setPadding(32, 32, 32, 32)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { bottomMargin = 32 }
                 }
-                card.addView(tvType); card.addView(tvQ); card.addView(btnAdd); llQuestions.addView(card)
+
+                // Simple 'i' or '!' Icon to replicate the SVG
+                val tvIcon = TextView(this).apply {
+                    text = "!"
+                    textSize = 24f
+                    setTextColor(Color.parseColor("#888888"))
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    gravity = android.view.Gravity.CENTER
+                }
+                iconContainer.addView(tvIcon)
+
+                // Title
+                val tvTitle = TextView(this).apply {
+                    text = "NO QUESTIONS FOUND."
+                    textSize = 16f
+                    setTextColor(Color.parseColor("#222222"))
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    gravity = android.view.Gravity.CENTER
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { bottomMargin = 16 }
+                }
+
+                // Subtitle
+                val tvSubtitle = TextView(this).apply {
+                    text = "This topic currently has no recorded questions. Try selecting another topic or creating a new question manually."
+                    textSize = 13f
+                    setTextColor(Color.parseColor("#666666"))
+                    gravity = android.view.Gravity.CENTER
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+
+                emptyStateContainer.addView(iconContainer)
+                emptyStateContainer.addView(tvTitle)
+                emptyStateContainer.addView(tvSubtitle)
+
+                llQuestions.addView(emptyStateContainer)
+
+            } else {
+                // --- RENDER QUESTIONS ---
+                questions.forEach { q ->
+                    // 1. Change to RelativeLayout for absolute positioning
+                    val card = RelativeLayout(this).apply {
+                        setPadding(48, 48, 48, 48)
+
+                        val defaultShape = android.graphics.drawable.GradientDrawable().apply {
+                            cornerRadius = 32f
+                            setStroke(4, Color.parseColor("#D1D8DD")) // Default Gray border
+                            setColor(Color.WHITE)
+                        }
+
+                        val pressedShape = android.graphics.drawable.GradientDrawable().apply {
+                            cornerRadius = 32f
+                            setStroke(6, Color.parseColor("#EFBD31")) // Yellow border, slightly thicker
+                            setColor(Color.WHITE)
+                        }
+
+                        background = defaultShape
+
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply { setMargins(0, 0, 0, 32) }
+
+                        isClickable = true // Required for touch events to register on the layout
+
+                        // Simulate 'hover' effect using touch events
+                        setOnTouchListener { view, event ->
+                            when (event.action) {
+                                android.view.MotionEvent.ACTION_DOWN -> {
+                                    view.background = pressedShape
+                                }
+                                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                                    view.background = defaultShape
+                                }
+                            }
+                            false // Return false so the click event can still pass through to child buttons
+                        }
+                    }
+
+                    // 2. The Type Badge (Top Right)
+                    val tvType = TextView(this).apply {
+                        id = View.generateViewId()
+                        text = q.type.uppercase()
+                        textSize = 10f
+                        setTextColor(Color.parseColor("#1E4B95"))
+                        setTypeface(null, android.graphics.Typeface.BOLD)
+                        setPadding(24, 12, 24, 12)
+
+                        val badgeShape = android.graphics.drawable.GradientDrawable()
+                        badgeShape.cornerRadius = 12f
+                        badgeShape.setColor(Color.parseColor("#F4EFED"))
+                        background = badgeShape
+
+                        layoutParams = RelativeLayout.LayoutParams(
+                            RelativeLayout.LayoutParams.WRAP_CONTENT,
+                            RelativeLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            addRule(RelativeLayout.ALIGN_PARENT_END) // Aligns to right
+                            addRule(RelativeLayout.ALIGN_PARENT_TOP) // Aligns to top
+                        }
+                    }
+
+                    // 3. The Question Text
+                    val tvQ = TextView(this).apply {
+                        id = View.generateViewId()
+                        text = q.questionText
+                        textSize = 15f
+                        setTextColor(Color.parseColor("#222222"))
+                        setTypeface(null, android.graphics.Typeface.BOLD)
+
+                        layoutParams = RelativeLayout.LayoutParams(
+                            RelativeLayout.LayoutParams.MATCH_PARENT,
+                            RelativeLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            addRule(RelativeLayout.ALIGN_PARENT_START)
+                            addRule(RelativeLayout.ALIGN_PARENT_TOP)
+                            // Right margin (250) prevents long text from overlapping the badge
+                            setMargins(0, 24, 250, 48)
+                        }
+                    }
+
+                    // 4. The Action Button
+                    val btnAdd = Button(this).apply {
+                        text = "+ Add to Assessment"
+                        isAllCaps = false
+                        textSize = 13f
+                        setTextColor(Color.parseColor("#1A4C8B"))
+                        setTypeface(null, android.graphics.Typeface.BOLD)
+                        stateListAnimator = null // Removes Android's default button drop-shadow
+
+                        val btnShape = android.graphics.drawable.GradientDrawable()
+                        btnShape.cornerRadius = 24f
+                        btnShape.setColor(Color.parseColor("#EBF0F5")) // Matches web 10% opacity blue
+                        background = btnShape
+
+                        layoutParams = RelativeLayout.LayoutParams(
+                            RelativeLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            addRule(RelativeLayout.BELOW, tvQ.id) // Places button directly below text
+                        }
+
+                        setOnClickListener {
+                            addNewQuestion(AssessmentQuestion(q.type, q.questionText, q.imageUrl, q.pendingQuestionImageUri, q.choices.toMutableList(), q.correctAnswerIndex, q.points, q.correctTextAnswer, q.pendingAnswerImageUri))
+                            hasUnsavedChanges = true
+                            updatePublishButtonState()
+                            dialog.dismiss()
+                        }
+                    }
+
+                    card.addView(tvType)
+                    card.addView(tvQ)
+                    card.addView(btnAdd)
+                    llQuestions.addView(card)
+                }
             }
         }
 

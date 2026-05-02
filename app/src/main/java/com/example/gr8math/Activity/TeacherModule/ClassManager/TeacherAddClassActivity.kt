@@ -74,14 +74,15 @@ class TeacherAddClassActivity : AppCompatActivity() {
         etEndTime.setOnClickListener { showTimePicker(etEndTime, "Select End Time") }
 
         btnCreateClass.setOnClickListener {
-            validateEmptyFields()
+            // CHANGE: Only proceed if local validation passes
+            if (validateEmptyFields()) {
+                val section = etSection.text.toString().trim()
+                val students = etNumStudents.text.toString().trim()
+                val start = etStartTime.tag?.toString()
+                val end = etEndTime.tag?.toString()
 
-            val section = etSection.text.toString().trim()
-            val students = etNumStudents.text.toString().trim()
-            val start = etStartTime.tag?.toString()
-            val end = etEndTime.tag?.toString()
-
-            viewModel.createClass(adviserId, section, students, start, end)
+                viewModel.createClass(adviserId, section, students, start, end)
+            }
         }
     }
 
@@ -99,19 +100,30 @@ class TeacherAddClassActivity : AppCompatActivity() {
                 is AddClassState.Error -> {
                     setInputsEnabled(true)
 
-                    // Route specific errors to the exact UI fields, just like the web!
                     when {
                         state.message.contains("needed details") -> {
                             validateEmptyFields()
+                            viewModel.resetState()
                         }
                         state.message.contains("positive number") -> {
-                            UIUtils.errorDisplay(this, tilNumStudents, etNumStudents, true, state.message)
+                            // Using direct error setting to ensure visibility
+                            tilNumStudents.isErrorEnabled = true
+                            tilNumStudents.error = state.message
+                            etNumStudents.requestFocus()
+                            viewModel.resetState()
                         }
                         state.message.contains("Already have a class") -> {
-                            UIUtils.errorDisplay(this, tilSection, etSection, true, state.message)
+                            tilSection.setErrorIconDrawable(R.drawable.ic_warning)
+                            tilSection.isErrorEnabled = true
+                            tilSection.error = state.message
+                            etSection.requestFocus() // Highlight the field for the user
+
+                            android.util.Log.d("AddClass", "Error set directly: ${tilSection.error}")
+                            viewModel.resetState()
                         }
                         else -> {
                             ShowToast.showMessage(this, state.message)
+                            viewModel.resetState()
                         }
                     }
                 }
@@ -120,23 +132,44 @@ class TeacherAddClassActivity : AppCompatActivity() {
         }
     }
 
-    private fun validateEmptyFields() {
-        // Clear errors first
+    private fun validateEmptyFields(): Boolean {
+        var isValid = true
+
+        // Clear all errors first
         UIUtils.errorDisplay(this, tilSection, etSection, false, "")
         UIUtils.errorDisplay(this, tilNumStudents, etNumStudents, false, "")
+        UIUtils.errorDisplay(this, tilStartTime, etStartTime, false, "")
+        UIUtils.errorDisplay(this, tilEndTime, etEndTime, false, "")
 
         // Class Name Validation
         if (etSection.text.toString().trim().isEmpty()) {
             UIUtils.errorDisplay(this, tilSection, etSection, true, "Please enter the needed details.")
+            isValid = false
         }
 
         // Number of Students Validation
         val studentsText = etNumStudents.text.toString().trim()
         if (studentsText.isEmpty()) {
-            UIUtils.errorDisplay(this, tilNumStudents, etNumStudents, true, "Please enter the needed details")
+            UIUtils.errorDisplay(this, tilNumStudents, etNumStudents, true, "Please enter the needed details.")
+            isValid = false
         } else if ((studentsText.toIntOrNull() ?: 0) <= 0) {
             UIUtils.errorDisplay(this, tilNumStudents, etNumStudents, true, "Must be a valid positive number.")
+            isValid = false
         }
+
+        // Start Time Validation (Check if text is empty or tag is null)
+        if (etStartTime.text.toString().trim().isEmpty()) {
+            UIUtils.errorDisplay(this, tilStartTime, etStartTime, true, "Please enter the needed details.")
+            isValid = false
+        }
+
+        // End Time Validation
+        if (etEndTime.text.toString().trim().isEmpty()) {
+            UIUtils.errorDisplay(this, tilEndTime, etEndTime, true, "Please enter the needed details.")
+            isValid = false
+        }
+
+        return isValid
     }
 
     private fun showTimePicker(timeEditText: TextInputEditText, title: String) {

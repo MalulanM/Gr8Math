@@ -10,6 +10,7 @@ import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,6 +24,7 @@ import aws.smithy.kotlin.runtime.content.ByteStream
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
 import com.example.gr8math.Services.TigrisService
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
 import com.example.gr8math.ViewModel.LessonContentViewModel
@@ -81,6 +83,44 @@ class LessonContentActivity : AppCompatActivity() {
         setupEditorToolbar()
         setupObservers()
 
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        // Let the gatekeeper handle the network check and data loading
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val cardContent = findViewById<View>(R.id.cardContent)
+        val btnSave = findViewById<View>(R.id.btnSave)
+        val btnToggleFormat = findViewById<View>(R.id.btnToggleFormat)
+        val editorToolbar = findViewById<View>(R.id.editorToolbar)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the editor and buttons
+            noInternetView?.visibility = View.VISIBLE
+            cardContent?.visibility = View.GONE
+            btnSave?.visibility = View.GONE
+            btnToggleFormat?.visibility = View.GONE
+            editorToolbar?.visibility = View.GONE // Hide the format bar if it's open
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show editor and buttons
+        noInternetView?.visibility = View.GONE
+        cardContent?.visibility = View.VISIBLE
+        btnSave?.visibility = View.VISIBLE
+        btnToggleFormat?.visibility = View.VISIBLE
+
+
+        // 3. Fetch your actual data
         if (lessonId > 0) {
             viewModel.loadLesson(lessonId)
         }
@@ -410,7 +450,13 @@ class LessonContentActivity : AppCompatActivity() {
                 is LessonState.Loading -> UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
                 is LessonState.Saved -> {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                    ShowToast.showMessage(this, "Lesson saved!")
+                    val successMessage = if (lessonId > 0) {
+                        "Lesson edited!"
+                    } else {
+                        "Lesson posted!"
+                    }
+
+                    ShowToast.showMessage(this, successMessage)
                     setResult(RESULT_OK)
                     finish()
                 }

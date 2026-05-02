@@ -5,10 +5,12 @@ import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
 import com.example.gr8math.ViewModel.LessonContentViewModel
@@ -36,6 +38,42 @@ class LessonDetailActivity : AppCompatActivity() {
         initViews()
         setupObservers()
 
+        // 🚨 Removed the loose lesson check and viewModel.loadLesson() from here!
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        // Let the gatekeeper handle the network check and data loading
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val webViewContent = findViewById<View>(R.id.webViewContent)
+        val tvWeek = findViewById<View>(R.id.tvWeek)
+        val tvTitle = findViewById<View>(R.id.tvTitle)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the lesson content
+            noInternetView?.visibility = View.VISIBLE
+            webViewContent?.visibility = View.GONE
+            tvWeek?.visibility = View.GONE
+            tvTitle?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show content
+        noInternetView?.visibility = View.GONE
+        webViewContent?.visibility = View.VISIBLE
+        tvWeek?.visibility = View.VISIBLE
+        tvTitle?.visibility = View.VISIBLE
+
+        // 3. Fetch your actual data
         val lessonId = intent.getIntExtra("lesson_id", 0)
         if (lessonId > 0) {
             viewModel.loadLesson(lessonId)

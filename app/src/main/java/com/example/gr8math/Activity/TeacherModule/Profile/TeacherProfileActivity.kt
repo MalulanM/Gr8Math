@@ -34,6 +34,7 @@ import com.example.gr8math.Activity.LoginAndRegister.ForgotPasswordActivity
 import com.example.gr8math.Data.Repository.TeacherAchievementEntity
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
 import com.google.android.material.appbar.MaterialToolbar
@@ -103,6 +104,35 @@ class TeacherProfileActivity : AppCompatActivity() {
         setupListeners()
         observeViewModel()
 
+
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val scrollView = findViewById<View>(R.id.scrollView)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the main content
+            noInternetView?.visibility = View.VISIBLE
+            scrollView?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show main content
+        noInternetView?.visibility = View.GONE
+        scrollView?.visibility = View.VISIBLE
+
+        // 3. Fetch your actual data
         viewModel.loadProfile(userId)
     }
 
@@ -164,11 +194,32 @@ class TeacherProfileActivity : AppCompatActivity() {
                     }
                     is ProfileUiState.Error -> {
                         UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                        ShowToast.showMessage(this@TeacherProfileActivity, state.message)
+
+
+                        MaterialAlertDialogBuilder(this@TeacherProfileActivity)
+                            .setTitle("Update Failed")
+                            .setMessage(state.message)
+                            .setPositiveButton("Try Again") { dialog, _ ->
+                                loadData() // Re-checks internet and refreshes
+                                dialog.dismiss()
+                            }
+                            .setNegativeButton("Dismiss", null)
+                            .show()
+
+                        // Reset icons and toggles
+                        resetAllEditStates()
                     }
                 }
             }
         }
+    }
+
+    private fun resetAllEditStates() {
+        isEditingFirstName = false
+        isEditingLastName = false
+        setEditMode(etFirstName, ivEditFirstName, false)
+        setEditMode(etLastName, ivEditLastName, false)
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
     }
 
     private fun populateUI(data: com.example.gr8math.Data.Repository.TeacherProfileData) {
@@ -199,6 +250,11 @@ class TeacherProfileActivity : AppCompatActivity() {
     private fun setupListeners() {
         ivEditFirstName.setOnClickListener {
             if (isEditingFirstName) {
+                if (!NetworkUtils.isConnected(this)) {
+                    ShowToast.showMessage(this, "No internet connection. Cannot save.")
+                    return@setOnClickListener
+                }
+
                 val newName = etFirstName.text.toString().trim()
                 if (newName.isEmpty()) {
                     ShowToast.showMessage(this, "First name cannot be empty.")
@@ -217,6 +273,10 @@ class TeacherProfileActivity : AppCompatActivity() {
 
         ivEditLastName.setOnClickListener {
             if (isEditingLastName) {
+                if (!NetworkUtils.isConnected(this)) {
+                    ShowToast.showMessage(this, "No internet connection. Cannot save.")
+                    return@setOnClickListener
+                }
                 val newName = etLastName.text.toString().trim()
                 if (newName.isEmpty()) {
                     ShowToast.showMessage(this, "Last name cannot be empty.")
@@ -233,16 +293,30 @@ class TeacherProfileActivity : AppCompatActivity() {
         }
 
         etTeachingPos.setOnItemClickListener { parent, _, position, _ ->
+            if (!NetworkUtils.isConnected(this)) {
+                ShowToast.showMessage(this, "No internet connection.  Cannot save.")
+                loadData()
+                return@setOnItemClickListener
+            }
             viewModel.updateTeacherProfile(userId, "teaching_position", parent.getItemAtPosition(position).toString())
         }
 
         etGender.setOnItemClickListener { parent, _, position, _ ->
+            if (!NetworkUtils.isConnected(this)) {
+                ShowToast.showMessage(this, "No internet connection. Cannot save.")
+                loadData()
+                return@setOnItemClickListener
+            }
             viewModel.updateUserProfile(userId, "gender", parent.getItemAtPosition(position).toString())
         }
 
         etDob.setOnClickListener {
             val cal = Calendar.getInstance()
             DatePickerDialog(this, { _, year, month, day ->
+                if (!NetworkUtils.isConnected(this)) {
+                    ShowToast.showMessage(this, "No internet connection. Cannot save.")
+                    return@DatePickerDialog
+                }
                 val selected = Calendar.getInstance().apply { set(year, month, day) }
                 viewModel.updateUserProfile(userId, "birthdate", SimpleDateFormat("yyyy-MM-dd", Locale.US).format(selected.time))
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
@@ -256,6 +330,10 @@ class TeacherProfileActivity : AppCompatActivity() {
         ivEditAchievements.setOnClickListener { showAddAchievementDialog() }
 
         editPfp.setOnClickListener {
+            if (!NetworkUtils.isConnected(this)) {
+                ShowToast.showMessage(this, "No internet connection. Cannot save.")
+                return@setOnClickListener
+            }
             isUploadingProfilePic = true
             showUploadSourceDialog()
         }
@@ -404,6 +482,10 @@ class TeacherProfileActivity : AppCompatActivity() {
             .setTitle("Remove Achievement")
             .setMessage("Are you sure you want to delete this achievement?")
             .setNeutralButton("Yes") { _, _ ->
+                if (!NetworkUtils.isConnected(this)) {
+                    ShowToast.showMessage(this, "No internet connection. Cannot save.")
+                    return@setNeutralButton
+                }
                 viewModel.deleteAchievement(achievementId, achievement.certificate)
             }
             .setPositiveButton("No", null)
@@ -428,6 +510,10 @@ class TeacherProfileActivity : AppCompatActivity() {
         val confirmDialog = MaterialAlertDialogBuilder(this)
             .setView(messageView)
             .setNeutralButton("Yes") { d, _ ->
+                if (!NetworkUtils.isConnected(this)) {
+                    ShowToast.showMessage(this, "No internet connection. Cannot save.")
+                    return@setNeutralButton
+                }
                 val dbFormattedDate = year
                 var imageBytes: ByteArray? = null
                 var mimeType: String? = null

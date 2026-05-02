@@ -25,8 +25,18 @@ class ForgotPasswordViewModel : ViewModel() {
             val result = repository.sendPasswordResetCode(email)
             result.onSuccess {
                 _state.value = ForgotState.CodeSent
-            }.onFailure {
-                _state.value = ForgotState.Error(it.message ?: "Failed to send code")
+            }.onFailure { error ->
+
+                val originalMessage = error.message ?: "Failed to send code"
+
+                val displayMessage = if (originalMessage.contains("invalid format", ignoreCase = true)) {
+                    "Please enter a valid email address."
+                } else {
+                    originalMessage
+                }
+
+                // 3. Update the state with the new message
+                _state.value = ForgotState.Error(displayMessage)
             }
         }
     }

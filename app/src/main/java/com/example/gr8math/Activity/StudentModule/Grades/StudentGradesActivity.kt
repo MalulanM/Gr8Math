@@ -18,6 +18,7 @@ import com.example.gr8math.Activity.StudentModule.Notification.StudentNotificati
 import com.example.gr8math.Adapter.StudentGradesAdapter
 import com.example.gr8math.Data.Model.StudentScore
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.NotificationHelper
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.ViewModel.GradesState
@@ -65,6 +66,35 @@ class StudentGradesActivity : AppCompatActivity() {
 
         // 4. Observe & Load
         setupObservers()
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val rvGrades = findViewById<View>(R.id.rvGrades)
+        val emptyStateLayout = findViewById<View>(R.id.emptyStateLayout)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the lists
+            noInternetView?.visibility = View.VISIBLE
+            rvGrades?.visibility = View.GONE
+            emptyStateLayout?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen
+        noInternetView?.visibility = View.GONE
+
+        // 3. Fetch your actual data
         viewModel.loadGrades()
     }
 

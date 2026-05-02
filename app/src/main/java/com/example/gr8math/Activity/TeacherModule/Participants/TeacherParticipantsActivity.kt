@@ -3,6 +3,7 @@ package com.example.gr8math.Activity.TeacherModule.Participants
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -17,6 +18,7 @@ import com.example.gr8math.Activity.TeacherModule.Notification.TeacherNotificati
 import com.example.gr8math.Data.Model.Participant
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.NotificationHelper
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.ViewModel.ParticipantsState
@@ -38,6 +40,38 @@ class TeacherParticipantsActivity : AppCompatActivity() {
         setupBottomNav()
         setupObservers()
 
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val scrollView = findViewById<View>(R.id.scrollView)
+        val emptyStateLayout = findViewById<View>(R.id.emptyStateLayout)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the lists
+            noInternetView?.visibility = View.VISIBLE
+            scrollView?.visibility = View.GONE
+            emptyStateLayout?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen
+        noInternetView?.visibility = View.GONE
+
+        // (Note: We don't manually make scrollView or emptyStateLayout visible here
+        // because your viewModel.state observer handles showing the correct one perfectly!)
+
+        // 3. Fetch your actual data
         viewModel.loadParticipants(CurrentCourse.courseId)
     }
 

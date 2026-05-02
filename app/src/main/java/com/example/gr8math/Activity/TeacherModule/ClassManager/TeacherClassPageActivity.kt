@@ -38,6 +38,7 @@ import java.util.Calendar
 import java.util.Locale
 import androidx.lifecycle.lifecycleScope
 import com.example.gr8math.Data.Repository.ClassPageRepository
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.UIUtils
 import kotlinx.coroutines.launch
 import java.util.TimeZone
@@ -71,12 +72,52 @@ class TeacherClassPageActivity : AppCompatActivity() {
 
         initViews()
         setupCurrentCourse()
-        checkUserModerationStatus()
+
+
         setupBottomNav()
         setupObservers()
 
-        viewModel.loadContent()
         handleNotificationIntent(intent)
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        // Let the gatekeeper handle the network check and data loading
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val scrollView = findViewById<View>(R.id.scrollView)
+        val emptyStateLayout = findViewById<View>(R.id.emptyStateLayout)
+        val btnAdd = findViewById<View>(R.id.btnAdd)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the content
+            noInternetView?.visibility = View.VISIBLE
+            scrollView?.visibility = View.GONE
+            emptyStateLayout?.visibility = View.GONE
+            btnAdd?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen
+        noInternetView?.visibility = View.GONE
+        scrollView?.visibility = View.VISIBLE
+
+        // 3. Fetch your actual data
+        checkUserModerationStatus()
+        viewModel.loadContent()
+
+        // Catch-all: If the section name failed to load earlier because they were offline, fetch it now!
+        if (CurrentCourse.sectionName.isEmpty()) {
+            viewModel.fetchSectionName(CurrentCourse.courseId)
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

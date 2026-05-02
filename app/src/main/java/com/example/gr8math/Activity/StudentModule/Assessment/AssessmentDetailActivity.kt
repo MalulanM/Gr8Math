@@ -3,12 +3,15 @@ package com.example.gr8math.Activity.StudentModule.Assessment
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gr8math.Activity.StudentModule.ClassManager.StudentClassPageActivity
 import com.example.gr8math.Activity.TakeAssessmentActivity
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.ViewModel.AssessmentDetailState
 import com.example.gr8math.ViewModel.AssessmentDetailViewModel
@@ -42,6 +45,39 @@ class AssessmentDetailActivity : AppCompatActivity() {
         initViews()
         setupObservers()
 
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        // Let the gatekeeper handle parsing the data and starting the timer!
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val mainContent = findViewById<View>(R.id.mainContent)
+        val btnStartAssessment = findViewById<View>(R.id.btnStartAssessment)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the content
+            noInternetView?.visibility = View.VISIBLE
+            // Use INVISIBLE instead of GONE so it doesn't break the layout constraints (vertical bias)
+            mainContent?.visibility = View.INVISIBLE
+            btnStartAssessment?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show content
+        noInternetView?.visibility = View.GONE
+        mainContent?.visibility = View.VISIBLE
+        btnStartAssessment?.visibility = View.VISIBLE
+
+        // 3. Fetch your actual data
         if (assessmentId != 0) {
             viewModel.loadAssessment(assessmentId)
         } else {

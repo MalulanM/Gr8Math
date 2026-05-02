@@ -31,6 +31,7 @@ import com.example.gr8math.Activity.TermsAndConditionsActivity
 import com.example.gr8math.Helper.NotificationMethods
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
 import com.example.gr8math.ViewModel.ClassManagerViewModel
@@ -75,6 +76,39 @@ class StudentClassManagerActivity : AppCompatActivity() {
         setupObservers()
         NotificationMethods.handleNotificationIntent(this, intent, id, role)
 
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        btnRefresh.setOnClickListener {
+            loadData()
+        }
+
+        loadData()
+
+
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val defaultView = findViewById<View>(R.id.scrollView)
+        val loadingLayout = findViewById<View>(R.id.loadingLayout)
+        val loadingProgressBg = findViewById<View>(R.id.loadingProgressBg)
+
+        // Check if views were found to prevent future null pointers
+        if (noInternetView == null || defaultView == null) return
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            noInternetView.visibility = View.VISIBLE
+            defaultView.visibility = View.GONE
+            loadingLayout?.visibility = View.GONE
+            loadingProgressBg?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET
+        noInternetView.visibility = View.GONE
+        defaultView.visibility = View.VISIBLE
+
+        // 3. Fetch your actual data
         if (id > 0) {
             viewModel.loadClasses(id, role)
             NotificationMethods.setupNotifications(this, id, requestPermissionLauncher, lifecycleScope)
@@ -242,7 +276,12 @@ class StudentClassManagerActivity : AppCompatActivity() {
             }
         }
 
-        dialog.findViewById<TextView>(R.id.tvGreeting).text = "Hi, ${this.name}!"
+        val tvGreeting = dialog.findViewById<TextView>(R.id.tvGreeting)
+        tvGreeting.text = "Hi, ${this.name}!"
+
+        tvGreeting.maxLines = 1
+        tvGreeting.ellipsize = android.text.TextUtils.TruncateAt.END
+        tvGreeting.isSingleLine = true
 
         dialogView.findViewById<View>(R.id.btnAccountSettings).setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java)); dialog.dismiss()

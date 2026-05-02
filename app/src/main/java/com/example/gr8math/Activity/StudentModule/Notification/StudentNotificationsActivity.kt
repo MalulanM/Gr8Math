@@ -18,6 +18,7 @@ import com.example.gr8math.Activity.StudentModule.Grades.StudentGradesActivity
 import com.example.gr8math.Adapter.StudentNotificationAdapter
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.NotificationHelper
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.ViewModel.NotificationsViewModel
@@ -90,8 +91,6 @@ class StudentNotificationsActivity : AppCompatActivity() {
         }
 
 
-        viewModel.loadStudentNotifications(CurrentCourse.userId, focusedCourseId)
-
         // --- Observer ---
         viewModel.studentState.observe(this) { state ->
             val rv = findViewById<RecyclerView>(R.id.rvNotifications)
@@ -116,6 +115,37 @@ class StudentNotificationsActivity : AppCompatActivity() {
                 }
             }
         }
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val rvNotifications = findViewById<View>(R.id.rvNotifications)
+        val emptyStateLayout = findViewById<View>(R.id.emptyStateLayout)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide everything else
+            noInternetView?.visibility = View.VISIBLE
+            rvNotifications?.visibility = View.GONE
+            emptyStateLayout?.visibility = View.GONE
+            btnMarkAllRead.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen
+        noInternetView?.visibility = View.GONE
+
+        val focusedCourseId = intent.getIntExtra("courseId", CurrentCourse.courseId)
+        viewModel.loadStudentNotifications(CurrentCourse.userId, focusedCourseId)
     }
 
     override fun onResume() {

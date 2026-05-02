@@ -6,6 +6,7 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -23,6 +24,7 @@ import com.example.gr8math.Data.Repository.BadgeUiModel
 import com.example.gr8math.Data.Repository.StudentProfileData
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
 import com.example.gr8math.ViewModel.ProfileUiState
@@ -41,8 +43,6 @@ class StudentBadgesActivity : AppCompatActivity() {
     private lateinit var rvBadges: RecyclerView
     private lateinit var adapter: BadgesAdapter
 
-    // Optional: Add loading layout IDs here if your XML has them
-    // private lateinit var loadingLayout: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,6 +51,34 @@ class StudentBadgesActivity : AppCompatActivity() {
         initViews()
         setupBottomNav()
         observeViewModel()
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val rvBadges = findViewById<View>(R.id.rvBadges)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the RecyclerView
+            noInternetView?.visibility = View.VISIBLE
+            rvBadges?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show RecyclerView
+        noInternetView?.visibility = View.GONE
+        rvBadges?.visibility = View.VISIBLE
+
+        // 3. Fetch your actual data
         viewModel.loadProfile(userId)
     }
 

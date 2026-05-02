@@ -37,6 +37,7 @@ import com.example.gr8math.Data.Repository.BadgeUiModel
 import com.example.gr8math.Data.Repository.StudentProfileData
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
 import com.example.gr8math.ViewModel.ProfileUiState
@@ -120,6 +121,36 @@ class ProfileActivity : AppCompatActivity() {
         observeViewModel()
 
         viewModel.loadProfile(userId)
+
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val mainContent = findViewById<View>(R.id.scrollView)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide main content
+            noInternetView?.visibility = View.VISIBLE
+            mainContent?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show main content
+        noInternetView?.visibility = View.GONE
+        mainContent?.visibility = View.VISIBLE
+
+        // 3. Fetch your actual data
+        viewModel.loadProfile(userId)
     }
 
     private fun initViews() {
@@ -179,11 +210,32 @@ class ProfileActivity : AppCompatActivity() {
                     }
                     is ProfileUiState.Error -> {
                         UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                        ShowToast.showMessage(this@ProfileActivity, state.message)
+
+                        MaterialAlertDialogBuilder(this@ProfileActivity)
+                            .setTitle("Update Failed")
+                            .setMessage(state.message)
+                            .setPositiveButton("Try Again") { dialog, _ ->
+                                loadData()
+                                dialog.dismiss()
+                            }
+                            .setNegativeButton("Dismiss", null)
+                            .show()
+
+                        resetAllEditStates()
                     }
                 }
             }
         }
+    }
+
+    private fun resetAllEditStates() {
+        isEditingFirstName = false
+        isEditingLastName = false
+        isEditingLRN = false
+        setEditMode(etFirstName, ivEditFirstName, false)
+        setEditMode(etLastName, ivEditLastName, false)
+        setEditMode(etLRN, ivEditLRN, false)
+        UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
     }
 
     private fun populateUI(data: StudentProfileData) {
@@ -241,6 +293,10 @@ class ProfileActivity : AppCompatActivity() {
     private fun setupListeners() {
         ivEditFirstName.setOnClickListener {
             if (isEditingFirstName) {
+                if (!NetworkUtils.isConnected(this)) {
+                    ShowToast.showMessage(this, "No internet connection. Cannot save.")
+                    return@setOnClickListener
+                }
                 val newName = etFirstName.text.toString().trim()
                 if (newName.isEmpty()) {
                     ShowToast.showMessage(this, "First name cannot be empty.")
@@ -259,6 +315,10 @@ class ProfileActivity : AppCompatActivity() {
 
         ivEditLastName.setOnClickListener {
             if (isEditingLastName) {
+                if (!NetworkUtils.isConnected(this)) {
+                    ShowToast.showMessage(this, "No internet. Cannot save.")
+                    return@setOnClickListener
+                }
                 val newName = etLastName.text.toString().trim()
                 if (newName.isEmpty()) {
                     ShowToast.showMessage(this, "Last name cannot be empty.")
@@ -277,9 +337,21 @@ class ProfileActivity : AppCompatActivity() {
 
         ivEditLRN.setOnClickListener {
             if (isEditingLRN) {
+                if (!NetworkUtils.isConnected(this)) {
+                    ShowToast.showMessage(this, "No internet. Cannot save.")
+                    return@setOnClickListener
+                }
                 val newLRN = etLRN.text.toString().trim()
+
+                // 1. Check if empty
                 if (newLRN.isEmpty()) {
                     ShowToast.showMessage(this, "LRN cannot be empty.")
+                    return@setOnClickListener
+                }
+
+                // 2. Check for exactly 12 characters AND digits only
+                if (newLRN.length != 12 || !newLRN.all { it.isDigit() }) {
+                    ShowToast.showMessage(this, "LRN must be exactly 12 digits.")
                     return@setOnClickListener
                 }
 
@@ -294,12 +366,21 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         etGender.setOnItemClickListener { parent, _, position, _ ->
+            if (!NetworkUtils.isConnected(this)) {
+                ShowToast.showMessage(this, "No internet connection. Cannot save.")
+                loadData()
+                return@setOnItemClickListener
+            }
             saveData("Gender", parent.getItemAtPosition(position).toString())
         }
 
         etDob.setOnClickListener {
             val cal = Calendar.getInstance()
             DatePickerDialog(this, { _, year, month, day ->
+                if (!NetworkUtils.isConnected(this)) {
+                    ShowToast.showMessage(this, "No internet connection. Cannot save")
+                    return@DatePickerDialog
+                }
                 val selected = Calendar.getInstance().apply { set(year, month, day) }
                 val formattedDate = SimpleDateFormat("MM/dd/yyyy", Locale.US).format(selected.time)
                 etDob.setText(formattedDate)
@@ -314,7 +395,13 @@ class ProfileActivity : AppCompatActivity() {
             showDirectChangePasswordDialog()
         }
 
-        editPfp.setOnClickListener { showUploadSourceDialog() }
+        editPfp.setOnClickListener {
+            if (!NetworkUtils.isConnected(this)) {
+                ShowToast.showMessage(this, "No internet connection. Cannot save.")
+                return@setOnClickListener
+            }
+            showUploadSourceDialog()
+        }
     }
 
     private fun showDirectChangePasswordDialog() {
@@ -455,21 +542,26 @@ class ProfileActivity : AppCompatActivity() {
 
             val confirmDialog = MaterialAlertDialogBuilder(this)
                 .setView(messageView)
-                .setNeutralButton("Yes") { d, _ ->
+                .setPositiveButton("Yes") { d, _ ->
+                    if (!NetworkUtils.isConnected(this@ProfileActivity)) {
+                        ShowToast.showMessage(this@ProfileActivity, "No internet connection. Cannot save.")
+                        return@setPositiveButton
+                    }
                     d.dismiss()
                     dialog.dismiss()
                     val selectedBadgeIds = selected.map { it.id }
                     viewModel.updateDisplayedBadges(studentId!!, selectedBadgeIds, userId)
                 }
-
-                .setPositiveButton("No") { d, _ -> d.dismiss() }
+                .setNegativeButton("No") { d, _ -> d.dismiss() }
                 .create()
 
             confirmDialog.show()
 
 
-            confirmDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL)?.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
-            confirmDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)?.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
+            confirmDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.colorMatisse))
+            confirmDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.colorRed))
         }
 
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -499,6 +591,10 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun handleImageResult(uri: Uri) {
         try {
+            if (!NetworkUtils.isConnected(this)) {
+                ShowToast.showMessage(this, "No internet connection. Cannot save.")
+                return
+            }
             Glide.with(this).load(uri).placeholder(R.drawable.ic_profile_default)
                 .circleCrop().diskCacheStrategy(DiskCacheStrategy.NONE).skipMemoryCache(true).into(ivProfile)
 

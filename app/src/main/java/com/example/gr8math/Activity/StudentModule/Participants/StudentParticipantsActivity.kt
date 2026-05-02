@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -19,6 +20,7 @@ import com.example.gr8math.Activity.StudentModule.Notification.StudentNotificati
 import com.example.gr8math.Data.Model.StudentInfoSide
 import com.example.gr8math.Data.Model.TeacherInfo
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.ViewModel.StudentParticipantsState
 import com.example.gr8math.ViewModel.StudentParticipantsViewModel
@@ -44,6 +46,37 @@ class StudentParticipantsActivity : AppCompatActivity() {
         setupBottomNav()
         setupObservers()
 
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val emptyStateLayout = findViewById<View>(R.id.emptyStateLayout)
+        val rvStudents = findViewById<View>(R.id.rvStudentParticipants)
+        val cardTeacher = findViewById<View>(R.id.cardTeacher)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide everything else
+            noInternetView?.visibility = View.VISIBLE
+            emptyStateLayout?.visibility = View.GONE
+            rvStudents?.visibility = View.GONE
+            cardTeacher?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen
+        noInternetView?.visibility = View.GONE
+
+        // 3. Fetch your actual data
         viewModel.loadParticipants()
     }
 

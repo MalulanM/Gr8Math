@@ -37,23 +37,25 @@ class StudentProfileViewModel : ViewModel() {
         }
     }
 
+
+
     fun updateField(userId: Int, table: String, field: String, value: String) {
         viewModelScope.launch {
-            repo.updateField(userId, table, field, value).onFailure {
-                _uiState.value = ProfileUiState.Error("Failed to update $field")
-            }
+            repo.updateField(userId, table, field, value)
+                .onFailure { error ->
+                    _uiState.value = ProfileUiState.Error(mapErrorMessage(error))
+                }
         }
     }
 
     fun updateDisplayedBadges(studentId: Int, selectedBadgeIds: List<Int>, userId: Int) {
         viewModelScope.launch {
             _uiState.value = ProfileUiState.Loading
-
-            repo.updateBadgeRanks(studentId, selectedBadgeIds).onSuccess {
-                loadProfile(userId)
-            }.onFailure {
-                _uiState.value = ProfileUiState.Error("Failed to update badges.")
-            }
+            repo.updateBadgeRanks(studentId, selectedBadgeIds)
+                .onSuccess { loadProfile(userId) }
+                .onFailure { error ->
+                    _uiState.value = ProfileUiState.Error(mapErrorMessage(error))
+                }
         }
     }
 

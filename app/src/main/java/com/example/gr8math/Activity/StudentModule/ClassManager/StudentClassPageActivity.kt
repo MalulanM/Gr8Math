@@ -5,12 +5,14 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.gr8math.Activity.GameActivity
 import com.example.gr8math.Activity.StudentModule.Badges.StudentBadgesActivity
 import com.example.gr8math.Activity.StudentModule.Grades.StudentGradesActivity
@@ -20,8 +22,10 @@ import com.example.gr8math.Activity.StudentModule.Notification.StudentNotificati
 import com.example.gr8math.Activity.StudentModule.Participants.StudentParticipantsActivity
 import com.example.gr8math.Activity.TeacherModule.Lesson.LessonDetailActivity
 import com.example.gr8math.Data.Model.ClassContentItem
+import com.example.gr8math.Helper.NotificationMethods
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.NotificationHelper
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.ViewModel.ContentState
@@ -53,8 +57,35 @@ class StudentClassPageActivity : AppCompatActivity() {
         setupBottomNav()
         setupObservers()
 
-        viewModel.loadContent()
         handleNotificationIntent(intent)
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        btnRefresh.setOnClickListener {
+            loadData()
+        }
+
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val scrollView = findViewById<View>(R.id.scrollView) // 🌟 Target the ScrollView instead
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide everything else
+            noInternetView?.visibility = View.VISIBLE
+            scrollView?.visibility = View.GONE
+            emptyStateLayout.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show main view
+        noInternetView?.visibility = View.GONE
+        scrollView?.visibility = View.VISIBLE
+
+        // 3. Fetch data
+        viewModel.loadContent()
     }
 
     override fun onNewIntent(intent: Intent) {

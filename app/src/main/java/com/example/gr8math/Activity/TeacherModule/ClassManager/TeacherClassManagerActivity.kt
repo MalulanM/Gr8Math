@@ -33,6 +33,7 @@ import com.example.gr8math.Helper.NotificationMethods
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.Model.TeacherClass
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
 import com.example.gr8math.ViewModel.ClassManagerViewModel
@@ -104,7 +105,44 @@ class TeacherClassManagerActivity : AppCompatActivity() {
             viewModel.loadHistory(id)
             NotificationMethods.setupNotifications(this, id, requestPermissionLauncher, lifecycleScope)
         }
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        btnRefresh.setOnClickListener {
+            loadData()
+        }
+
+        loadData()
     }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val defaultView = findViewById<View>(R.id.default_view)
+        val loadingLayout = findViewById<View>(R.id.loadingLayout)
+        val loadingProgressBg = findViewById<View>(R.id.loadingProgressBg)
+
+        // 1. Check for Internet using your utility class
+        if (!NetworkUtils.isConnected(this)) {
+            noInternetView.visibility = View.VISIBLE
+            defaultView.visibility = View.GONE
+            loadingLayout.visibility = View.GONE
+            loadingProgressBg.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show main view
+        noInternetView.visibility = View.GONE
+        defaultView.visibility = View.VISIBLE
+
+        if (id > 0) {
+            viewModel.loadClasses(id, role)
+            viewModel.loadHistory(id)
+            NotificationMethods.setupNotifications(this, id, requestPermissionLauncher, lifecycleScope)
+        }
+    }
+
+
+
+
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -367,8 +405,12 @@ class TeacherClassManagerActivity : AppCompatActivity() {
             Glide.with(this).load(profilePic).placeholder(R.drawable.ic_profile_default).error(R.drawable.ic_profile_default).circleCrop().into(ivProfile)
         }
 
-        val nameTv = dialog.findViewById<TextView>(R.id.tvGreeting)
-        nameTv.text = "Hi, $name!"
+        val tvGreeting = dialog.findViewById<TextView>(R.id.tvGreeting)
+        tvGreeting.text = "Hi, ${this.name}!"
+
+        tvGreeting.maxLines = 1
+        tvGreeting.ellipsize = android.text.TextUtils.TruncateAt.END
+        tvGreeting.isSingleLine = true
 
         dialogView.findViewById<View>(R.id.btnAccountSettings).setOnClickListener {
             startActivity(Intent(this, TeacherProfileActivity::class.java))

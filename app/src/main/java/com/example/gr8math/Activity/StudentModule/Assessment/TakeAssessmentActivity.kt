@@ -41,6 +41,7 @@ import com.bumptech.glide.Glide
 import java.util.UUID
 import android.widget.CompoundButton
 import androidx.core.content.res.ResourcesCompat
+import com.example.gr8math.Utils.NetworkUtils
 import java.net.URLEncoder // Added for proper LaTeX encoding
 
 class TakeAssessmentActivity : AppCompatActivity() {
@@ -73,7 +74,49 @@ class TakeAssessmentActivity : AppCompatActivity() {
         setContentView(R.layout.activity_take_assessment)
 
         initViews()
+        setupObservers()
 
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        // Let the gatekeeper handle parsing the data and starting the timer!
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val cardMainContent = findViewById<View>(R.id.cardMainContent)
+        val cardTimer = findViewById<View>(R.id.cardTimer)
+        val navigationButtons = findViewById<View>(R.id.navigationButtons)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the test UI
+            noInternetView?.visibility = View.VISIBLE
+            cardMainContent?.visibility = View.GONE
+            cardTimer?.visibility = View.GONE
+            navigationButtons?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show the test UI
+        noInternetView?.visibility = View.GONE
+        cardMainContent?.visibility = View.VISIBLE
+        cardTimer?.visibility = View.VISIBLE
+        navigationButtons?.visibility = View.VISIBLE
+
+        // 3. Initialize the assessment only if it hasn't been loaded yet
+        if (viewModel.assessment == null) {
+            setupAssessmentAndTimer()
+        }
+    }
+
+    private fun setupAssessmentAndTimer() {
+        // Parse the data from the intent
         val json = intent.getStringExtra("assessment_data")
         if (json != null) {
             viewModel.parseAssessmentData(json)
@@ -83,8 +126,7 @@ class TakeAssessmentActivity : AppCompatActivity() {
             return
         }
 
-        setupObservers()
-
+        // Handle the timer logic
         if (!viewModel.timerStarted) {
             val prefs = getSharedPreferences("assessment_timer", MODE_PRIVATE)
             val assessmentId = viewModel.assessment?.id ?: 0
@@ -110,7 +152,7 @@ class TakeAssessmentActivity : AppCompatActivity() {
             viewModel.timerStarted = true
         }
 
-        startTimer(viewModel.timeRemainingMillis) // only called ONCE, outside the if-block
+        startTimer(viewModel.timeRemainingMillis)
     }
 
     private fun initViews() {

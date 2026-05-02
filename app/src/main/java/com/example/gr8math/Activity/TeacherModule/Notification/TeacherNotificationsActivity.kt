@@ -19,6 +19,7 @@ import com.example.gr8math.Activity.TeacherModule.Participants.TeacherParticipan
 import com.example.gr8math.Adapter.TeacherNotificationAdapter
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.NotificationHelper
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.ViewModel.NotifState
@@ -57,9 +58,7 @@ class TeacherNotificationsActivity : AppCompatActivity() {
             if (!item.isRead) {
                 item.isRead = true
                 adapter.notifyItemChanged(position)
-
                 updateMarkAllButtonVisibility()
-
                 viewModel.markRead(item.id)
                 NotificationHelper.fetchUnreadCount(bottomNav)
             }
@@ -81,16 +80,13 @@ class TeacherNotificationsActivity : AppCompatActivity() {
 
             list.forEach { it.isRead = true }
             adapter.notifyDataSetChanged()
-
             updateMarkAllButtonVisibility()
-
             viewModel.markAllRead(unreadIds)
             NotificationHelper.fetchUnreadCount(bottomNav)
-
             ShowToast.showMessage(this, "All notifications marked as read")
         }
 
-        viewModel.loadTeacherNotifications(CurrentCourse.userId, focusedCourseId)
+        // 🚨 Removed the loose viewModel.loadTeacherNotifications() from here!
 
         viewModel.teacherState.observe(this) { state ->
             val rv = findViewById<RecyclerView>(R.id.rvNotifications)
@@ -118,6 +114,15 @@ class TeacherNotificationsActivity : AppCompatActivity() {
                 }
             }
         }
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        loadData()
     }
 
     override fun onResume() {
@@ -127,12 +132,35 @@ class TeacherNotificationsActivity : AppCompatActivity() {
             bottomNav.selectedItemId = R.id.nav_notifications
 
             NotificationHelper.fetchUnreadCount(bottomNav)
-
-            val focusedCourseId = intent.getIntExtra("courseId", CurrentCourse.courseId)
-            viewModel.loadTeacherNotifications(CurrentCourse.userId, focusedCourseId)
-
             setupBottomNav()
+
+            loadData()
         }
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val rvNotifications = findViewById<View>(R.id.rvNotifications)
+        val emptyStateLayout = findViewById<View>(R.id.emptyStateLayout)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the lists
+            noInternetView?.visibility = View.VISIBLE
+            rvNotifications?.visibility = View.GONE
+            emptyStateLayout?.visibility = View.GONE
+            btnMarkAllRead.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen
+        noInternetView?.visibility = View.GONE
+
+        // (We let the observer handle showing the RV or Empty State)
+
+        // 3. Fetch your actual data
+        val focusedCourseId = intent.getIntExtra("courseId", CurrentCourse.courseId)
+        viewModel.loadTeacherNotifications(CurrentCourse.userId, focusedCourseId)
     }
 
     private fun updateMarkAllButtonVisibility() {

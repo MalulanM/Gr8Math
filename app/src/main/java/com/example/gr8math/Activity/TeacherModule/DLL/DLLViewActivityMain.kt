@@ -3,6 +3,7 @@ package com.example.gr8math.Activity.TeacherModule.DLL
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -16,6 +17,7 @@ import com.example.gr8math.Data.Repository.DllMainEntity
 import com.example.gr8math.Data.Repository.DllRepository
 import com.example.gr8math.Model.CurrentCourse
 import com.example.gr8math.R
+import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.NotificationHelper
 import com.example.gr8math.Utils.ShowToast
 import com.example.gr8math.Utils.UIUtils
@@ -41,17 +43,49 @@ class DLLViewActivityMain : AppCompatActivity() {
 
         initViews()
         setupBottomNav()
-        loadDllData(CurrentCourse.courseId)
+
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        // Let the gatekeeper handle the network check and data loading
+        loadData()
     }
 
     override fun onResume() {
         super.onResume()
-        loadDllData(CurrentCourse.courseId)
+
         val bottomNav: BottomNavigationView = findViewById(R.id.bottom_navigation)
         bottomNav.setOnItemSelectedListener(null)
         bottomNav.selectedItemId = R.id.nav_dll
         NotificationHelper.fetchUnreadCount(bottomNav)
         setupBottomNav()
+
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val scrollView = findViewById<View>(R.id.scrollView)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the main content
+            noInternetView?.visibility = View.VISIBLE
+            scrollView?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show main content
+        noInternetView?.visibility = View.GONE
+        scrollView?.visibility = View.VISIBLE
+
+        // 3. Fetch your actual data
+        loadDllData(CurrentCourse.courseId)
     }
 
 

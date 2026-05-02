@@ -23,15 +23,14 @@ class AddClassRepository {
     ): Result<String> {
         return withContext(Dispatchers.IO) {
             try {
-                val existingCount = db.from("class").select(columns = Columns.list("id")) {
+                val existing = db.from("class").select(columns = Columns.list("id", "class_code")) {
                     filter {
                         eq("adviser_id", adviserId)
                         ilike("class_name", sectionName)
                     }
-                    count(Count.EXACT)
-                }.countOrNull() ?: 0
+                }.decodeList<ClassIdResponse>()
 
-                if (existingCount > 0) {
+                if (existing.isNotEmpty()) {
                     return@withContext Result.failure(Exception("Already have a class with this name."))
                 }
                 // 1. Generate Unique Code

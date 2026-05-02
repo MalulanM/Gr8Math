@@ -19,6 +19,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import androidx.lifecycle.lifecycleScope
 import com.example.gr8math.Data.Repository.ClassPageRepository
 import com.example.gr8math.Model.CurrentCourse
+import com.example.gr8math.Utils.NetworkUtils
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -55,7 +56,7 @@ class DllMasterEditorActivity : AppCompatActivity() {
         if (isExistingDll) {
             isEditable = false
         }
-        checkUserModerationStatus()
+
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         val viewPager = findViewById<ViewPager2>(R.id.viewPager)
@@ -66,14 +67,11 @@ class DllMasterEditorActivity : AppCompatActivity() {
 
         toolbar.setNavigationOnClickListener { handleBackNavigation() }
 
-
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 handleBackNavigation()
             }
         })
-
-
 
         btnEditMode.visibility = if (isEditable) View.GONE else View.VISIBLE
 
@@ -95,12 +93,10 @@ class DllMasterEditorActivity : AppCompatActivity() {
             tab.text = tabNames[position]
         }.attach()
 
-
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             private var lastPos = viewPager.currentItem
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-                // If we swipe to a DIFFERENT tab and we were editing, lock it.
                 if (position != lastPos && isEditable && dllMainId != -1) {
                     isEditable = false
                     btnEditMode.visibility = View.VISIBLE
@@ -109,6 +105,39 @@ class DllMasterEditorActivity : AppCompatActivity() {
                 lastPos = position
             }
         })
+
+        val btnRefresh = findViewById<Button>(R.id.btnRefresh)
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener {
+                loadData()
+            }
+        }
+
+        // Let the gatekeeper handle the network check and data loading
+        loadData()
+    }
+
+    private fun loadData() {
+        val noInternetView = findViewById<View>(R.id.no_internet_view)
+        val viewPager = findViewById<View>(R.id.viewPager)
+        val tabLayout = findViewById<View>(R.id.tabLayout)
+
+        // 1. Check for Internet
+        if (!NetworkUtils.isConnected(this)) {
+            // Show No Internet Screen, hide the tabs and pager
+            noInternetView?.visibility = View.VISIBLE
+            viewPager?.visibility = View.GONE
+            tabLayout?.visibility = View.GONE
+            return
+        }
+
+        // 2. HAS INTERNET: Hide error screen, show content
+        noInternetView?.visibility = View.GONE
+        viewPager?.visibility = View.VISIBLE
+        tabLayout?.visibility = View.VISIBLE
+
+        // 3. Fetch your actual data (Moderation status)
+        checkUserModerationStatus()
     }
 
     private fun checkUserModerationStatus() {

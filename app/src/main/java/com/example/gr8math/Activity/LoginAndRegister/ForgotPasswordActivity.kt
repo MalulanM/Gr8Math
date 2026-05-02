@@ -47,6 +47,9 @@ class ForgotPasswordActivity : AppCompatActivity() {
     private lateinit var tilNewPassLayout: TextInputLayout
     private lateinit var tilConfirmPassLayout: TextInputLayout
 
+    // Screen 1 UI
+    private lateinit var tilEmailCode: TextInputLayout
+
     // Loading UI
     private lateinit var loadingLayout: View
     private lateinit var loadingProgress: View
@@ -88,7 +91,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
                 }
                 is ForgotState.CodeSent -> {
-                    ShowToast.showMessage(this, "A verification code will be sent to your email.")
+                    ShowToast.showMessage(this, "Verification code sent successfully!")
                     enableCodeInput()
                     startCountdown()
                 }
@@ -103,7 +106,6 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 }
                 is ForgotState.Error -> {
                     val cleanMessage = state.message.split("\n").firstOrNull() ?: "An error occurred"
-                    ShowToast.showMessage(this, cleanMessage)
 
                     // Reset buttons if error occurred
                     if (::txtSendCode.isInitialized) {
@@ -114,15 +116,36 @@ class ForgotPasswordActivity : AppCompatActivity() {
                     if (::verifyBtn.isInitialized) verifyBtn.isEnabled = true
                     if (::savePassBtn.isInitialized) savePassBtn.isEnabled = true
 
-                    if (state.message.contains("Invalid code", ignoreCase = true)) {
-                        UIUtils.errorDisplay(
-                            context = this,
-                            til = tilCode,
-                            field = codeInput,
-                            showIcon = true,
-                            errorText = "Please enter the verification code.",
-                            forceError = true
-                        )
+                    // --- NEW: Route the error to the correct place ---
+                    // --- Route the error to the correct place ---
+                    when {
+                        cleanMessage.contains("email", ignoreCase = true) -> {
+                            // 1. If it's an email error, show custom UI error! No Toast.
+                            UIUtils.errorDisplay(
+                                context = this@ForgotPasswordActivity,
+                                til = tilEmailCode,
+                                field = emailInput,
+                                showIcon = true,
+                                errorText = cleanMessage,
+                                forceError = true
+                            )
+                            emailInput.requestFocus()
+                        }
+                        cleanMessage.contains("Invalid code", ignoreCase = true) -> {
+                            // 2. Code error
+                            UIUtils.errorDisplay(
+                                context = this@ForgotPasswordActivity,
+                                til = tilCode,
+                                field = codeInput,
+                                showIcon = true,
+                                errorText = "Please enter the verification code.",
+                                forceError = true
+                            )
+                        }
+                        else -> {
+                            // 3. Any other random server errors get a Toast
+                            ShowToast.showMessage(this@ForgotPasswordActivity, cleanMessage)
+                        }
                     }
                 }
             }
@@ -134,8 +157,32 @@ class ForgotPasswordActivity : AppCompatActivity() {
     private fun sendCode() {
         val email = emailInput.text.toString().trim()
 
+        // Local check for empty email
         if (email.isEmpty()) {
-            emailInput.error = "Please enter a valid email address."
+            UIUtils.errorDisplay(
+                context = this,
+                til = tilEmailCode,
+                field = emailInput,
+                showIcon = true,
+                errorText = "Please enter your email address.",
+                forceError = true
+            )
+            emailInput.requestFocus()
+            return
+        }
+
+        // Local Regex check to prevent server call entirely!
+        val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$".toRegex()
+        if (!email.matches(emailRegex)) {
+            UIUtils.errorDisplay(
+                context = this,
+                til = tilEmailCode,
+                field = emailInput,
+                showIcon = true,
+                errorText = "Please enter a valid email address.",
+                forceError = true
+            )
+            emailInput.requestFocus()
             return
         }
 
@@ -143,6 +190,10 @@ class ForgotPasswordActivity : AppCompatActivity() {
         txtSendCode.text = "Sending..."
         txtSendCode.isEnabled = false
         txtSendCode.setTextColor(android.graphics.Color.parseColor("#888888"))
+
+        // Remove old errors before sending
+        tilEmailCode.error = null
+
         viewModel.sendCode(email)
     }
 
@@ -332,6 +383,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
         verifyBtn = findViewById(R.id.btnVerify)
         txtSendCode = findViewById(R.id.tvGetCode)
         tilCode = findViewById(R.id.tilCode)
+        tilEmailCode = findViewById(R.id.tilEmailCode)
 
         loadingLayout = findViewById(R.id.loadingLayout)
         loadingProgress = findViewById(R.id.loadingProgressBg)
@@ -344,7 +396,31 @@ class ForgotPasswordActivity : AppCompatActivity() {
         codeInput.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                tilCode.error = null
+                if (::tilCode.isInitialized) {
+                    tilCode.error = null
+                    tilCode.isErrorEnabled = false
+
+                    // ---> Restore your custom default stroke color <---
+                    tilCode.setBoxStrokeColorStateList(
+                        ContextCompat.getColorStateList(this@ForgotPasswordActivity, R.color.til_stroke)!!
+                    )
+                }
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        emailInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (::tilEmailCode.isInitialized) {
+                    tilEmailCode.error = null
+                    tilEmailCode.isErrorEnabled = false
+
+                    // ---> Restore your custom default stroke color <---
+                    tilEmailCode.setBoxStrokeColorStateList(
+                        ContextCompat.getColorStateList(this@ForgotPasswordActivity, R.color.til_stroke)!!
+                    )
+                }
             }
             override fun afterTextChanged(s: Editable?) {}
         })
