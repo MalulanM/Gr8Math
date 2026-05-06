@@ -28,7 +28,17 @@ class TeacherClassPageViewModel : ViewModel() {
         if (!forceReload && _state.value is ContentState.Success) return
 
         _state.value = ContentState.Loading
+
         viewModelScope.launch {
+            // 1. Check if class exists first
+            val name = repository.getSectionNameByCourseId(courseId)
+            if (name == null) {
+                _state.value = ContentState.Error("CLASS_DELETED")
+                return@launch
+            }
+
+            // 2. Update name and get content
+            _sectionName.postValue(name)
             val result = repository.getClassContent(courseId)
             result.onSuccess { list ->
                 _state.value = ContentState.Success(list)
@@ -45,15 +55,16 @@ class TeacherClassPageViewModel : ViewModel() {
                 if (name != null) {
                     _sectionName.postValue(name)
                 } else {
-                    _sectionName.postValue("Class Details")
+                    // CLASS IS DELETED!
+                    _state.postValue(ContentState.Error("CLASS_DELETED"))
                 }
             } catch (e: Exception) {
-                _sectionName.postValue("Class Details")
+                _state.postValue(ContentState.Error(e.message ?: "Failed to fetch class"))
             }
         }
     }
 
-    // Add this inside your TeacherClassPageViewModel class
+
 
     fun deleteContent(item: ClassContentItem) {
         viewModelScope.launch {

@@ -13,6 +13,7 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.gr8math.Activity.GameActivity
 import com.example.gr8math.Activity.StudentModule.Badges.StudentBadgesActivity
 import com.example.gr8math.Activity.StudentModule.Grades.StudentGradesActivity
@@ -47,6 +48,8 @@ class StudentClassPageActivity : AppCompatActivity() {
     private lateinit var emptyStateLayout: LinearLayout
     private lateinit var konfettiView: KonfettiView
     private var mediaPlayer: MediaPlayer? = null
+
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -156,6 +159,16 @@ class StudentClassPageActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
+        swipeRefreshLayout.setOnRefreshListener {
+            if (!NetworkUtils.isConnected(this)) {
+                swipeRefreshLayout.isRefreshing = false
+                loadData()
+            } else {
+                viewModel.loadContent(forceReload = true)
+            }
+        }
+
     }
 
     private fun handleIntentData() {
@@ -193,25 +206,61 @@ class StudentClassPageActivity : AppCompatActivity() {
         }
 
         viewModel.contentState.observe(this) { state ->
+            val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+            val btnParticipants = findViewById<View>(R.id.btnParticipants)
+
             when (state) {
                 is ContentState.Loading -> {
-                    emptyStateLayout.visibility = View.GONE
-                }
-                is ContentState.Success -> {
-                    if (state.data.isEmpty()) {
-                        emptyStateLayout.visibility = View.VISIBLE
-
+                    if (!swipeRefreshLayout.isRefreshing) {
+                        // Keep game card, remove others
                         if (parentLayout.childCount > 1) {
                             parentLayout.removeViews(1, parentLayout.childCount - 1)
                         }
+                    }
+                    emptyStateLayout.visibility = View.GONE
+                }
+                is ContentState.Success -> {
+                    swipeRefreshLayout.isRefreshing = false
+                    bottomNav?.visibility = View.VISIBLE
+                    btnParticipants?.visibility = View.VISIBLE
+
+                    if (state.data.isEmpty()) {
+                        emptyStateLayout.visibility = View.VISIBLE
                     } else {
                         emptyStateLayout.visibility = View.GONE
                         populateList(state.data)
                     }
                 }
                 is ContentState.Error -> {
-                    ShowToast.showMessage(this, state.message)
-                    emptyStateLayout.visibility = View.VISIBLE
+                    swipeRefreshLayout.isRefreshing = false
+                    val noInternetView = findViewById<View>(R.id.no_internet_view)
+                    val scrollView = findViewById<View>(R.id.scrollView)
+
+                    // Check if the error is actually due to no connection
+                    if (!NetworkUtils.isConnected(this)) {
+                        noInternetView?.visibility = View.VISIBLE
+                        scrollView?.visibility = View.GONE
+                        emptyStateLayout.visibility = View.GONE
+                    } else {
+                        // Only if we HAVE internet but the class is actually missing
+                        noInternetView?.visibility = View.GONE
+                        scrollView?.visibility = View.GONE
+                        bottomNav?.visibility = View.GONE
+                        btnParticipants?.visibility = View.GONE
+                        emptyStateLayout.visibility = View.VISIBLE
+
+                        val tvTitle = findViewById<TextView>(R.id.tvEmptyTitle)
+                        val tvSub = findViewById<TextView>(R.id.tvEmptySubtext)
+
+                        if (state.message == "CLASS_DELETED" || state.message.contains("not found", true)) {
+                            tvTitle?.text = "CLASS NO LONGER EXISTS"
+                            tvSub?.text = "This class has been deleted. Please use the back arrow to return to your class list and refresh."
+                        } else {
+                            tvTitle?.text = "UNABLE TO LOAD DATA"
+                            tvSub?.text = state.message
+                            ShowToast.showMessage(this, state.message)
+                        }
+                    }
                 }
             }
         }

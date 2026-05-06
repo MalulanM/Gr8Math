@@ -21,6 +21,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.example.gr8math.Activity.LoginAndRegister.AppLoginActivity
 import com.example.gr8math.Activity.PrivacyPolicyActivity
@@ -58,6 +59,8 @@ class StudentClassManagerActivity : AppCompatActivity() {
     private var profilePic: String? = null
     private var name: String = ""
 
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -92,23 +95,25 @@ class StudentClassManagerActivity : AppCompatActivity() {
         val loadingLayout = findViewById<View>(R.id.loadingLayout)
         val loadingProgressBg = findViewById<View>(R.id.loadingProgressBg)
 
-        // Check if views were found to prevent future null pointers
         if (noInternetView == null || defaultView == null) return
 
-        // 1. Check for Internet
         if (!NetworkUtils.isConnected(this)) {
             noInternetView.visibility = View.VISIBLE
             defaultView.visibility = View.GONE
             loadingLayout?.visibility = View.GONE
             loadingProgressBg?.visibility = View.GONE
+
+            // Hide the button so they can't attempt to add/join
+            addClassesButton.visibility = View.GONE
             return
         }
 
-        // 2. HAS INTERNET
         noInternetView.visibility = View.GONE
         defaultView.visibility = View.VISIBLE
 
-        // 3. Fetch your actual data
+        // Re-enable the button once internet is confirmed
+        addClassesButton.visibility = View.VISIBLE
+
         if (id > 0) {
             viewModel.loadClasses(id, role)
             NotificationMethods.setupNotifications(this, id, requestPermissionLauncher, lifecycleScope)
@@ -129,6 +134,7 @@ class StudentClassManagerActivity : AppCompatActivity() {
         addClassesButton = findViewById(R.id.btnAddClasses)
         parentLayout = findViewById(R.id.class_list_container)
         emptyStateLayout = findViewById(R.id.emptyStateLayout)
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
     }
 
     private fun initData() {
@@ -147,6 +153,13 @@ class StudentClassManagerActivity : AppCompatActivity() {
         mainToolbar.setNavigationOnClickListener { showFacultyMenu() }
 
         addClassesButton.setOnClickListener {
+            if (!NetworkUtils.isConnected(this)) {
+                ShowToast.showMessage(this, "Unstable internet connection. Please wait for a stable signal to join a class.")
+
+                // Hide the button immediately as a visual cue
+                it.visibility = View.GONE
+                return@setOnClickListener
+            }
             val intent = Intent(this, StudentAddClassActivity::class.java)
             intent.putExtra("id", id)
             addClassLauncher.launch(intent)
@@ -157,16 +170,28 @@ class StudentClassManagerActivity : AppCompatActivity() {
                 viewModel.loadClasses(id, role, forceReload = true)
             }
         }
+
+        swipeRefreshLayout.setOnRefreshListener {
+            if (!NetworkUtils.isConnected(this)) {
+                swipeRefreshLayout.isRefreshing = false
+                loadData()
+            } else {
+                viewModel.loadClasses(id, role, forceReload = true)
+            }
+        }
     }
 
     private fun setupObservers() {
         viewModel.classState.observe(this) { state ->
+            if (!swipeRefreshLayout.isRefreshing) {
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, state is ClassState.Loading)
+            }
             when (state) {
                 is ClassState.Loading -> {
-                    UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
                     emptyStateLayout.visibility = View.GONE
                 }
                 is ClassState.Success -> {
+                    swipeRefreshLayout.isRefreshing = false
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     parentLayout.removeAllViews()
                     emptyStateLayout.visibility = View.GONE
@@ -230,13 +255,23 @@ class StudentClassManagerActivity : AppCompatActivity() {
                     }
                 }
                 is ClassState.Empty -> {
+                    swipeRefreshLayout.isRefreshing = false
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
                     parentLayout.removeAllViews()
                     emptyStateLayout.visibility = View.VISIBLE
                 }
                 is ClassState.Error -> {
+                    swipeRefreshLayout.isRefreshing = false
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                    ShowToast.showMessage(this, state.message)
+                    if (!NetworkUtils.isConnected(this)) {
+                        ShowToast.showMessage(this, "No internet connection. Please check your network.")
+                        addClassesButton.visibility = View.GONE
+                        loadData()
+                    } else {
+                        ShowToast.showMessage(this, "Something went wrong while fetching data. Please try again.")
+                        addClassesButton.visibility = View.VISIBLE
+                        ShowToast.showMessage(this, state.message)
+                    }
                 }
             }
         }

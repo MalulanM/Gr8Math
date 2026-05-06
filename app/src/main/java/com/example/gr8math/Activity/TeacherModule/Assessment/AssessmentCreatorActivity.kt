@@ -215,8 +215,16 @@ class AssessmentCreatorActivity : AppCompatActivity() {
                 }
                 is AssessmentState.Error -> {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
+
+                    val errorMessage = if (!NetworkUtils.isConnected(this)) {
+                        "Failed to publish"
+                    } else {
+                        "Unable to save changes. Please try again later."
+                    }
+
                     MaterialAlertDialogBuilder(this)
-                        .setMessage(state.message)
+                        .setTitle("Error")
+                        .setMessage(errorMessage)
                         .setPositiveButton("OK", null)
                         .show()
                 }
@@ -319,6 +327,10 @@ class AssessmentCreatorActivity : AppCompatActivity() {
     }
 
     private fun executePublishProcess() {
+        if (!NetworkUtils.isConnected(this)) {
+            ShowToast.showMessage(this, "No internet connection. Please check your network.")
+            return
+        }
         UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, true)
 
         lifecycleScope.launch {
@@ -369,7 +381,11 @@ class AssessmentCreatorActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                    ShowToast.showMessage(this@AssessmentCreatorActivity, "Error: ${e.message}")
+                    if (!NetworkUtils.isConnected(this@AssessmentCreatorActivity)) {
+                        ShowToast.showMessage(this@AssessmentCreatorActivity, "No internet connection. Cannot save.")
+                    } else {
+                        ShowToast.showMessage(this@AssessmentCreatorActivity, "Failed to save. Please try again.")
+                    }
                 }
             }
         }

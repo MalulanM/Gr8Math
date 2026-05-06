@@ -32,12 +32,31 @@ class StudentClassPageViewModel : ViewModel() {
         }
     }
 
-    fun loadContent() {
+    fun loadContent(forceReload: Boolean = false) {
+        val courseId = CurrentCourse.courseId
+        if (courseId == 0) {
+            _contentState.value = ContentState.Error("Invalid Course ID")
+            return
+        }
+
+        if (!forceReload && _contentState.value is ContentState.Success) return
+
         _contentState.value = ContentState.Loading
+
         viewModelScope.launch {
-            val result = repository.getClassContent(CurrentCourse.courseId)
-            result.onSuccess {
-                _contentState.value = ContentState.Success(it)
+            // 1. Check if class exists first
+            val name = repository.getSectionNameByCourseId(courseId)
+            if (name == null) {
+                // This triggers the specific UI state in the Activity
+                _contentState.postValue(ContentState.Error("CLASS_DELETED"))
+                return@launch
+            }
+
+            // 2. Update name and get content
+            _sectionName.postValue(name)
+            val result = repository.getClassContent(courseId)
+            result.onSuccess { list ->
+                _contentState.value = ContentState.Success(list)
             }.onFailure {
                 _contentState.value = ContentState.Error(it.message ?: "Failed to load content")
             }

@@ -37,6 +37,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import androidx.lifecycle.lifecycleScope
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.gr8math.Data.Repository.ClassPageRepository
 import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.UIUtils
@@ -65,6 +66,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
 
     private val repository = ClassPageRepository()
     private var userProfile: ClassPageRepository.UserProfile? = null
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,14 +97,15 @@ class TeacherClassPageActivity : AppCompatActivity() {
         val scrollView = findViewById<View>(R.id.scrollView)
         val emptyStateLayout = findViewById<View>(R.id.emptyStateLayout)
         val btnAdd = findViewById<View>(R.id.btnAdd)
+        val bottomNav = findViewById<View>(R.id.bottom_navigation)
 
         // 1. Check for Internet
         if (!NetworkUtils.isConnected(this)) {
-            // Show No Internet Screen, hide the content
             noInternetView?.visibility = View.VISIBLE
             scrollView?.visibility = View.GONE
             emptyStateLayout?.visibility = View.GONE
             btnAdd?.visibility = View.GONE
+            bottomNav?.visibility = View.GONE
             return
         }
 
@@ -157,6 +160,17 @@ class TeacherClassPageActivity : AppCompatActivity() {
                 showAddOptionsDialog()
             }
         }
+
+
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
+        swipeRefreshLayout.setOnRefreshListener {
+            if (!NetworkUtils.isConnected(this)) {
+                swipeRefreshLayout.isRefreshing = false
+                loadData()
+            } else {
+                viewModel.loadContent(forceReload = true)
+            }
+        }
     }
 
     private fun setupCurrentCourse() {
@@ -190,12 +204,18 @@ class TeacherClassPageActivity : AppCompatActivity() {
             }
         }
         viewModel.state.observe(this) { state ->
+            val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
             when (state) {
                 is ContentState.Loading -> {
-                    parentLayout.removeAllViews()
+                    if (!swipeRefreshLayout.isRefreshing) parentLayout.removeAllViews()
                     emptyStateLayout.visibility = View.GONE
                 }
                 is ContentState.Success -> {
+                    swipeRefreshLayout.isRefreshing = false
+
+                    bottomNav?.visibility = View.VISIBLE
+                    btnAdd.visibility = View.VISIBLE
+
                     if (state.data.isEmpty()) {
                         parentLayout.visibility = View.GONE
                         emptyStateLayout.visibility = View.VISIBLE
@@ -208,9 +228,37 @@ class TeacherClassPageActivity : AppCompatActivity() {
                     }
                 }
                 is ContentState.Error -> {
-                    ShowToast.showMessage(this, state.message)
-                    parentLayout.visibility = View.GONE
-                    emptyStateLayout.visibility = View.VISIBLE
+                    swipeRefreshLayout.isRefreshing = false
+                    val noInternetView = findViewById<View>(R.id.no_internet_view)
+                    val scrollView = findViewById<View>(R.id.scrollView)
+
+                    // Check if we are actually offline
+                    if (!NetworkUtils.isConnected(this)) {
+                        noInternetView?.visibility = View.VISIBLE
+                        scrollView?.visibility = View.GONE
+                        emptyStateLayout.visibility = View.GONE
+                        bottomNav?.visibility = View.GONE
+                        btnAdd.visibility = View.GONE
+                    } else {
+                        // We HAVE internet, so this is likely a "Ghost Class" (deleted on web)
+                        noInternetView?.visibility = View.GONE
+                        scrollView?.visibility = View.GONE
+                        bottomNav?.visibility = View.GONE
+                        btnAdd.visibility = View.GONE
+                        emptyStateLayout.visibility = View.VISIBLE
+
+                        val tvTitle = findViewById<TextView>(R.id.tvEmptyTitle)
+                        val tvSub = findViewById<TextView>(R.id.tvEmptySubtext)
+
+                        if (state.message == "CLASS_DELETED" || state.message.contains("not found", true)) {
+                            tvTitle?.text = "CLASS NO LONGER EXISTS"
+                            tvSub?.text = "This class has been deleted. Please go back and refresh your list."
+                        } else {
+                            tvTitle?.text = "ERROR"
+                            tvSub?.text = state.message
+                            ShowToast.showMessage(this, state.message)
+                        }
+                    }
                 }
             }
         }

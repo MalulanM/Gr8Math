@@ -358,7 +358,6 @@ class LessonContentActivity : AppCompatActivity() {
 
                         val publicUrl = "https://${TigrisService.BUCKET_NAME}.fly.storage.tigris.dev/$filePath"
 
-                        // 🌟 FIX 1: Added PDF handling back in!
                         val cleanTag = when {
                             pendingMedia.mimeType.startsWith("image/") ->
                                 "<img src=\"$publicUrl\" style=\"max-width:100%; border-radius:8px;\" />"
@@ -384,7 +383,18 @@ class LessonContentActivity : AppCompatActivity() {
                 }catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                        ShowToast.showMessage(this@LessonContentActivity, "Upload failed: ${e.message}")
+                        val errorMessage = if (!NetworkUtils.isConnected(this@LessonContentActivity)) {
+                            "Failed to publish. Please check your internet connection."
+                        } else {
+                            "Unable to upload media. Please try again later."
+                        }
+
+                        MaterialAlertDialogBuilder(this@LessonContentActivity)
+                            .setTitle("Upload Error")
+                            .setMessage(errorMessage)
+                            .setPositiveButton("OK", null)
+                            .show()
+
                     }
                 }
             }
@@ -466,7 +476,17 @@ class LessonContentActivity : AppCompatActivity() {
                 }
                 is LessonState.Error -> {
                     UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, false)
-                    ShowToast.showMessage(this, state.message)
+                    val errorMessage = if (!NetworkUtils.isConnected(this)) {
+                        "Failed to publish"
+                    } else {
+                        "Unable to save changes. Please try again later."
+                    }
+
+                    MaterialAlertDialogBuilder(this)
+                        .setTitle("Error")
+                        .setMessage(errorMessage)
+                        .setPositiveButton("OK", null)
+                        .show()
                 }
                 else -> {}
             }

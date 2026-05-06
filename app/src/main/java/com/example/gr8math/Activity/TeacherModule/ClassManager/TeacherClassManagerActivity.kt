@@ -21,6 +21,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.example.gr8math.Activity.LoginAndRegister.AppLoginActivity
 import com.example.gr8math.Activity.PrivacyPolicyActivity
@@ -59,6 +60,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
     private lateinit var tvNoResults: TextView
     private lateinit var searchLayout: RecyclerView
     private lateinit var parentLayout: LinearLayout
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
 
     private lateinit var classAdapter: ClassAdapter
 
@@ -120,18 +122,22 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         val loadingLayout = findViewById<View>(R.id.loadingLayout)
         val loadingProgressBg = findViewById<View>(R.id.loadingProgressBg)
 
-        // 1. Check for Internet using your utility class
         if (!NetworkUtils.isConnected(this)) {
             noInternetView.visibility = View.VISIBLE
             defaultView.visibility = View.GONE
             loadingLayout.visibility = View.GONE
             loadingProgressBg.visibility = View.GONE
+
+            // Hide the button so they can't attempt to create
+            addClassesButton.visibility = View.GONE
             return
         }
 
-        // 2. HAS INTERNET: Hide error screen, show main view
         noInternetView.visibility = View.GONE
         defaultView.visibility = View.VISIBLE
+
+        // Re-enable the button once internet is confirmed
+        addClassesButton.visibility = View.VISIBLE
 
         if (id > 0) {
             viewModel.loadClasses(id, role)
@@ -167,6 +173,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         llPastSearches = findViewById(R.id.llPastSearches)
         searchLayout = findViewById(R.id.rvSearchResults)
         emptyStateLayout = findViewById(R.id.emptyStateLayout)
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
 
         classAdapter = ClassAdapter(mutableListOf()) { selectedClass ->
             openClass(selectedClass.courseId, selectedClass.sectionName)
@@ -193,6 +200,10 @@ class TeacherClassManagerActivity : AppCompatActivity() {
             val query = text.toString().trim()
             if (query.isNotEmpty()) {
                 llPastSearches.visibility = View.GONE
+                if (!NetworkUtils.isConnected(this@TeacherClassManagerActivity)) {
+                    ShowToast.showMessage(this@TeacherClassManagerActivity, "No internet connection. Please check your network.")
+                    return@addTextChangedListener
+                }
                 viewModel.searchClasses(id, role, query)
             } else {
                 llPastSearches.visibility = View.VISIBLE
@@ -208,16 +219,34 @@ class TeacherClassManagerActivity : AppCompatActivity() {
         }
 
         addClassesButton.setOnClickListener {
+            if (!NetworkUtils.isConnected(this)) {
+                ShowToast.showMessage(this, "Unstable internet connection. Please wait for a stable signal to create a class.")
+
+                // 2. Hide the button immediately as a visual cue
+                it.visibility = View.GONE
+                return@setOnClickListener
+            }
             val intent = Intent(this, TeacherAddClassActivity::class.java)
             intent.putExtra("id", id)
             addClassLauncher.launch(intent)
+        }
+
+        swipeRefreshLayout.setOnRefreshListener {
+            if (!NetworkUtils.isConnected(this)) {
+                swipeRefreshLayout.isRefreshing = false
+                loadData()
+            } else {
+                viewModel.loadClasses(id, role, forceReload = true)
+            }
         }
     }
 
     private fun setupObservers() {
         viewModel.classState.observe(this) { state ->
             val isLoading = state is ClassState.Loading
-            UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, isLoading)
+            if (!swipeRefreshLayout.isRefreshing) {
+                UIUtils.showLoading(loadingLayout, loadingProgress, loadingText, isLoading)
+            }
 
             val isSearchMode = searchView.visibility == View.VISIBLE
 
@@ -226,6 +255,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                     emptyStateLayout.visibility = View.GONE
                 }
                 is ClassState.Success -> {
+                    swipeRefreshLayout.isRefreshing = false
                     tvNoResults.visibility = View.GONE
 
                     if (isSearchMode) {
@@ -276,6 +306,7 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                     }
                 }
                 is ClassState.Empty -> {
+                    swipeRefreshLayout.isRefreshing = false
                     if (isSearchMode) {
                         searchLayout.visibility = View.GONE
                         tvNoResults.visibility = View.VISIBLE
@@ -285,8 +316,15 @@ class TeacherClassManagerActivity : AppCompatActivity() {
                     }
                 }
                 is ClassState.Error -> {
+                    swipeRefreshLayout.isRefreshing = false
                     emptyStateLayout.visibility = View.GONE
-                    ShowToast.showMessage(this, state.message)
+                    if (!NetworkUtils.isConnected(this)) {
+                        ShowToast.showMessage(this, "No internet connection. Please check your network.")
+                        addClassesButton.visibility = View.GONE
+                    } else {
+                        ShowToast.showMessage(this, "Something went wrong while fetching data. Please try again.")
+                        addClassesButton.visibility = View.VISIBLE
+                    }
                 }
                 else -> {}
             }

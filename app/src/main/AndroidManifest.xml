@@ -20,6 +20,7 @@
         <activity
             android:name=".Activity.SplashActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Gr8Math">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
