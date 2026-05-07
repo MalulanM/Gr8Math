@@ -50,15 +50,18 @@
                 style="@style/Gr8TextInputStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Month Number"
+                android:hint="Month"
+                app:endIconMode="dropdown_menu"
                 app:boxBackgroundColor="@color/white">
-                <com.google.android.material.textfield.TextInputEditText
+                <AutoCompleteTextView
                     android:id="@+id/etQuarterNumber"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/lexend"
-                    android:inputType="number"
+                    android:inputType="none"
                     android:maxLines="1"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
                     android:textColor="@color/colorText" />
             </com.google.android.material.textfield.TextInputLayout>
 

@@ -627,7 +627,15 @@ class TeacherClassPageActivity : AppCompatActivity() {
         val etTitle = dialogView.findViewById<TextInputEditText>(R.id.etAssessmentTitle)
         val etFrom = dialogView.findViewById<TextInputEditText>(R.id.etAvailableFrom)
         val etUntil = dialogView.findViewById<TextInputEditText>(R.id.etAvailableUntil)
-        val etQuarter = dialogView.findViewById<TextInputEditText>(R.id.etQuarterNumber)
+        val etQuarter = dialogView.findViewById<AutoCompleteTextView>(R.id.etQuarterNumber)
+
+        val monthsMap = mapOf(
+            "January" to "1", "February" to "2", "March" to "3", "April" to "4",
+            "May" to "5", "June" to "6", "July" to "7", "August" to "8",
+            "September" to "9", "October" to "10", "November" to "11", "December" to "12"
+        )
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, monthsMap.keys.toList())
+        etQuarter.setAdapter(adapter)
 
         // Grab TextInputLayouts for the red errors
         // (Make sure these IDs match your dialog_create_assessment.xml file!)
@@ -648,9 +656,11 @@ class TeacherClassPageActivity : AppCompatActivity() {
         if (existingItem != null) {
             etNum.setText(existingItem.assessmentNumber.toString())
             etTitle.setText(existingItem.title)
-            etQuarter.setText(existingItem.quarter.toString())
             etFrom.setText(existingItem.startTime)
             etUntil.setText(existingItem.endTime)
+            val existingQuarterStr = existingItem.quarter.toString()
+            val prefillMonth = monthsMap.entries.find { it.value == existingQuarterStr }?.key ?: ""
+            etQuarter.setText(prefillMonth, false) // false prevents dropdown from opening on load
         }
 
         val dateTimeFormat = SimpleDateFormat("MM/dd/yy - hh:mm a", Locale.US)
@@ -729,7 +739,8 @@ class TeacherClassPageActivity : AppCompatActivity() {
             val assessmentTitle = etTitle.text.toString().trim()
             val availableFrom = etFrom.text.toString().trim()
             val availableUntil = etUntil.text.toString().trim()
-            val assessmentQuarter = etQuarter.text.toString().trim()
+            val selectedMonthName = etQuarter.text.toString().trim()
+            val assessmentQuarter = monthsMap[selectedMonthName] ?: ""
 
             var hasError = false
 
