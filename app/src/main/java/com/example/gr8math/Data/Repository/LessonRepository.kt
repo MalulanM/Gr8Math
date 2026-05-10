@@ -1,19 +1,38 @@
 package com.example.gr8math.Data.Repository
 
 import com.example.gr8math.Data.Model.*
+import com.example.gr8math.Data.Repository.ContentModerationService
+import com.example.gr8math.Data.Repository.AuditTrailService // <-- Imported new service
 import com.example.gr8math.Services.SupabaseService
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import io.github.jan.supabase.auth.auth
 
 class LessonRepository {
 
     private val db = SupabaseService.client
+
+    private suspend fun getCurrentUserId(): Int? {
+        return try {
+            val currentUser = db.auth.currentUserOrNull() ?: return null
+            val email = currentUser.email ?: return null
+            val dbUser = db.from("user")
+                .select(columns = Columns.list("id")) {
+                    filter { eq("email_add", email) }
+                }
+                .decodeSingleOrNull<UserIdRow>()
+            dbUser?.id
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    @kotlinx.serialization.Serializable
+    private data class UserIdRow(val id: Int)
 
     suspend fun getLesson(lessonId: Int): Result<LessonEntity> {
         return withContext(Dispatchers.IO) {
@@ -30,19 +49,61 @@ class LessonRepository {
         }
     }
 
-    // UPDATED: Now performs Notification Logic
     suspend fun createLesson(lesson: LessonInsert): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                // 1. Insert Lesson and RETURN the new data (so we get the ID)
+                // 1. Combine title and content for the check
+                val fullText = "${lesson.lessonTitle} ${lesson.lessonContent}"
+
+                // 2. Run the moderation service (the one we built)
+                val modResult = ContentModerationService.checkContentModeration(db, fullText)
+
+                // 3. Determine final status
+                val finalStatus = if (modResult.isSafe) "approved" else "pending"
+
+                // 4. Insert lesson with the correct status
                 val newLesson = db.from("lesson")
-                    .insert(lesson) {
-                        select() // Important: Ask Supabase to return the created row
+                    .insert(lesson.copy(status = finalStatus)) {
+                        select()
                     }
                     .decodeSingle<LessonEntity>()
 
-                // 2. Trigger Notification Logic (Fire and Forget)
-                notifyStudentsOfNewLesson(newLesson.id, lesson.courseId)
+                val userId = getCurrentUserId()
+
+                // 5. If flagged, insert a moderation_actions record
+                if (!modResult.isSafe) {
+                    if (userId != null) {
+                        val context = "[FLAGGED ITEM: ${modResult.offendingWord}]\n\n" +
+                                "TITLE: ${lesson.lessonTitle}\n\nCONTENT:\n${lesson.lessonContent}"
+
+                        db.from("moderation_actions").insert(
+                            buildJsonObject {
+                                put("target_user_id", userId)
+                                put("content_type", "lesson")
+                                put("content_id", newLesson.id)
+                                put("violation_details", context)
+                                put("reason_code", modResult.reasonCode ?: "Banned Word")
+                                put("status", "pending")
+                            }
+                        )
+                    }
+                }
+
+                // 6. Notify students ONLY if the lesson passed moderation
+                if (finalStatus == "approved") {
+                    notifyStudentsOfNewLesson(newLesson.id, lesson.courseId)
+
+                    // --- CHANGED: Use the separated AuditTrailService ---
+                    if (userId != null) {
+                        AuditTrailService.logAuditTrail(
+                            userId = userId,
+                            resource = "Lesson",
+                            action = "CREATE",
+                            status = "SUCCESS",
+                            details = "Created new lesson: ${lesson.lessonTitle}"
+                        )
+                    }
+                }
 
                 Result.success(Unit)
             } catch (e: Exception) {
@@ -54,9 +115,51 @@ class LessonRepository {
     suspend fun updateLesson(id: Int, lesson: LessonInsert): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                db.from("lesson").update(lesson) {
-                    filter { eq("id", id) }
+                // 1. Moderation check
+                val fullText = "${lesson.lessonTitle} ${lesson.lessonContent}"
+                val modResult = ContentModerationService.checkContentModeration(db, fullText)
+                val finalStatus = if (modResult.isSafe) "approved" else "pending"
+
+                // 2. Update the lesson with the new status
+                db.from("lesson")
+                    .update(lesson.copy(status = finalStatus)) {
+                        filter { eq("id", id) }
+                    }
+
+                val userId = getCurrentUserId()
+
+                // 3. If flagged, add a moderation_actions record
+                if (!modResult.isSafe) {
+                    if (userId != null) {
+                        val context = "[FLAGGED ITEM: ${modResult.offendingWord}]\n\n" +
+                                "TITLE: ${lesson.lessonTitle}\n\nCONTENT:\n${lesson.lessonContent}"
+
+                        db.from("moderation_actions").insert(
+                            buildJsonObject {
+                                put("target_user_id", userId)
+                                put("content_type", "lesson")
+                                put("content_id", id)
+                                put("violation_details", context)
+                                put("reason_code", modResult.reasonCode ?: "Banned Word")
+                                put("status", "pending")
+                            }
+                        )
+                    }
                 }
+                // 4. Log Audit Trail if safe
+                else if (finalStatus == "approved") {
+                    // --- CHANGED: Use the separated AuditTrailService ---
+                    if (userId != null) {
+                        AuditTrailService.logAuditTrail(
+                            userId = userId,
+                            resource = "Lesson",
+                            action = "UPDATE",
+                            status = "SUCCESS",
+                            details = "Updated lesson: ${lesson.lessonTitle}"
+                        )
+                    }
+                }
+
                 Result.success(Unit)
             } catch (e: Exception) {
                 Result.failure(e)
@@ -64,8 +167,7 @@ class LessonRepository {
         }
     }
 
-    // --- NOTIFICATION LOGIC (Replicating Laravel Service) ---
-
+    // --- NOTIFICATION LOGIC (unchanged) ---
     private suspend fun notifyStudentsOfNewLesson(lessonId: Int, courseId: Int) {
         try {
             val sectionRes = db.from("course_content")
@@ -90,7 +192,6 @@ class LessonRepository {
                 put("section_id", sectionId)
             }
 
-            // D. Prepare Notification Objects for Batch Insert
             val notifications = students.map {
                 NotificationInsert(
                     userId = it.student.userId,
@@ -101,10 +202,7 @@ class LessonRepository {
                 )
             }
 
-            // E. Batch Insert into 'notifications' table
             db.from("notifications").insert(notifications)
-
-
         } catch (e: Exception) {
             e.printStackTrace()
         }

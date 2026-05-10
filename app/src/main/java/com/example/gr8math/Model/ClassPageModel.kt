@@ -41,7 +41,8 @@ data class LessonInsert(
     @SerialName("course_id") val courseId: Int,
     @SerialName("week_number") val weekNumber: Int,
     @SerialName("lesson_title") val lessonTitle: String,
-    @SerialName("lesson_content") val lessonContent: String
+    @SerialName("lesson_content") val lessonContent: String,
+    val status: String = "approved"
 )
 
 // ==========================================

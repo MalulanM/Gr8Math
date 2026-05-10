@@ -6,7 +6,9 @@ import com.example.gr8math.Data.Model.AssessmentRecordInsert
 import com.example.gr8math.Data.Model.AssessmentStatus
 import com.example.gr8math.Data.Model.ClassContentItem
 import com.example.gr8math.Data.Model.LessonEntity
+import com.example.gr8math.Data.Repository.AuditTrailService // <-- Imported AuditTrailService
 import com.example.gr8math.Services.SupabaseService
+import io.github.jan.supabase.auth.auth // <-- Imported Supabase Auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
@@ -37,6 +39,22 @@ class ClassPageRepository {
             outputFormat.format(date)
         } catch (e: Exception) {
             isoDate
+        }
+    }
+
+    // --- HELPER: GET CURRENT USER ID ---
+    private suspend fun getCurrentUserId(): Int? {
+        return try {
+            val currentUser = db.auth.currentUserOrNull() ?: return null
+            val email = currentUser.email ?: return null
+            val dbUser = db.from("user")
+                .select(columns = Columns.list("id")) {
+                    filter { eq("email_add", email) }
+                }
+                .decodeSingleOrNull<UserIdRow>()
+            dbUser?.id
+        } catch (e: Exception) {
+            null
         }
     }
 
@@ -231,12 +249,36 @@ class ClassPageRepository {
         }
     }
 
+    // --- UPDATED DELETE METHODS WITH AUDIT TRAILS ---
+
     suspend fun deleteLesson(lessonId: Int): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             try {
+                // 1. Fetch user for audit
+                val userId = getCurrentUserId()
+
+                // 2. Fetch the lesson title BEFORE deleting it
+                val oldLesson = db.from("lesson")
+                    .select(columns = Columns.list("lesson_title")) {
+                        filter { eq("id", lessonId) }
+                    }.decodeSingleOrNull<TitleRow>()
+
+                // 3. Delete the lesson
                 db.from("lesson").delete {
                     filter { eq("id", lessonId) }
                 }
+
+                // 4. Log to Audit Trails
+                if (userId != null && oldLesson?.lessonTitle != null) {
+                    AuditTrailService.logAuditTrail(
+                        userId = userId,
+                        resource = "Lesson",
+                        action = "DELETE",
+                        status = "SUCCESS",
+                        details = "Deleted lesson: ${oldLesson.lessonTitle}"
+                    )
+                }
+
                 Result.success(true)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -248,17 +290,37 @@ class ClassPageRepository {
     suspend fun deleteAssessment(assessmentId: Int): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             try {
-                // 1. Wipe all student answers tied to this assessment
+                // 1. Fetch user for audit
+                val userId = getCurrentUserId()
+
+                // 2. Fetch the assessment title BEFORE deleting it
+                val oldAssessment = db.from("assessment_created")
+                    .select(columns = Columns.list("title")) {
+                        filter { eq("id", assessmentId) }
+                    }.decodeSingleOrNull<TitleRow>()
+
+                // 3. Wipe all student answers tied to this assessment
                 db.from("student_answers").delete { filter { eq("assessment_id", assessmentId) } }
 
-                // 2. Wipe all student records/scores tied to this assessment
+                // 4. Wipe all student records/scores tied to this assessment
                 db.from("assessment_record").delete { filter { eq("assessment_id", assessmentId) } }
 
-                // 3. Wipe the assessment questions
+                // 5. Wipe the assessment questions
                 db.from("assessment_questions").delete { filter { eq("assessment_id", assessmentId) } }
 
-                // 4. Finally, delete the assessment itself
+                // 6. Finally, delete the assessment itself
                 db.from("assessment_created").delete { filter { eq("id", assessmentId) } }
+
+                // 7. Log to Audit Trails
+                if (userId != null && oldAssessment?.title != null) {
+                    AuditTrailService.logAuditTrail(
+                        userId = userId,
+                        resource = "Assessment",
+                        action = "DELETE",
+                        status = "SUCCESS",
+                        details = "Deleted assessment: ${oldAssessment.title}"
+                    )
+                }
 
                 Result.success(true)
             } catch (e: Exception) {
@@ -346,15 +408,18 @@ class ClassPageRepository {
                 null
             }
         }
-
-
     }
 
-
-
-
-
     // --- DATA WRAPPERS ---
+
+    @Serializable
+    private data class UserIdRow(val id: Int)
+
+    @Serializable
+    private data class TitleRow(
+        val title: String? = null,
+        @SerialName("lesson_title") val lessonTitle: String? = null
+    )
 
     @Serializable
     data class StudentIdWrapper(@SerialName("id") val id: Int)
