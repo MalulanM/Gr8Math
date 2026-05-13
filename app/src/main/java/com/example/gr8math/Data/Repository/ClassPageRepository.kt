@@ -376,8 +376,17 @@ class ClassPageRepository {
     }
 
     private fun getFirstSentence(content: String): String {
-        val noHtml = content.replace(Regex("<[^>]*>"), "").trim()
+        // 1. FIRST: Completely annihilate <script> and <style> blocks (tags AND the code inside them)
+        var preCleaned = content.replace("(?is)<script.*?</script>".toRegex(), "")
+        preCleaned = preCleaned.replace("(?is)<style.*?</style>".toRegex(), "")
+
+        // 2. THEN remove the remaining safe HTML tags
+        val noHtml = preCleaned.replace(Regex("<[^>]*>"), "").trim()
+
+        // 3. Remove Base64 image data
         val noBase64 = noHtml.replace(Regex("data:image/[^;]+;base64,[A-Za-z0-9+/=]+"), "").trim()
+
+        // 4. Split into lines
         val lines = noBase64.split("\n").map { it.trim() }.filter { it.isNotEmpty() }
 
         if (lines.isEmpty()) {

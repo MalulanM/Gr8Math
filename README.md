@@ -1,10 +1,11 @@
 # Gr8Math Mobile App
 
-An interactive Android math learning application built with Jetpack Compose, featuring real-time collaboration, cloud storage, and gamification through Unity integration.
+An interactive Android math learning application built with XML-based UI, featuring real-time collaboration, cloud storage, and gamification through Unity integration.
 
 ## Table of Contents
 
 - [Project Overview](#project-overview)
+- [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Project Structure](#project-structure)
@@ -22,9 +23,150 @@ Gr8Math is a comprehensive Android application designed for interactive math lea
 - **Supabase Backend** - PostgreSQL database with real-time capabilities and authentication
 - **AWS S3/Tigris Integration** - Cloud storage for user assets and content
 - **Firebase Services** - Push messaging and analytics
-- **Unity Integration** - Enhanced graphics and game mechanics
-- **Jetpack Compose UI** - Modern, reactive user interface
+- **Unity Integration** - Enhanced graphics and interactive game mechanics
+- **XML-based UI** - Native Android layouts with Material Design
 - **Retrofit Networking** - Type-safe HTTP client for API communication
+
+## Features
+
+### Shared Features (Student & Teacher)
+
+#### Authentication & User Management
+- User registration with role-based distinctions (Student/Teacher)
+- Secure user login and password recovery
+- Comprehensive user profile management
+- Cloud-based profile picture management
+- Terms and conditions acceptance
+
+#### Classroom Management
+- View class rosters and participant information
+- Real-time class activity tracking
+- Participant profile access
+- Multi-class enrollment support
+
+#### Notifications System
+- Real-time Firebase push notifications
+- Role-based notification delivery
+- Notification center with read/unread tracking
+- Activity-specific notifications
+
+#### Cloud Storage Integration
+- AWS S3/Tigris integration for secure file storage
+- Automatic URL generation for stored files
+- Asset management and deletion capabilities
+
+#### Security & Compliance
+- Content moderation system
+- Comprehensive audit trail logging
+- Role-based access control
+- User activity tracking (Create, Update, Delete operations)
+
+#### User Interface
+- Material Design 3 interface with XML-based layouts
+- Responsive layouts for all screen sizes
+- Smooth animations and transitions
+- Image optimization with Glide caching
+
+---
+
+### Teacher Features
+
+#### Assessment Management
+- Create and manage assessments with customizable questions
+- Multiple-choice question creation with answer keys
+- Set assessment timing, start/end dates, and time limits
+- Organize assessments by academic quarter
+- Word bank management for efficient question creation
+- Detailed assessment result viewing and analytics
+
+#### Daily Lesson Log (DLL)
+- Content and performance standards management
+- Learning competencies tracking by day of week
+- Resource tracking (textbooks, guides, learner materials)
+- 10 procedure categories (A-J) with daily documentation
+- 7 reflection categories (A-G) for teacher insights
+- Weekly and quarterly lesson planning
+- Daily entry creation and editing
+
+#### Class Management
+- Create new classes and generate class codes
+- Manage student enrollment
+- View and manage class participants
+- Monitor class activity and engagement
+
+#### Grades & Performance Analytics
+- Comprehensive student grades dashboard
+- Quarterly and monthly performance reports
+- Assessment score analysis and tracking
+- Performance analytics and trending
+- Student ranking and leaderboard view
+- Grade calculation and percentage tracking
+
+#### Teacher Achievements
+- Teacher badge/achievement system
+- Achievement tracking and display
+
+---
+
+### Student Features
+
+#### Student Profile Management
+- LRN (Learner Reference Number) tracking
+- Profile customization and settings
+
+#### Class Enrollment
+- Join classes using unique class codes
+- View enrolled classes and class information
+- Access class roster and view classmates
+
+#### Assessment Completion
+- Take timed assessments with progress tracking
+- View detailed assessment instructions and requirements
+- Submit answers with immediate feedback
+- Track assessment performance and scores
+- Review detailed assessment results
+
+#### Interactive Games
+- Play Unity-powered interactive math maze games
+- Navigate through dynamic mazes while collecting books
+- Discover math questions related to Gr8Math concepts when viewing collected books
+- Three difficulty levels for progressive challenge:
+  - **Easy** - Basic maze layouts with straightforward math questions
+  - **Medium** - More complex mazes with intermediate difficulty questions
+  - **Hard** - Advanced maze designs with challenging Gr8Math problems
+- Earn badges through successful game completion:
+  - "First Escape!" - Complete first maze escape
+  - "Perfect Escape!" - Flawless maze escape without errors
+  - "First Exploration..." - Complete initial exploration
+  - "Full Exploration..." - Complete all difficulty levels
+- Access game leaderboards and rankings
+- Immediate feedback on math answers within the game
+
+#### Gamification & Achievements
+- Performance-based badge system with 8 unique badges:
+  - "First Ace!" - Perfect first assessment
+  - "First-Timer" - Complete first assessment
+  - "First Escape!" - First successful game escape
+  - "Perfect Escape!" - Flawless game escape
+  - "First Exploration..." - Initial exploration game
+  - "Full Exploration..." - Complete exploration
+  - "Three-Quarter Score!" - Achieve 75%+ score
+  - "Triple Ace" - Three perfect scores
+- Achievement tracking and collection display
+- Milestone celebrations with confetti animations
+- Badge descriptions and acquisition dates
+
+#### Grades & Progress Tracking
+- Student grades dashboard
+- Quarterly and monthly performance reports
+- Assessment score tracking and analysis
+- View personal rankings and leaderboard position
+- Performance trend analysis
+
+#### Real-time Data Synchronization
+- Live collaboration with classmates
+- Instant grade and feedback updates
+- Offline support indicators
 
 ## Tech Stack
 
@@ -40,8 +182,8 @@ Gr8Math is a comprehensive Android application designed for interactive math lea
 
 | Technology | Purpose | Version |
 |-----------|---------|---------|
-| **Jetpack Compose** | Declarative UI framework | Latest (via BOM) |
 | **Material 3** | Design system | Latest |
+| **XML Layouts** | Native Android UI layouts | - |
 | **Glide** | Image loading and caching | 4.16.0 |
 | **Konfetti** | Confetti animations | 2.0.4 |
 | **ColorPickerView** | Color selection UI | 2.2.4 |

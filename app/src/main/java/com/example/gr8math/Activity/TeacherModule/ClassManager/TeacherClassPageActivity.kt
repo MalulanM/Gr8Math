@@ -331,7 +331,7 @@ class TeacherClassPageActivity : AppCompatActivity() {
                     val view = layoutInflater.inflate(R.layout.item_class_lesson_card, parentLayout, false)
                     view.findViewById<TextView>(R.id.tvWeek).text = item.weekNumber.toString()
                     view.findViewById<TextView>(R.id.tvTitle).text = item.title
-                    view.findViewById<TextView>(R.id.tvDescription).text = item.previewContent
+                    view.findViewById<TextView>(R.id.tvDescription).text = item.previewContent ?: ""
 
                     view.findViewById<TextView>(R.id.tvSeeMore).setOnClickListener {
                         val i = Intent(this, LessonDetailActivity::class.java)

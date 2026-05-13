@@ -11,7 +11,8 @@ import kotlinx.coroutines.launch
 
 sealed class GradesState {
     object Loading : GradesState()
-    data class Success(val data: List<StudentScore>) : GradesState()
+    //  1. Add studentId to the Success state
+    data class Success(val studentId: Int, val data: List<StudentScore>) : GradesState()
     data class Error(val message: String) : GradesState()
 }
 
@@ -22,17 +23,16 @@ class StudentGradesViewModel : ViewModel() {
     val state: LiveData<GradesState> = _state
 
     fun loadGrades() {
-        // 1. Set Loading State (Important for UI feedback)
         _state.value = GradesState.Loading
 
-        // 2. Launch Coroutine
         viewModelScope.launch {
-            // 3. Fetch data using CurrentCourse singleton
             val result = repository.getStudentGrades(CurrentCourse.userId, CurrentCourse.courseId)
 
-            // 4. Handle Result
-            result.onSuccess { list ->
-                _state.value = GradesState.Success(list)
+            //  2. Handle the Pair result
+            result.onSuccess { pair ->
+                val fetchedStudentId = pair.first
+                val list = pair.second
+                _state.value = GradesState.Success(fetchedStudentId, list)
             }.onFailure {
                 _state.value = GradesState.Error(it.message ?: "Failed to load grades")
             }

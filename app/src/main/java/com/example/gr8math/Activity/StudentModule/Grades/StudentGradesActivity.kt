@@ -17,6 +17,8 @@ import com.example.gr8math.Activity.StudentModule.ClassManager.StudentClassPageA
 import com.example.gr8math.Activity.StudentModule.Notification.StudentNotificationsActivity
 import com.example.gr8math.Adapter.StudentGradesAdapter
 import com.example.gr8math.Data.Model.StudentScore
+import com.example.gr8math.Model.CurrentCourse // Ensure this is imported
+// import com.example.gr8math.Model.CurrentUser // Import wherever your logged-in student session is stored
 import com.example.gr8math.R
 import com.example.gr8math.Utils.NetworkUtils
 import com.example.gr8math.Utils.NotificationHelper
@@ -28,6 +30,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
@@ -38,6 +41,7 @@ class StudentGradesActivity : AppCompatActivity() {
     private lateinit var bottomNav: BottomNavigationView
     private lateinit var rvGrades: RecyclerView
     private lateinit var adapter: StudentGradesAdapter
+    private var currentStudentId: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,8 +51,31 @@ class StudentGradesActivity : AppCompatActivity() {
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
 
+        val btnQuarterlyReport = findViewById<Button>(R.id.btnQuarterlyReport)
+        btnQuarterlyReport.visibility = View.VISIBLE
+        btnQuarterlyReport.setOnClickListener {
+            // Prevent crash if they click before data loads
+            if (currentStudentId == 0) {
+                ShowToast.showMessage(this, "Please wait for grades to load first.")
+                return@setOnClickListener
+            }
 
-        findViewById<Button>(R.id.btnQuarterlyReport).visibility = View.GONE
+            val calendar = Calendar.getInstance()
+            val currentMonth = calendar.get(Calendar.MONTH) + 1
+            val currentYear = calendar.get(Calendar.YEAR)
+
+            val intent = Intent(this, MonthlyReportActivity::class.java).apply {
+                putExtra("EXTRA_IS_STUDENT", true)
+                putExtra("EXTRA_MONTH", currentMonth)
+                putExtra("EXTRA_YEAR", currentYear)
+                putExtra("EXTRA_COURSE_ID", CurrentCourse.courseId)
+
+                // Pass the newly retrieved ID!
+                putExtra("EXTRA_STUDENT_ID", currentStudentId)
+                putExtra("EXTRA_STUDENT_NAME", "My Report") // Display name on PDF
+            }
+            startActivity(intent)
+        }
 
         // 2. Setup Navigation
         bottomNav = findViewById(R.id.bottom_navigation)
@@ -68,10 +95,8 @@ class StudentGradesActivity : AppCompatActivity() {
         setupObservers()
 
         val btnRefresh = findViewById<Button>(R.id.btnRefresh)
-        if (btnRefresh != null) {
-            btnRefresh.setOnClickListener {
-                loadData()
-            }
+        btnRefresh?.setOnClickListener {
+            loadData()
         }
 
         loadData()
@@ -118,6 +143,9 @@ class StudentGradesActivity : AppCompatActivity() {
 
                 }
                 is GradesState.Success -> {
+                    // Capture the ID from the view model
+                    currentStudentId = state.studentId
+
                     if (state.data.isEmpty()) {
                         rv.visibility = View.GONE
                         emptyLayout.visibility = View.VISIBLE

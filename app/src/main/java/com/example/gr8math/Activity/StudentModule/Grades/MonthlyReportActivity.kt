@@ -52,6 +52,7 @@ class MonthlyReportActivity : AppCompatActivity() {
     private var courseId = 0
     private var studentId = 0
     private var studentName = "Student" // Default fallback
+    private var isStudentView = false // Track if viewed by a student
     private var selectedMonthValue: String = "" // e.g., "2026-05"
     private var currentDisplayLabel: String = "" // e.g., "May 2026"
     private var pendingDownloadIsPdf = true
@@ -63,6 +64,7 @@ class MonthlyReportActivity : AppCompatActivity() {
         // Get intents needed for the ViewModel
         studentId = intent.getIntExtra("EXTRA_STUDENT_ID", 0)
         courseId = intent.getIntExtra("EXTRA_COURSE_ID", 0)
+        isStudentView = intent.getBooleanExtra("EXTRA_IS_STUDENT", false)
         intent.getStringExtra("EXTRA_STUDENT_NAME")?.let { studentName = it }
 
         initViews()
@@ -257,6 +259,13 @@ class MonthlyReportActivity : AppCompatActivity() {
     private fun setupDownloadDialog() {
         val btnGenerateCopy = findViewById<Button>(R.id.btnGenerateCopy)
 
+        // Hide button if the activity is being viewed by a student
+        if (isStudentView) {
+            btnGenerateCopy.visibility = View.GONE
+            return
+        }
+
+        btnGenerateCopy.visibility = View.VISIBLE
         btnGenerateCopy.setOnClickListener {
             if (tableScrollView.visibility == View.GONE) {
                 ShowToast.showMessage(this, "No data available to export.")

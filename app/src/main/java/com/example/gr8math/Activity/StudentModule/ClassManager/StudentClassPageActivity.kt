@@ -36,6 +36,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import nl.dionsegijn.konfetti.xml.KonfettiView
+import androidx.core.text.HtmlCompat
 
 class StudentClassPageActivity : AppCompatActivity() {
     private var id: Int = 0
@@ -402,7 +403,9 @@ class StudentClassPageActivity : AppCompatActivity() {
                     val view = layoutInflater.inflate(R.layout.item_class_lesson_card, parentLayout, false)
                     view.findViewById<TextView>(R.id.tvWeek).text = item.weekNumber.toString()
                     view.findViewById<TextView>(R.id.tvTitle).text = item.title
-                    view.findViewById<TextView>(R.id.tvDescription).text = item.previewContent
+                    view.findViewById<TextView>(R.id.tvDescription).text = item.previewContent ?: ""
+
+
                     view.findViewById<ImageButton>(R.id.ibEditLesson).visibility = View.GONE
                     view.findViewById<ImageButton>(R.id.ibDeleteLesson).visibility = View.GONE
                     view.findViewById<TextView>(R.id.tvSeeMore).setOnClickListener {

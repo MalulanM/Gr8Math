@@ -13,7 +13,8 @@ class StudentGradesRepository {
 
     private val db = SupabaseService.client
 
-    suspend fun getStudentGrades(userId: Int, courseId: Int): Result<List<StudentScore>> {
+    //  1. Change return type to Result<Pair<Int, List<StudentScore>>>
+    suspend fun getStudentGrades(userId: Int, courseId: Int): Result<Pair<Int, List<StudentScore>>> {
         return withContext(Dispatchers.IO) {
             try {
                 // 1. Get Student ID
@@ -54,7 +55,8 @@ class StudentGradesRepository {
                     )
                 }
 
-                Result.success(uiList)
+                // 2. Return both the studentId and the list
+                Result.success(Pair(studentId, uiList))
 
             } catch (e: Exception) {
                 Result.failure(e)
