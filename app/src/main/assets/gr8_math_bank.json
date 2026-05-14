@@ -4,17 +4,68 @@
     "questions": [
       {
         "type": "Multiple Choice",
-        "question": "What is the greatest common factor (GCF) of $6x^3$ and $12x^2$?",
-        "choices": ["$3x$", "$6x^2$", "$12x^3$", "$2x$"],
-        "correctAnswers": ["$6x^2$"],
+        "question": "What is the greatest common factor (GCF) of $8x^4$ and $12x^3$?",
+        "choices": [
+          "$4x^3$",
+          "$2x^4$",
+          "$8x^3$",
+          "$4x^4$"
+        ],
+        "correctAnswers": [
+          "$4x^3$"
+        ],
         "points": 1
       },
       {
         "type": "Short Answer",
-        "question": "Factor completely: $x^2 - 16$",
-        "choices": ["$(x-4)(x+4)$"],
-        "correctAnswers": ["$(x-4)(x+4)$"],
+        "question": "Factor completely: $x^2 - 25$",
+        "choices": [
+          "$(x-5)(x+5)$"
+        ],
+        "correctAnswers": [
+          "$(x-5)(x+5)$"
+        ],
         "points": 2
+      },
+      {
+        "type": "Checkboxes",
+        "question": "Which of the following are factors of the trinomial $x^2 + 5x + 6$?",
+        "choices": [
+          "$(x+2)$",
+          "$(x-2)$",
+          "$(x+3)$",
+          "$(x-3)$"
+        ],
+        "correctAnswers": [
+          "$(x+2)$",
+          "$(x+3)$"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Multiple Choice",
+        "question": "Factor the perfect square trinomial completely: $x^2 + 10x + 25$",
+        "choices": [
+          "$(x+5)^2$",
+          "$(x-5)^2$",
+          "$(x+10)^2$",
+          "$(x+5)(x-5)$"
+        ],
+        "correctAnswers": [
+          "$(x+5)^2$"
+        ],
+        "points": 1
+      },
+      {
+        "type": "Short Answer",
+        "question": "Factor the sum of two cubes completely: $x^3 + 8$",
+        "choices": [
+          "$(x+2)(x^2-2x+4)$"
+        ],
+        "correctAnswers": [
+          "$(x+2)(x^2-2x+4)$"
+        ],
+        "points": 3
       }
     ]
   },
@@ -24,13 +75,419 @@
       {
         "type": "Multiple Choice",
         "question": "What is the slope of the line $y = 3x - 4$?",
-        "choices": ["-4", "3", "x", "0"],
-        "correctAnswers": ["3"],
+        "choices": [
+          "-4",
+          "3",
+          "$x$",
+          "0"
+        ],
+        "correctAnswers": [
+          "3"
+        ],
         "points": 1
+      },
+      {
+        "type": "Short Answer",
+        "question": "What is the x-intercept of the equation $2x + 4y = 8$?",
+        "choices": [
+          "4"
+        ],
+        "correctAnswers": [
+          "4"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Multiple Choice",
+        "question": "What is the equation $y = 2x - 5$ written in standard form $Ax + By = C$?",
+        "choices": [
+          "$2x - y = 5$",
+          "$2x + y = 5$",
+          "$x - 2y = 5$",
+          "$-2x - y = 5$"
+        ],
+        "correctAnswers": [
+          "$2x - y = 5$"
+        ],
+        "points": 1
+      },
+      {
+        "type": "Checkboxes",
+        "question": "Which of the following linear equations have a negative slope?",
+        "choices": [
+          "$y = -2x + 1$",
+          "$y = 4x - 3$",
+          "$x + y = 4$",
+          "$2x - y = 6$"
+        ],
+        "correctAnswers": [
+          "$y = -2x + 1$",
+          "$x + y = 4$"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Short Answer",
+        "question": "Find the slope of the line passing through the points $(1, 2)$ and $(3, 6)$.",
+        "choices": [
+          "2"
+        ],
+        "correctAnswers": [
+          "2"
+        ],
+        "points": 2
       }
     ]
   },
   {
-    "topic": "No Question Topic"
+    "topic": "Systems of Linear Equations",
+    "questions": [
+      {
+        "type": "Multiple Choice",
+        "question": "How many solutions does a system of linear equations have if their graphs are parallel lines?",
+        "choices": [
+          "One",
+          "Infinite",
+          "Zero",
+          "Two"
+        ],
+        "correctAnswers": [
+          "Zero"
+        ],
+        "points": 1
+      },
+      {
+        "type": "Short Answer",
+        "question": "Solve for the value of $y$ in the system: $x = 2$ and $x + y = 5$.",
+        "choices": [
+          "3"
+        ],
+        "correctAnswers": [
+          "3"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Multiple Choice",
+        "question": "If you add the equations $x + y = 5$ and $x - y = 1$ using the elimination method, what is the resulting value of $x$?",
+        "choices": [
+          "$x = 2$",
+          "$x = 3$",
+          "$x = 4$",
+          "$x = 6$"
+        ],
+        "correctAnswers": [
+          "$x = 3$"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Checkboxes",
+        "question": "Which of the following terms describe a system of linear equations that has exactly one solution (intersecting lines)?",
+        "choices": [
+          "Consistent",
+          "Inconsistent",
+          "Dependent",
+          "Independent"
+        ],
+        "correctAnswers": [
+          "Consistent",
+          "Independent"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Short Answer",
+        "question": "The sum of two numbers is 10 and their difference is 2. What is the value of the larger number?",
+        "choices": [
+          "6"
+        ],
+        "correctAnswers": [
+          "6"
+        ],
+        "points": 3
+      }
+    ]
+  },
+  {
+    "topic": "Rational Algebraic Expressions",
+    "questions": [
+      {
+        "type": "Multiple Choice",
+        "question": "What is the value of $x$ that makes the rational expression $\\frac{2}{x-3}$ undefined?",
+        "choices": [
+          "0",
+          "3",
+          "-3",
+          "2"
+        ],
+        "correctAnswers": [
+          "3"
+        ],
+        "points": 1
+      },
+      {
+        "type": "Short Answer",
+        "question": "Simplify the rational expression completely: $\\frac{4x^2}{2x}$",
+        "choices": [
+          "$2x$"
+        ],
+        "correctAnswers": [
+          "$2x$"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Checkboxes",
+        "question": "Which of the following are considered rational algebraic expressions?",
+        "choices": [
+          "$\\frac{x+1}{x-2}$",
+          "$\\frac{\\sqrt{x}}{x}$",
+          "$\\frac{3x^2}{5}$",
+          "$2^x$"
+        ],
+        "correctAnswers": [
+          "$\\frac{x+1}{x-2}$",
+          "$\\frac{3x^2}{5}$"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Multiple Choice",
+        "question": "What is the product of $\\frac{x}{y}$ and $\\frac{y^2}{x^2}$?",
+        "choices": [
+          "$\\frac{y}{x}$",
+          "$\\frac{x}{y}$",
+          "$xy$",
+          "$\\frac{1}{xy}$"
+        ],
+        "correctAnswers": [
+          "$\\frac{y}{x}$"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Short Answer",
+        "question": "What is the least common denominator (LCD) of $\\frac{1}{2x}$ and $\\frac{1}{3x}$?",
+        "choices": [
+          "$6x$"
+        ],
+        "correctAnswers": [
+          "$6x$"
+        ],
+        "points": 3
+      }
+    ]
+  },
+  {
+    "topic": "Triangle Congruence",
+    "questions": [
+      {
+        "type": "Multiple Choice",
+        "question": "What does the acronym SSS stand for in triangle congruence postulates?",
+        "choices": [
+          "Side-Shape-Side",
+          "Side-Side-Side",
+          "Shape-Shape-Shape",
+          "Same-Side-Same"
+        ],
+        "correctAnswers": [
+          "Side-Side-Side"
+        ],
+        "points": 1
+      },
+      {
+        "type": "Checkboxes",
+        "question": "Which of the following are valid postulates or theorems for proving triangle congruence?",
+        "choices": [
+          "SSS",
+          "SAS",
+          "AAA",
+          "ASA"
+        ],
+        "correctAnswers": [
+          "SSS",
+          "SAS",
+          "ASA"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Short Answer",
+        "question": "If $\\triangle ABC \\cong \\triangle DEF$, which side corresponds to side $AB$?",
+        "choices": [
+          "$DE$"
+        ],
+        "correctAnswers": [
+          "$DE$"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Multiple Choice",
+        "question": "In $\\triangle XYZ$, what is the included angle between sides $XY$ and $YZ$?",
+        "choices": [
+          "$\\angle X$",
+          "$\\angle Y$",
+          "$\\angle Z$",
+          "$\\angle XYZ$"
+        ],
+        "correctAnswers": [
+          "$\\angle Y$"
+        ],
+        "points": 1
+      },
+      {
+        "type": "Short Answer",
+        "question": "If two triangles are congruent and one has an interior angle measuring $45^{\\circ}$, what is the measure of the corresponding angle in the other triangle?",
+        "choices": [
+          "$45^{\\circ}$"
+        ],
+        "correctAnswers": [
+          "$45^{\\circ}$"
+        ],
+        "points": 2
+      }
+    ]
+  },
+  {
+    "topic": "Basic Concepts of Probability",
+    "questions": [
+      {
+        "type": "Multiple Choice",
+        "question": "What is the probability of an impossible event occurring?",
+        "choices": [
+          "1",
+          "0",
+          "0.5",
+          "-1"
+        ],
+        "correctAnswers": [
+          "0"
+        ],
+        "points": 1
+      },
+      {
+        "type": "Short Answer",
+        "question": "If you flip a fair coin, what is the probability of getting a tail? Express your answer as a fraction.",
+        "choices": [
+          "1/2"
+        ],
+        "correctAnswers": [
+          "1/2"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Checkboxes",
+        "question": "A standard six-sided die is rolled. Which of the following are outcomes in the event 'rolling an even number'?",
+        "choices": [
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "correctAnswers": [
+          "2",
+          "4"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Multiple Choice",
+        "question": "The set of all possible outcomes of an experiment is called the...",
+        "choices": [
+          "Event",
+          "Probability",
+          "Sample Space",
+          "Trial"
+        ],
+        "correctAnswers": [
+          "Sample Space"
+        ],
+        "points": 1
+      },
+      {
+        "type": "Short Answer",
+        "question": "If the probability of rain tomorrow is 0.3, what is the probability that it will NOT rain?",
+        "choices": [
+          "0.7"
+        ],
+        "correctAnswers": [
+          "0.7"
+        ],
+        "points": 2
+      }
+    ]
+  },
+  {
+    "topic": "Volume of Cubes and Cylinders",
+    "questions": [
+      {
+        "type": "Multiple Choice",
+        "question": "Which of the following is the correct formula for the volume of a cylinder?",
+        "choices": [
+          "$V = \\pi r^2 h$",
+          "$V = l w h$",
+          "$V = s^3$",
+          "$V = \\frac{1}{3} \\pi r^2 h$"
+        ],
+        "correctAnswers": [
+          "$V = \\pi r^2 h$"
+        ],
+        "points": 1
+      },
+      {
+        "type": "Short Answer",
+        "question": "What is the volume of a cube with an edge length of 4 cm?",
+        "choices": [
+          "64 cm^3"
+        ],
+        "correctAnswers": [
+          "64 cm^3"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Multiple Choice",
+        "question": "A cylinder has a radius of 3 meters and a height of 5 meters. What is its volume in terms of $\\pi$?",
+        "choices": [
+          "$15\\pi$ cubic meters",
+          "$30\\pi$ cubic meters",
+          "$45\\pi$ cubic meters",
+          "$90\\pi$ cubic meters"
+        ],
+        "correctAnswers": [
+          "$45\\pi$ cubic meters"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Checkboxes",
+        "question": "Which of the following measurements are strictly required to calculate the volume of a solid right circular cylinder?",
+        "choices": [
+          "Radius of the base",
+          "Slant height",
+          "Height of the cylinder",
+          "Apothem"
+        ],
+        "correctAnswers": [
+          "Radius of the base",
+          "Height of the cylinder"
+        ],
+        "points": 2
+      },
+      {
+        "type": "Short Answer",
+        "question": "If a box in the shape of a perfect cube has a total volume of 125 cubic inches, what is the length of one of its edges in inches?",
+        "choices": [
+          "5"
+        ],
+        "correctAnswers": [
+          "5"
+        ],
+        "points": 3
+      }
+    ]
   }
 ]
